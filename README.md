@@ -1,14 +1,82 @@
 # 💰 Incentive Compensation Tool
 
-A self-service dashboard for CSMs to track their book of business, quarterly revenue performance, and YoY pacing.
+A self-service dashboard for CSMs to track their book of business, quarterly revenue performance, and YoY pacing — powered by **live data** from BigQuery.
 
 ## 🚀 Quick Start
 
 **Live Dashboard:** [incentive-compensation-tool.quick.shopify.io](https://incentive-compensation-tool.quick.shopify.io)
 
-1. Enter your name in the dashboard
-2. If your data exists in `/data/`, it loads automatically
-3. If not, follow the instructions below to add your data
+1. Open the dashboard
+2. Grant BigQuery access when prompted (one-time)
+3. Enter your name (auto-populated from your Shopify identity)
+4. Click **⚡ Load Live Data**
+5. View your real-time compensation data!
+
+---
+
+## 📡 How It Works
+
+This Quick site uses the **Quick.js BigQuery API** (`quick.dw`) to query Shopify's data warehouse directly in your browser:
+
+```javascript
+// Example: Query accounts for a CSM
+const results = await quick.dw.querySync(`
+    SELECT account_name, gmv_usd, revenue_usd
+    FROM \`shopify-dw.sales.sales_accounts\`
+    WHERE merchant_success_manager LIKE '%Maya Marks%'
+`);
+```
+
+### Data Sources
+
+| Metric | BigQuery Table |
+|--------|----------------|
+| Account List | `shopify-dw.sales.sales_accounts` |
+| Shop Mapping | `shopify-dw.sales.sales_unified_entity_mapping` |
+| Revenue (Quarterly) | `shopify-dw.finance.shop_netsuite_account_daily_profit_summary` |
+| GMV | `shopify-dw.finance.gmv` |
+
+---
+
+## 🔐 Authentication
+
+The dashboard uses Google OAuth to access BigQuery:
+
+1. First visit prompts for BigQuery permission
+2. Your Shopify Google account grants access
+3. Queries run with your personal permissions
+4. No data is stored — everything is queried live
+
+---
+
+## 📊 Dashboard Features
+
+### Summary Metrics
+- **Total Accounts** — Number of accounts in your book
+- **2025 Total Revenue** — Sum of Q1-Q4 2025 revenue
+- **L12M GMV** — Last 12 months Gross Merchandise Volume
+- **Average Take Rate** — (L12M Revenue / L12M GMV) × 100
+
+### YoY Pacing
+- **Q1 2025 Revenue** — Baseline quarter
+- **Q1 2026 YTD** — Current quarter progress
+- **Pacing Rate** — How Q1 2026 is tracking vs Q1 2025
+
+### Account Details Table
+- Account name with Salesforce link
+- L12M GMV and Revenue
+- Take Rate
+- Quarterly revenue breakdown (Q1-Q4 2025, Q1 2026)
+- YoY comparison
+
+---
+
+## 🔄 Refreshing Data
+
+Since data is pulled live from BigQuery:
+- Click **⚡ Load Live Data** anytime to refresh
+- Data reflects latest available in the data warehouse
+- No caching — always up-to-date
 
 ---
 
@@ -17,91 +85,56 @@ A self-service dashboard for CSMs to track their book of business, quarterly rev
 ```
 IncentiveCompensationTool/
 ├── index.html              # Main dashboard (deployed to Quick)
-├── data/
-│   ├── maya-marks.json     # Example CSM data file
-│   └── [your-name].json    # Add your data here!
+├── data/                   # Legacy static data (optional)
 └── README.md
 ```
 
 ---
 
-## 📊 Adding Your Data
+## 🛠 Technical Details
 
-### Step 1: Generate Your Data
+### Quick.js APIs Used
 
-Open **Cursor** and run this prompt:
+```javascript
+// BigQuery data warehouse
+quick.dw.querySync(sql)
 
-```
-Generate my book of business JSON file for [Your Name] with:
-- All my accounts with Salesforce links
-- L12M GMV and Revenue
-- Take Rate (L12M Revenue / L12M GMV × 100)
-- Quarterly revenue for 2025 (Q1-Q4)
-- Q1 2026 YTD revenue
-- Format as JSON matching data/maya-marks.json schema
-```
+// Authentication
+quick.auth.requestScopes([...])
 
-### Step 2: Create Your Data File
-
-Save your JSON file as `data/[your-name].json`
-
-Example: `data/john-smith.json`
-
-### Step 3: Commit to This Repo
-
-```bash
-git add data/[your-name].json
-git commit -m "Add data for [Your Name]"
-git push
+// User identity
+quick.id.fullName
+quick.id.email
 ```
 
-### Step 4: Load Your Dashboard
+### Key Queries
 
-Go to the dashboard and enter your name - your data will load automatically!
-
----
-
-## 📋 Data Schema
-
-```json
-{
-  "csm_name": "Your Name",
-  "generated_at": "2026-01-15T20:30:00Z",
-  "totals": {
-    "account_count": 37,
-    "total_l12m_gmv": 3284567890,
-    "total_l12m_revenue": 45678901,
-    "total_2025_revenue": 42156789,
-    "avg_take_rate": 1.39
-  },
-  "q1_comparison": {
-    "q1_2025": 9876543,
-    "q1_2026_ytd": 2567890,
-    "pacing_rate": 26.0
-  },
-  "accounts": [
-    {
-      "name": "Account Name",
-      "sfdc_url": "https://shopify.lightning.force.com/...",
-      "l12m_gmv": 456789012,
-      "l12m_revenue": 6789012,
-      "take_rate": 1.49,
-      "q1_2025": 1567890,
-      "q2_2025": 1678901,
-      "q3_2025": 1789012,
-      "q4_2025": 1890123,
-      "q1_2026": 412345,
-      "country": "DE"
-    }
-  ]
-}
+**1. Get CSM's Accounts:**
+```sql
+SELECT account_id, name, account_url, country_code, shop_id
+FROM `shopify-dw.sales.sales_accounts` sa
+JOIN `shopify-dw.sales.sales_unified_entity_mapping` m
+  ON sa.account_id = m.salesforce_account_id
+WHERE LOWER(sa.merchant_success_manager) LIKE '%name%'
 ```
 
----
+**2. Get Quarterly Revenue:**
+```sql
+SELECT shop_id,
+  SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' 
+      THEN estimated_profit_usd ELSE 0 END) AS q1_2025
+FROM `shopify-dw.finance.shop_netsuite_account_daily_profit_summary`
+WHERE shop_id IN (...)
+GROUP BY shop_id
+```
 
-## 🔄 Keeping Data Fresh
-
-Run the Cursor prompt monthly (or whenever you need updated data) and push a new version of your JSON file.
+**3. Get GMV:**
+```sql
+SELECT shop_id, SUM(gmv_usd) AS l12m_gmv
+FROM `shopify-dw.finance.gmv`
+WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+GROUP BY shop_id
+```
 
 ---
 
@@ -110,4 +143,3 @@ Run the Cursor prompt monthly (or whenever you need updated data) and push a new
 **Maya Marks** - [@MareikeMarks](https://github.com/MareikeMarks)
 
 Questions? Slack: #csm-tools
-

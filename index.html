@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incentive Compensation Tool | Book of Business</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Quick.js for BigQuery access -->
+    <script src="/client/quick.js"></script>
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -1077,28 +1079,37 @@
     </header>
 
     <main class="container">
-        <!-- CSM Selector - Simple Name Input -->
+        <!-- CSM Selector - Live BigQuery Data -->
         <div class="csm-selector">
             <h2>👤 Load Your Book of Business</h2>
             
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Enter your name to load your incentive compensation data</p>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Enter your name to pull live data from BigQuery</p>
             
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center;">
+            <!-- Auth Status -->
+            <div id="auth-status" style="display: none; margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem;"></div>
+            
+            <!-- Name Input -->
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center; margin-bottom: 1rem;">
                 <input 
                     type="text" 
                     id="csm-name-input" 
                     placeholder="Enter your name (e.g., Maya Marks)"
-                    value="Maya Marks"
+                    value=""
                     style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; min-width: 280px;"
-                    onkeypress="if(event.key === 'Enter') loadCSMData()"
+                    onkeypress="if(event.key === 'Enter') loadLiveData()"
                 >
-                <button onclick="loadCSMData()" style="padding: 0.75rem 1.5rem; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">
-                    🚀 Load Data
+                <button id="load-btn" onclick="loadLiveData()" style="padding: 0.75rem 1.5rem; border-radius: 8px; background: linear-gradient(135deg, #00ff88, #00d4ff); color: #0a0a0f; border: none; cursor: pointer; font-weight: 600;">
+                    ⚡ Load Live Data
                 </button>
             </div>
             
+            <!-- Error Message -->
+            <div id="error-message" style="display: none; background: rgba(255, 71, 87, 0.1); border: 1px solid var(--accent-red); border-radius: 8px; padding: 1rem; margin-top: 1rem; max-width: 600px; text-align: left;">
+                <p style="color: var(--accent-red); margin: 0; font-size: 0.875rem;" id="error-text"></p>
+            </div>
+            
             <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem;">
-                📊 Data synced from GitHub • Last updated: Jan 15, 2026
+                ⚡ Live data from BigQuery • <span id="data-source-label">shopify-dw.finance + shopify-dw.sales</span>
             </p>
         </div>
 
@@ -1602,10 +1613,258 @@
     </footer>
 
     <script>
-        // GitHub data repository URL - CSMs can add their JSON files here
-        const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/MareikeMarks/IncentiveCompensationTool/main/data';
+        // === LIVE BIGQUERY DATA FUNCTIONS ===
+        
+        let hasAuth = false;
+        
+        // Initialize and check BigQuery auth on page load
+        async function initAuth() {
+            try {
+                const authResult = await quick.auth.requestScopes([
+                    "https://www.googleapis.com/auth/bigquery",
+                ]);
+                hasAuth = authResult.hasRequiredScopes;
+                
+                if (hasAuth) {
+                    showAuthStatus('✅ Connected to BigQuery', 'success');
+                    // Auto-populate name from user identity
+                    if (quick.id && quick.id.fullName) {
+                        document.getElementById('csm-name-input').value = quick.id.fullName;
+                    }
+                }
+            } catch (e) {
+                console.log('Auth check:', e);
+            }
+        }
+        
+        function showAuthStatus(message, type) {
+            const el = document.getElementById('auth-status');
+            el.style.display = 'block';
+            el.textContent = message;
+            el.style.background = type === 'success' ? 'rgba(0, 255, 136, 0.1)' : 'rgba(255, 71, 87, 0.1)';
+            el.style.border = type === 'success' ? '1px solid var(--accent-green)' : '1px solid var(--accent-red)';
+            el.style.color = type === 'success' ? 'var(--accent-green)' : 'var(--accent-red)';
+        }
+        
+        function showError(message) {
+            const el = document.getElementById('error-message');
+            const textEl = document.getElementById('error-text');
+            el.style.display = 'block';
+            textEl.textContent = message;
+        }
+        
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+        
+        // Main function to load live data from BigQuery
+        async function loadLiveData() {
+            const nameInput = document.getElementById('csm-name-input');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                showError('Please enter your name');
+                nameInput.focus();
+                return;
+            }
+            
+            hideError();
+            
+            // Request BigQuery auth if not already granted
+            if (!hasAuth) {
+                try {
+                    const authResult = await quick.auth.requestScopes([
+                        "https://www.googleapis.com/auth/bigquery",
+                    ]);
+                    if (!authResult.hasRequiredScopes) {
+                        showError('BigQuery access required. Please grant permission when prompted.');
+                        return;
+                    }
+                    hasAuth = true;
+                } catch (e) {
+                    showError('Failed to authenticate: ' + e.message);
+                    return;
+                }
+            }
+            
+            // Show loading state
+            document.getElementById('loading').classList.add('active');
+            const loadBtn = document.getElementById('load-btn');
+            loadBtn.textContent = '⏳ Loading...';
+            loadBtn.disabled = true;
+            
+            try {
+                // Query 1: Get accounts for this CSM from sales data
+                const accountsQuery = `
+                    SELECT DISTINCT
+                        sa.account_id,
+                        sa.name AS account_name,
+                        sa.account_url,
+                        sa.merchant_success_manager,
+                        sa.country_code,
+                        m.shop_id
+                    FROM \`shopify-dw.sales.sales_accounts\` sa
+                    LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
+                        ON sa.account_id = m.salesforce_account_id
+                    WHERE LOWER(sa.merchant_success_manager) LIKE '%${name.toLowerCase().split(' ').join('%')}%'
+                    AND m.shop_id IS NOT NULL
+                `;
+                
+                const accountsResult = await quick.dw.querySync(accountsQuery);
+                
+                if (!accountsResult.results || accountsResult.results.length === 0) {
+                    throw new Error(`No accounts found for "${name}". Make sure your name matches how it appears in Salesforce.`);
+                }
+                
+                const shopIds = accountsResult.results.map(r => r.shop_id).filter(Boolean);
+                const accountMap = {};
+                accountsResult.results.forEach(r => {
+                    if (!accountMap[r.account_id]) {
+                        accountMap[r.account_id] = {
+                            name: r.account_name,
+                            sfdc_url: r.account_url || `https://shopify.lightning.force.com/lightning/r/Account/${r.account_id}/view`,
+                            country: r.country_code || 'US',
+                            shop_ids: []
+                        };
+                    }
+                    if (r.shop_id) accountMap[r.account_id].shop_ids.push(r.shop_id);
+                });
+                
+                // Query 2: Get revenue data for these shops
+                const revenueQuery = `
+                    WITH shop_revenue AS (
+                        SELECT 
+                            shop_id,
+                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN estimated_profit_usd ELSE 0 END) AS l12m_revenue,
+                            SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2025,
+                            SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
+                            SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
+                            SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
+                            SUM(CASE WHEN date >= '2026-01-01' THEN estimated_profit_usd ELSE 0 END) AS q1_2026
+                        FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
+                        WHERE shop_id IN (${shopIds.join(',')})
+                        AND account_type = 'Income'
+                        AND date >= '2024-01-15'
+                        GROUP BY shop_id
+                    )
+                    SELECT * FROM shop_revenue
+                `;
+                
+                const revenueResult = await quick.dw.querySync(revenueQuery);
+                
+                // Query 3: Get GMV data
+                const gmvQuery = `
+                    SELECT 
+                        shop_id,
+                        SUM(gmv_usd) AS l12m_gmv
+                    FROM \`shopify-dw.finance.gmv\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+                    GROUP BY shop_id
+                `;
+                
+                const gmvResult = await quick.dw.querySync(gmvQuery);
+                
+                // Build revenue and GMV maps
+                const revenueMap = {};
+                (revenueResult.results || []).forEach(r => {
+                    revenueMap[r.shop_id] = r;
+                });
+                
+                const gmvMap = {};
+                (gmvResult.results || []).forEach(r => {
+                    gmvMap[r.shop_id] = r.l12m_gmv || 0;
+                });
+                
+                // Aggregate data by account
+                const accounts = [];
+                let totalGmv = 0, totalRevenue = 0, total2025 = 0, totalQ1_2025 = 0, totalQ1_2026 = 0;
+                
+                Object.entries(accountMap).forEach(([accountId, account]) => {
+                    let accGmv = 0, accRevenue = 0, accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0, accQ1_26 = 0;
+                    
+                    account.shop_ids.forEach(shopId => {
+                        accGmv += gmvMap[shopId] || 0;
+                        const rev = revenueMap[shopId];
+                        if (rev) {
+                            accRevenue += rev.l12m_revenue || 0;
+                            accQ1_25 += rev.q1_2025 || 0;
+                            accQ2_25 += rev.q2_2025 || 0;
+                            accQ3_25 += rev.q3_2025 || 0;
+                            accQ4_25 += rev.q4_2025 || 0;
+                            accQ1_26 += rev.q1_2026 || 0;
+                        }
+                    });
+                    
+                    const takeRate = accGmv > 0 ? (accRevenue / accGmv) * 100 : 0;
+                    const acc2025 = accQ1_25 + accQ2_25 + accQ3_25 + accQ4_25;
+                    
+                    accounts.push({
+                        name: account.name,
+                        sfdc_url: account.sfdc_url,
+                        l12m_gmv: accGmv,
+                        l12m_revenue: accRevenue,
+                        take_rate: takeRate,
+                        q1_2025: accQ1_25,
+                        q2_2025: accQ2_25,
+                        q3_2025: accQ3_25,
+                        q4_2025: accQ4_25,
+                        q1_2026: accQ1_26,
+                        country: account.country
+                    });
+                    
+                    totalGmv += accGmv;
+                    totalRevenue += accRevenue;
+                    total2025 += acc2025;
+                    totalQ1_2025 += accQ1_25;
+                    totalQ1_2026 += accQ1_26;
+                });
+                
+                // Sort accounts by L12M revenue
+                accounts.sort((a, b) => b.l12m_revenue - a.l12m_revenue);
+                
+                // Build final data object
+                const data = {
+                    csm_name: name,
+                    generated_at: new Date().toISOString(),
+                    data_source: 'live',
+                    totals: {
+                        account_count: accounts.length,
+                        total_l12m_gmv: totalGmv,
+                        total_l12m_revenue: totalRevenue,
+                        total_2025_revenue: total2025,
+                        avg_take_rate: totalGmv > 0 ? (totalRevenue / totalGmv) * 100 : 0
+                    },
+                    q1_comparison: {
+                        q1_2025: totalQ1_2025,
+                        q1_2026_ytd: totalQ1_2026,
+                        pacing_rate: totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025) * 100 : 0
+                    },
+                    accounts: accounts
+                };
+                
+                // Update dashboard
+                updateDashboardFromGitHub(data);
+                
+                // Show live data indicator
+                document.getElementById('current-csm-badge').style.display = 'flex';
+                document.getElementById('current-csm-name').innerHTML = `<span style="color: var(--accent-green);">⚡ LIVE</span> ${name}`;
+                showAuthStatus(`✅ Loaded ${accounts.length} accounts from BigQuery`, 'success');
+                
+            } catch (e) {
+                console.error('Query error:', e);
+                showError('Failed to load data: ' + e.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                loadBtn.textContent = '⚡ Load Live Data';
+                loadBtn.disabled = false;
+            }
+        }
+        
+        // Initialize auth on page load
+        document.addEventListener('DOMContentLoaded', initAuth);
 
-        // Load CSM data - tries GitHub first, falls back to pre-loaded data for Maya
+        // Legacy function for GitHub fallback (keeping for compatibility)
         async function loadCSMData() {
             const nameInput = document.getElementById('csm-name-input');
             const name = nameInput.value.trim();
