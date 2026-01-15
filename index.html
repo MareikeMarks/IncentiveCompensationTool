@@ -1602,33 +1602,7 @@
     </footer>
 
     <script>
-        // Google OAuth Configuration
-        const REVENUE_API_BASE = 'https://revenue-funnel.shopify.io';
-        const GOOGLE_CLIENT_ID = ''; // Will be set after OAuth redirect
-        
-        // Legacy function removed - using new Google OAuth flow
-        
-        function checkAuthStatus() {
-            // Legacy function - kept for compatibility
-            const token = localStorage.getItem('google_access_token');
-            const userInfo = localStorage.getItem('user_info');
-            
-            if (token && userInfo) {
-                const user = JSON.parse(userInfo);
-                showAuthenticatedState(user);
-            } else {
-                // Check if we just came back from OAuth redirect
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
-                if (accessToken) {
-                    localStorage.setItem('google_access_token', accessToken);
-                    fetchUserInfo(accessToken);
-                    window.location.hash = ''; // Clean URL
-                }
-            }
-        }
-        
-        // GitHub data repository URL
+        // GitHub data repository URL - CSMs can add their JSON files here
         const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/MareikeMarks/IncentiveCompensationTool/main/data';
 
         // Load CSM data - tries GitHub first, falls back to pre-loaded data for Maya
@@ -1888,97 +1862,6 @@ Return ONLY this JSON structure (no markdown, no explanation):
             if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
             if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
             return '$' + value.toFixed(0);
-        }
-        
-        function fetchUserInfo(token) {
-            fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            .then(response => response.json())
-            .then(user => {
-                localStorage.setItem('user_info', JSON.stringify(user));
-                showAuthenticatedState(user);
-            })
-            .catch(error => {
-                console.error('Error fetching user info:', error);
-                signOut();
-            });
-        }
-        
-        function showAuthenticatedState(user) {
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('user-section').classList.remove('hidden');
-            
-            document.getElementById('user-name').textContent = user.name || user.email;
-            document.getElementById('user-email').textContent = user.email;
-            
-            if (user.picture) {
-                const avatar = document.getElementById('user-avatar');
-                avatar.style.backgroundImage = `url(${user.picture})`;
-                avatar.style.backgroundSize = 'cover';
-                avatar.textContent = '';
-            }
-        }
-        
-        function signOut() {
-            localStorage.removeItem('google_access_token');
-            localStorage.removeItem('user_info');
-            document.getElementById('auth-section').classList.remove('hidden');
-            document.getElementById('user-section').classList.add('hidden');
-            document.getElementById('report-content').classList.remove('active');
-        }
-        
-        async function loadMyBookOfBusiness() {
-            const token = localStorage.getItem('google_access_token');
-            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
-            
-            if (!token) {
-                alert('Please sign in first');
-                return;
-            }
-            
-            const btn = document.getElementById('load-data-btn');
-            btn.textContent = '⏳ Loading...';
-            btn.disabled = true;
-            
-            try {
-                // Call Revenue Funnel API to get accounts for this user
-                const response = await fetch(`${REVENUE_API_BASE}/api/book-of-business`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (!data.accounts || data.accounts.length === 0) {
-                    throw new Error('No accounts found for your book of business');
-                }
-                
-                // Update dashboard with the data
-                updateDashboard(data);
-                
-                // Show report
-                document.getElementById('report-content').classList.add('active');
-                document.getElementById('current-csm-badge').style.display = 'flex';
-                document.getElementById('current-csm-name').textContent = userInfo.name || userInfo.email;
-                
-                // Scroll to report
-                document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
-                
-            } catch (error) {
-                console.error('Error loading book of business:', error);
-                alert(`Error loading data: ${error.message}\n\nThe API endpoint may not be available yet. Contact #help-revenue-funnel for support.`);
-            } finally {
-                btn.textContent = '🚀 Load My Book of Business';
-                btn.disabled = false;
-            }
         }
         
         function updateDashboard(data) {
