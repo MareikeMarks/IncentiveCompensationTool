@@ -1,0 +1,2285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incentive Compensation Tool | Book of Business</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --accent-green: #00ff88;
+            --accent-blue: #00d4ff;
+            --accent-purple: #a855f7;
+            --accent-red: #ff4757;
+            --accent-yellow: #ffd93d;
+            --accent-orange: #ff9f43;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --border: #2a2a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* CSM Selector */
+        .csm-selector {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .csm-selector h2 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        /* Step Container */
+        .step-container {
+            width: 100%;
+            max-width: 700px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .step-container.hidden {
+            display: none;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-badge {
+            width: 28px;
+            height: 28px;
+            background: var(--accent-purple);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .step-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.75rem;
+            text-align: center;
+        }
+
+        /* Prompt Box */
+        .prompt-box {
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .prompt-box pre {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.75rem;
+            color: #a8dadc;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-blue);
+            transform: scale(1.02);
+        }
+
+        .copy-btn.copied {
+            background: var(--accent-green);
+        }
+
+        /* JSON Textarea */
+        .json-textarea {
+            width: 100%;
+            min-height: 150px;
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+            margin-bottom: 1rem;
+        }
+
+        .json-textarea::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .json-textarea:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            border-color: var(--accent-purple);
+            color: var(--text-primary);
+        }
+
+        .reset-btn.hidden {
+            display: none;
+        }
+
+        /* Google Sign-in */
+        .google-signin-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: white;
+            color: #1f1f1f;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .google-signin-btn:hover {
+            background: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* User Info */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-email {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .signout-btn {
+            margin-top: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .signout-btn:hover {
+            color: var(--text-primary);
+        }
+
+        #user-section.hidden {
+            display: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .csm-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .csm-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .csm-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .load-btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            border: none;
+            border-radius: 12px;
+            color: var(--bg-primary);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .load-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Current CSM Badge */
+        .current-csm {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-green);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+        }
+
+        .current-csm-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .current-csm-name {
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-blue);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .metric-value.green { color: var(--accent-green); }
+        .metric-value.blue { color: var(--accent-blue); }
+        .metric-value.purple { color: var(--accent-purple); }
+        .metric-value.yellow { color: var(--accent-yellow); }
+        .metric-value.orange { color: var(--accent-orange); }
+
+        /* YoY Comparison Card */
+        .yoy-comparison-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 212, 255, 0.1) 100%);
+            border: 1px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .yoy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .yoy-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .yoy-note {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .yoy-metrics {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .yoy-metric {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .yoy-metric.pacing {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            flex: 1.5;
+        }
+
+        .yoy-metric-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .yoy-metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .yoy-metric-value.previous {
+            color: var(--text-secondary);
+        }
+
+        .yoy-metric-value.current {
+            color: var(--accent-purple);
+        }
+
+        .yoy-metric-value.pacing-value {
+            color: var(--accent-yellow);
+        }
+
+        .yoy-arrow {
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            flex-shrink: 0;
+        }
+
+        .yoy-projected {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .yoy-projected strong {
+            color: var(--accent-green);
+        }
+
+        /* Sections */
+        section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h2 .emoji {
+            font-size: 1.25rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th, td {
+            padding: 0.625rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .account-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .account-link:hover {
+            text-decoration: underline;
+        }
+
+        .pacing-high { color: var(--accent-green); font-weight: 600; }
+        .pacing-medium { color: var(--accent-yellow); font-weight: 600; }
+        .pacing-low { color: var(--accent-red); font-weight: 600; }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .number {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Quarterly Cards */
+        .quarterly-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .quarter-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .quarter-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .quarter-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .quarter-values {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .quarter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .year-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .quarter-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .yoy-badge {
+            font-size: 0.7rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .yoy-positive {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent-green);
+        }
+
+        .yoy-negative {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--accent-red);
+        }
+
+        .yoy-neutral {
+            background: rgba(160, 160, 176, 0.2);
+            color: var(--text-secondary);
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Report Content */
+        #report-content {
+            display: none;
+        }
+
+        #report-content.active {
+            display: block;
+        }
+
+        /* Take Rate Section */
+        .take-rate-section {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid var(--accent-purple);
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .take-rate-chart {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .chart-header span {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .legend-dot.low { background: var(--accent-red); }
+        .legend-dot.medium { background: var(--accent-yellow); }
+        .legend-dot.high { background: var(--accent-green); }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .bar-label {
+            width: 120px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: right;
+            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 24px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            min-width: 60px;
+            transition: width 0.5s ease;
+        }
+
+        .bar.low { background: linear-gradient(90deg, var(--accent-red), #ff6b7a); }
+        .bar.medium { background: linear-gradient(90deg, var(--accent-yellow), #ffe066); }
+        .bar.high { background: linear-gradient(90deg, var(--accent-green), #66ffaa); }
+
+        .bar-value {
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--bg-primary);
+        }
+
+        .opportunities-table h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .recommendation-note {
+            font-size: 0.75rem;
+            color: var(--accent-yellow);
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(255, 217, 61, 0.1);
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-yellow);
+        }
+
+        .product-tag {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin: 0.125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .product-tag.payments {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+        }
+
+        .product-tag.installments {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent-purple);
+            border: 1px solid var(--accent-purple);
+        }
+
+        .product-tag.capital {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        .product-tag.shipping {
+            background: rgba(255, 159, 67, 0.2);
+            color: var(--accent-orange);
+            border: 1px solid var(--accent-orange);
+        }
+
+        .product-tag.pos {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        .product-tag.b2b {
+            background: rgba(255, 217, 61, 0.2);
+            color: var(--accent-yellow);
+            border: 1px solid var(--accent-yellow);
+        }
+
+        .product-tag.markets {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid var(--text-secondary);
+        }
+
+        .take-rate-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .summary-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .summary-icon {
+            font-size: 2rem;
+        }
+
+        .summary-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-green);
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-input {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            min-width: 200px;
+            transition: border-color 0.2s;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .filter-select {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+
+        .clear-filters-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-family: 'Space Grotesk', sans-serif;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-filters-btn:hover {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .filter-count {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        tr.hidden {
+            display: none;
+        }
+
+        .sort-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .sortable:hover {
+            background: var(--bg-card);
+        }
+
+        .sort-icon {
+            opacity: 0.4;
+            font-size: 0.7rem;
+            margin-left: 0.25rem;
+        }
+
+        .sortable.asc .sort-icon,
+        .sortable.desc .sort-icon {
+            opacity: 1;
+            color: var(--accent-green);
+        }
+
+        .sortable.asc .sort-icon::after { content: '↑'; }
+        .sortable.desc .sort-icon::after { content: '↓'; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .quarterly-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            h1 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <span class="logo">💰</span>
+                    <div>
+                        <h1>Incentive Compensation Tool</h1>
+                        <p class="subtitle">Book of Business & Revenue Tracking</p>
+                    </div>
+                </div>
+                <div class="current-csm" id="current-csm-badge" style="display: none;">
+                    <span class="current-csm-label">Viewing:</span>
+                    <span class="current-csm-name" id="current-csm-name"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- CSM Selector - Simple Name Input -->
+        <div class="csm-selector">
+            <h2>👤 Load Your Book of Business</h2>
+            
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Enter your name to load your incentive compensation data</p>
+            
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center;">
+                <input 
+                    type="text" 
+                    id="csm-name-input" 
+                    placeholder="Enter your name (e.g., Maya Marks)"
+                    value="Maya Marks"
+                    style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; min-width: 280px;"
+                    onkeypress="if(event.key === 'Enter') loadCSMData()"
+                >
+                <button onclick="loadCSMData()" style="padding: 0.75rem 1.5rem; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">
+                    🚀 Load Data
+                </button>
+            </div>
+            
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem;">
+                📊 Data synced from GitHub • Last updated: Jan 15, 2026
+            </p>
+        </div>
+
+        <!-- Success Message (shown briefly after loading) -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing data...</p>
+        </div>
+
+        <!-- Report Content -->
+        <div id="report-content">
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Total Accounts</div>
+                    <div class="metric-value blue" id="metric-accounts">37</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">2025 Total Revenue</div>
+                    <div class="metric-value green" id="metric-2025-rev">$15.7M</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">L12M GMV</div>
+                    <div class="metric-value blue" id="metric-gmv">$1.38B</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Avg Take Rate</div>
+                    <div class="metric-value orange" id="metric-take-rate">4.49%</div>
+                </div>
+            </div>
+
+            <!-- Q1 YoY Comparison -->
+            <div class="yoy-comparison-card">
+                <div class="yoy-header">
+                    <span class="yoy-title">📊 Q1 Year-over-Year Comparison</span>
+                    <span class="yoy-note">Jan 1-15 data (~17% of quarter)</span>
+                </div>
+                <div class="yoy-metrics">
+                    <div class="yoy-metric">
+                        <div class="yoy-metric-label">Q1 2025 (Full Quarter)</div>
+                        <div class="yoy-metric-value previous">$2.55M</div>
+                    </div>
+                    <div class="yoy-arrow">→</div>
+                    <div class="yoy-metric">
+                        <div class="yoy-metric-label">Q1 2026 (YTD)</div>
+                        <div class="yoy-metric-value current">$930K</div>
+                    </div>
+                    <div class="yoy-metric pacing">
+                        <div class="yoy-metric-label">Current Pacing</div>
+                        <div class="yoy-metric-value pacing-value">36.5%</div>
+                        <div class="yoy-projected">Projected if pace holds: <strong>$5.58M</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quarterly Performance -->
+            <section>
+                <h2><span class="emoji">📈</span> Quarterly Performance</h2>
+                <div class="quarterly-grid">
+                    <div class="quarter-card">
+                        <div class="quarter-label">Q1</div>
+                        <div class="quarter-values">
+                            <div class="quarter-row">
+                                <span class="year-label">2025</span>
+                                <span class="quarter-value">$2.55M</span>
+                            </div>
+                            <div class="quarter-row">
+                                <span class="year-label">2026</span>
+                                <span class="quarter-value" style="color: var(--accent-green);">$930K</span>
+                            </div>
+                            <span class="yoy-badge yoy-positive">36.5% YoY</span>
+                        </div>
+                    </div>
+                    <div class="quarter-card">
+                        <div class="quarter-label">Q2</div>
+                        <div class="quarter-values">
+                            <div class="quarter-row">
+                                <span class="year-label">2025</span>
+                                <span class="quarter-value">$3.71M</span>
+                            </div>
+                            <div class="quarter-row">
+                                <span class="year-label">2026</span>
+                                <span class="quarter-value" style="color: var(--text-secondary);">-</span>
+                            </div>
+                            <span class="yoy-badge yoy-neutral">Not started</span>
+                        </div>
+                    </div>
+                    <div class="quarter-card">
+                        <div class="quarter-label">Q3</div>
+                        <div class="quarter-values">
+                            <div class="quarter-row">
+                                <span class="year-label">2025</span>
+                                <span class="quarter-value">$3.96M</span>
+                            </div>
+                            <div class="quarter-row">
+                                <span class="year-label">2026</span>
+                                <span class="quarter-value" style="color: var(--text-secondary);">-</span>
+                            </div>
+                            <span class="yoy-badge yoy-neutral">Not started</span>
+                        </div>
+                    </div>
+                    <div class="quarter-card">
+                        <div class="quarter-label">Q4</div>
+                        <div class="quarter-values">
+                            <div class="quarter-row">
+                                <span class="year-label">2025</span>
+                                <span class="quarter-value">$5.50M</span>
+                            </div>
+                            <div class="quarter-row">
+                                <span class="year-label">2026</span>
+                                <span class="quarter-value" style="color: var(--text-secondary);">-</span>
+                            </div>
+                            <span class="yoy-badge yoy-neutral">Not started</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- All Accounts Q1 Performance -->
+            <section>
+                <h2><span class="emoji">📊</span> All Accounts - Q1 Performance (Sorted by Q1 2026 Revenue)</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Q1 2025</th>
+                                <th>Q1 2026</th>
+                                <th>YoY Pacing</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-accounts-q1">
+                            <tr><td>prepmymeal.de</td><td class="number">$271,910</td><td class="number">$132,521</td><td class="pacing-high">48.7%</td></tr>
+                            <tr><td>wunschgutschein.com</td><td class="number">$184,207</td><td class="number">$75,711</td><td class="pacing-high">41.1%</td></tr>
+                            <tr><td>atletica.de</td><td class="number">$126,543</td><td class="number">$43,946</td><td class="pacing-medium">34.7%</td></tr>
+                            <tr><td>Nature Heart</td><td class="number">$222,335</td><td class="number">$39,787</td><td class="pacing-low">17.9%</td></tr>
+                            <tr><td>Vitafy GmbH</td><td class="number">$15,728</td><td class="number">$39,140</td><td class="pacing-high">248.9% 🔥</td></tr>
+                            <tr><td>PURELEI</td><td class="number">$93,047</td><td class="number">$38,877</td><td class="pacing-high">41.8%</td></tr>
+                            <tr><td>Vice Golf</td><td class="number">$200,715</td><td class="number">$37,822</td><td class="pacing-low">18.8%</td></tr>
+                            <tr><td>6PM</td><td class="number">$89,888</td><td class="number">$35,620</td><td class="pacing-medium">39.6%</td></tr>
+                            <tr><td>solago.de</td><td class="number">$150,818</td><td class="number">$34,846</td><td class="pacing-low">23.1%</td></tr>
+                            <tr><td>Rosental Organics</td><td class="number">$110,078</td><td class="number">$32,656</td><td class="pacing-medium">29.7%</td></tr>
+                            <tr><td>zenkoh.de</td><td class="number">$102,372</td><td class="number">$31,775</td><td class="pacing-medium">31.0%</td></tr>
+                            <tr><td>Estrid Studios AB</td><td class="number">$109,552</td><td class="number">$30,987</td><td class="pacing-medium">28.3%</td></tr>
+                            <tr><td>The Body Shop UK</td><td class="number">$81,400</td><td class="number">$30,342</td><td class="pacing-medium">37.3%</td></tr>
+                            <tr><td>formbench.com</td><td class="number">$144,044</td><td class="number">$29,472</td><td class="pacing-low">20.5%</td></tr>
+                            <tr><td>smartport GmbH</td><td class="number">$27,028</td><td class="number">$28,635</td><td class="pacing-high">105.9% 🔥</td></tr>
+                            <tr><td>Solakon GmbH</td><td class="number">$112,511</td><td class="number">$26,978</td><td class="pacing-low">24.0%</td></tr>
+                            <tr><td>oace.shop</td><td class="number">$98,931</td><td class="number">$24,671</td><td class="pacing-low">24.9%</td></tr>
+                            <tr><td>Dieseo GmbH - Pummys™</td><td class="number">$55,682</td><td class="number">$24,219</td><td class="pacing-high">43.5%</td></tr>
+                            <tr><td>ahead-nutrition.com</td><td class="number">$71,573</td><td class="number">$23,646</td><td class="pacing-medium">33.0%</td></tr>
+                            <tr><td>Karaca Deutschland GmbH</td><td class="number">$81,047</td><td class="number">$22,685</td><td class="pacing-medium">28.0%</td></tr>
+                            <tr><td>mymuesli AG</td><td class="number">-$5,305</td><td class="number">$21,448</td><td class="pacing-high">N/A</td></tr>
+                            <tr><td>Tennis Point GmbH</td><td class="number">$59,504</td><td class="number">$19,725</td><td class="pacing-medium">33.1%</td></tr>
+                            <tr><td>snuzone</td><td class="number">$59,169</td><td class="number">$19,854</td><td class="pacing-medium">33.6%</td></tr>
+                            <tr><td>Höfer AcquiCo GmbH</td><td class="number">$37,812</td><td class="number">$18,453</td><td class="pacing-high">48.8%</td></tr>
+                            <tr><td>Sneakersnstuff Ab</td><td class="number">-$12,809</td><td class="number">$17,325</td><td class="pacing-high">N/A</td></tr>
+                            <tr><td>GastroHero GmbH</td><td class="number">$12,792</td><td class="number">$10,848</td><td class="pacing-high">84.8%</td></tr>
+                            <tr><td>Blank's GmbH & Co. KG</td><td class="number">$905</td><td class="number">$9,856</td><td class="pacing-high">1089.2% 🔥</td></tr>
+                            <tr><td>Alfred Kärcher</td><td class="number">$14,349</td><td class="number">$8,235</td><td class="pacing-high">57.4%</td></tr>
+                            <tr><td>Rebellion</td><td class="number">$12,710</td><td class="number">$4,127</td><td class="pacing-medium">32.5%</td></tr>
+                            <tr><td>Sportspar GmbH</td><td class="number">$6,903</td><td class="number">$2,355</td><td class="pacing-medium">34.1%</td></tr>
+                            <tr><td>REBO Landmaschinen GmbH</td><td class="number">$6,843</td><td class="number">$2,342</td><td class="pacing-medium">34.2%</td></tr>
+                            <tr><td>Selsey</td><td class="number">$0</td><td class="number">$2,340</td><td class="pacing-high">N/A</td></tr>
+                            <tr><td>SCHIESSER GmbH</td><td class="number">$0</td><td class="number">$2,340</td><td class="pacing-high">N/A</td></tr>
+                            <tr><td>L. Stroetmann GmbH</td><td class="number">$6,809</td><td class="number">$2,338</td><td class="pacing-medium">34.3%</td></tr>
+                            <tr><td>Micasa (MGB Delica)</td><td class="number">$75</td><td class="number">$2,336</td><td class="pacing-high">3095.0% 🔥</td></tr>
+                            <tr><td>Rebike Mobility GmbH</td><td class="number">$0</td><td class="number">$2,264</td><td class="pacing-high">N/A</td></tr>
+                            <tr><td>BayWa AG</td><td class="number">$0</td><td class="number">$0</td><td>-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Needs Attention -->
+            <section>
+                <h2><span class="emoji">⚠️</span> Needs Attention (Q1 YoY < 25%)</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Q1 2025</th>
+                                <th>Q1 2026</th>
+                                <th>YoY Pacing</th>
+                            </tr>
+                        </thead>
+                        <tbody id="needs-attention">
+                            <tr><td>Nature Heart</td><td class="number">$222,335</td><td class="number">$39,787</td><td class="pacing-low">17.9%</td></tr>
+                            <tr><td>Vice Golf</td><td class="number">$200,715</td><td class="number">$37,822</td><td class="pacing-low">18.8%</td></tr>
+                            <tr><td>formbench.com</td><td class="number">$144,044</td><td class="number">$29,472</td><td class="pacing-low">20.5%</td></tr>
+                            <tr><td>solago.de</td><td class="number">$150,818</td><td class="number">$34,846</td><td class="pacing-low">23.1%</td></tr>
+                            <tr><td>Solakon GmbH</td><td class="number">$112,511</td><td class="number">$26,978</td><td class="pacing-low">24.0%</td></tr>
+                            <tr><td>oace.shop</td><td class="number">$98,931</td><td class="number">$24,671</td><td class="pacing-low">24.9%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Full Book of Business -->
+            <section>
+                <h2><span class="emoji">📋</span> Complete Book of Business</h2>
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label for="account-search">🔍 Search</label>
+                        <input type="text" id="account-search" class="filter-input" placeholder="Filter by account name..." onkeyup="filterTable()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="pacing-filter">📈 Q1 Pacing</label>
+                        <select id="pacing-filter" class="filter-select" onchange="filterTable()">
+                            <option value="all">All Accounts</option>
+                            <option value="high">High (> 40%)</option>
+                            <option value="medium">Medium (25-40%)</option>
+                            <option value="low">Needs Attention (< 25%)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="revenue-filter">💰 2025 Revenue</label>
+                        <select id="revenue-filter" class="filter-select" onchange="filterTable()">
+                            <option value="all">All</option>
+                            <option value="1m">$1M+</option>
+                            <option value="500k">$500K - $1M</option>
+                            <option value="100k">$100K - $500K</option>
+                            <option value="under100k">Under $100K</option>
+                        </select>
+                    </div>
+                    <button class="clear-filters-btn" onclick="clearFilters()">Clear Filters</button>
+                    <span class="filter-count" id="filter-count">Showing 37 accounts</span>
+                </div>
+                <p class="sort-hint">💡 Click any column header to sort</p>
+                <div class="table-container">
+                    <table id="book-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-col="0" onclick="sortTable(0, 'string')">Account <span class="sort-icon">⇅</span></th>
+                                <th>Salesforce</th>
+                                <th class="sortable" data-col="2" onclick="sortTable(2, 'currency')">L12M GMV (Rolling) <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="3" onclick="sortTable(3, 'currency')">L12M Rev <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="4" onclick="sortTable(4, 'percent')">Take Rate <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="5" onclick="sortTable(5, 'currency')">2025 Total <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="6" onclick="sortTable(6, 'currency')">Q1 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="7" onclick="sortTable(7, 'currency')">Q1 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="8" onclick="sortTable(8, 'percent')">Q1 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="9" onclick="sortTable(9, 'currency')">Q2 '25 <span class="sort-icon">⇅</span></th>
+                                <th>Q2 '26</th>
+                                <th>Q2 YoY</th>
+                                <th class="sortable" data-col="12" onclick="sortTable(12, 'currency')">Q3 '25 <span class="sort-icon">⇅</span></th>
+                                <th>Q3 '26</th>
+                                <th>Q3 YoY</th>
+                                <th class="sortable" data-col="15" onclick="sortTable(15, 'currency')">Q4 '25 <span class="sort-icon">⇅</span></th>
+                                <th>Q4 '26</th>
+                                <th>Q4 YoY</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-book">
+                            <tr><td>prepmymeal.de</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czZeMQAU/view" target="_blank">🔗</a></td><td class="number">$101.5M</td><td class="number">$3.17M</td><td class="number">6.71%</td><td class="number">$1,519,010</td><td class="number">$271,910</td><td class="number">$132,521</td><td class="pacing-high">48.7%</td><td class="number">$331,451</td><td class="number">$0</td><td>-</td><td class="number">$434,642</td><td class="number">$0</td><td>-</td><td class="number">$481,007</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Vice Golf</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czJVXQA2/view" target="_blank">🔗</a></td><td class="number">$54.2M</td><td class="number">$2.46M</td><td class="number">10.69%</td><td class="number">$1,319,933</td><td class="number">$200,715</td><td class="number">$37,822</td><td class="pacing-low">18.8%</td><td class="number">$436,575</td><td class="number">$0</td><td>-</td><td class="number">$365,802</td><td class="number">$0</td><td>-</td><td class="number">$316,841</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>wunschgutschein.com</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czjnKQAQ/view" target="_blank">🔗</a></td><td class="number">$130.2M</td><td class="number">$2.05M</td><td class="number">2.89%</td><td class="number">$1,062,826</td><td class="number">$184,207</td><td class="number">$75,711</td><td class="pacing-high">41.1%</td><td class="number">$213,058</td><td class="number">$0</td><td>-</td><td class="number">$219,836</td><td class="number">$0</td><td>-</td><td class="number">$445,724</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Nature Heart</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002sPS9yQAG/view" target="_blank">🔗</a></td><td class="number">$68.8M</td><td class="number">$2.18M</td><td class="number">6.89%</td><td class="number">$1,057,057</td><td class="number">$222,335</td><td class="number">$39,787</td><td class="pacing-low">17.9%</td><td class="number">$282,350</td><td class="number">$0</td><td>-</td><td class="number">$258,052</td><td class="number">$0</td><td>-</td><td class="number">$294,320</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>smartport GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/001OG00000tx5K9YAI/view" target="_blank">🔗</a></td><td class="number">$73.2M</td><td class="number">$1.31M</td><td class="number">4.00%</td><td class="number">$832,706</td><td class="number">$27,028</td><td class="number">$28,635</td><td class="pacing-high">105.9%</td><td class="number">$167,585</td><td class="number">$0</td><td>-</td><td class="number">$199,637</td><td class="number">$0</td><td>-</td><td class="number">$438,457</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>atletica.de</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czoK0QAI/view" target="_blank">🔗</a></td><td class="number">$48.5M</td><td class="number">$1.43M</td><td class="number">6.39%</td><td class="number">$740,618</td><td class="number">$126,543</td><td class="number">$43,946</td><td class="pacing-medium">34.7%</td><td class="number">$170,765</td><td class="number">$0</td><td>-</td><td class="number">$177,827</td><td class="number">$0</td><td>-</td><td class="number">$265,484</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>PURELEI</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czm93QAA/view" target="_blank">🔗</a></td><td class="number">$67.1M</td><td class="number">$1.40M</td><td class="number">7.37%</td><td class="number">$702,871</td><td class="number">$93,047</td><td class="number">$38,877</td><td class="pacing-high">41.8%</td><td class="number">$154,098</td><td class="number">$0</td><td>-</td><td class="number">$192,067</td><td class="number">$0</td><td>-</td><td class="number">$263,660</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>solago.de</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czd5BQAQ/view" target="_blank">🔗</a></td><td class="number">$92.0M</td><td class="number">$1.28M</td><td class="number">7.14%</td><td class="number">$656,571</td><td class="number">$150,818</td><td class="number">$34,846</td><td class="pacing-low">23.1%</td><td class="number">$190,775</td><td class="number">$0</td><td>-</td><td class="number">$144,123</td><td class="number">$0</td><td>-</td><td class="number">$170,856</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>6PM</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czmtdQAA/view" target="_blank">🔗</a></td><td class="number">$67.6M</td><td class="number">$1.25M</td><td class="number">2.88%</td><td class="number">$650,461</td><td class="number">$89,888</td><td class="number">$35,620</td><td class="pacing-medium">39.6%</td><td class="number">$117,297</td><td class="number">$0</td><td>-</td><td class="number">$110,216</td><td class="number">$0</td><td>-</td><td class="number">$333,061</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Estrid Studios AB</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002cz9zAQAQ/view" target="_blank">🔗</a></td><td class="number">$43.4M</td><td class="number">$1.13M</td><td class="number">5.93%</td><td class="number">$645,940</td><td class="number">$109,552</td><td class="number">$30,987</td><td class="pacing-medium">28.3%</td><td class="number">$165,873</td><td class="number">$0</td><td>-</td><td class="number">$195,014</td><td class="number">$0</td><td>-</td><td class="number">$175,502</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>The Body Shop UK</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002cznvgQAA/view" target="_blank">🔗</a></td><td class="number">$38.6M</td><td class="number">$1.13M</td><td class="number">8.99%</td><td class="number">$624,184</td><td class="number">$81,400</td><td class="number">$30,342</td><td class="pacing-medium">37.3%</td><td class="number">$134,802</td><td class="number">$0</td><td>-</td><td class="number">$148,037</td><td class="number">$0</td><td>-</td><td class="number">$259,945</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Solakon GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002eqkZ3QAI/view" target="_blank">🔗</a></td><td class="number">$75.9M</td><td class="number">$1.12M</td><td class="number">5.85%</td><td class="number">$600,354</td><td class="number">$112,511</td><td class="number">$26,978</td><td class="pacing-low">24.0%</td><td class="number">$169,351</td><td class="number">$0</td><td>-</td><td class="number">$170,010</td><td class="number">$0</td><td>-</td><td class="number">$148,482</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>formbench.com</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czcZiQAI/view" target="_blank">🔗</a></td><td class="number">$48.4M</td><td class="number">$1.04M</td><td class="number">6.04%</td><td class="number">$534,005</td><td class="number">$144,044</td><td class="number">$29,472</td><td class="pacing-low">20.5%</td><td class="number">$144,211</td><td class="number">$0</td><td>-</td><td class="number">$117,759</td><td class="number">$0</td><td>-</td><td class="number">$127,991</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>zenkoh.de</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czh5jQAA/view" target="_blank">🔗</a></td><td class="number">$65.4M</td><td class="number">$1.00M</td><td class="number">6.61%</td><td class="number">$526,347</td><td class="number">$102,372</td><td class="number">$31,775</td><td class="pacing-medium">31.0%</td><td class="number">$133,020</td><td class="number">$0</td><td>-</td><td class="number">$147,078</td><td class="number">$0</td><td>-</td><td class="number">$143,877</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Rosental Organics</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czgt7QAA/view" target="_blank">🔗</a></td><td class="number">$51.1M</td><td class="number">$963K</td><td class="number">7.03%</td><td class="number">$499,335</td><td class="number">$110,078</td><td class="number">$32,656</td><td class="pacing-medium">29.7%</td><td class="number">$91,696</td><td class="number">$0</td><td>-</td><td class="number">$121,396</td><td class="number">$0</td><td>-</td><td class="number">$176,165</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Dieseo GmbH - Pummys™</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czAH5QAM/view" target="_blank">🔗</a></td><td class="number">$57.7M</td><td class="number">$868K</td><td class="number">5.75%</td><td class="number">$457,677</td><td class="number">$55,682</td><td class="number">$24,219</td><td class="pacing-high">43.5%</td><td class="number">$100,372</td><td class="number">$0</td><td>-</td><td class="number">$115,882</td><td class="number">$0</td><td>-</td><td class="number">$185,741</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>oace.shop</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czhAxQAI/view" target="_blank">🔗</a></td><td class="number">$54.4M</td><td class="number">$783K</td><td class="number">7.93%</td><td class="number">$415,593</td><td class="number">$98,931</td><td class="number">$24,671</td><td class="pacing-low">24.9%</td><td class="number">$118,304</td><td class="number">$0</td><td>-</td><td class="number">$86,984</td><td class="number">$0</td><td>-</td><td class="number">$111,375</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>ahead-nutrition.com</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002cz4wLQAQ/view" target="_blank">🔗</a></td><td class="number">$48.7M</td><td class="number">$761K</td><td class="number">6.30%</td><td class="number">$401,695</td><td class="number">$71,573</td><td class="number">$23,646</td><td class="pacing-medium">33.0%</td><td class="number">$94,679</td><td class="number">$0</td><td>-</td><td class="number">$96,333</td><td class="number">$0</td><td>-</td><td class="number">$139,109</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Karaca Deutschland GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002d0GBkQAM/view" target="_blank">🔗</a></td><td class="number">$43.5M</td><td class="number">$766K</td><td class="number">6.99%</td><td class="number">$392,838</td><td class="number">$81,047</td><td class="number">$22,685</td><td class="pacing-medium">28.0%</td><td class="number">$97,802</td><td class="number">$0</td><td>-</td><td class="number">$87,662</td><td class="number">$0</td><td>-</td><td class="number">$126,327</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Vitafy GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002a7BcxQAE/view" target="_blank">🔗</a></td><td class="number">$30.6M</td><td class="number">$391K</td><td class="number">3.03%</td><td class="number">$392,508</td><td class="number">$15,728</td><td class="number">$39,140</td><td class="pacing-high">248.9% 🔥</td><td class="number">$36,106</td><td class="number">$0</td><td>-</td><td class="number">$126,418</td><td class="number">$0</td><td>-</td><td class="number">$214,257</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Höfer AcquiCo GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002qvIn8QAE/view" target="_blank">🔗</a></td><td class="number">$34.5M</td><td class="number">$379K</td><td class="number">4.13%</td><td class="number">$291,189</td><td class="number">$37,812</td><td class="number">$18,453</td><td class="pacing-high">48.8%</td><td class="number">$121,904</td><td class="number">$0</td><td>-</td><td class="number">$86,398</td><td class="number">$0</td><td>-</td><td class="number">$45,075</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>mymuesli AG</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/001OG00000jN4oHYAS/view" target="_blank">🔗</a></td><td class="number">$17.1M</td><td class="number">$345K</td><td class="number">5.33%</td><td class="number">$287,185</td><td class="number">-$5,305</td><td class="number">$21,448</td><td class="pacing-high">N/A</td><td class="number">$7,011</td><td class="number">$0</td><td>-</td><td class="number">$57,768</td><td class="number">$0</td><td>-</td><td class="number">$227,711</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Tennis Point GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002d0FStQAM/view" target="_blank">🔗</a></td><td class="number">$454</td><td class="number">$241K</td><td class="number">1.35%</td><td class="number">$240,957</td><td class="number">$59,504</td><td class="number">$19,725</td><td class="pacing-medium">33.1%</td><td class="number">$60,506</td><td class="number">$0</td><td>-</td><td class="number">$60,442</td><td class="number">$0</td><td>-</td><td class="number">$60,505</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>snuzone</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czMMfQAM/view" target="_blank">🔗</a></td><td class="number">$42.9M</td><td class="number">$241K</td><td class="number">3.69%</td><td class="number">$231,362</td><td class="number">$59,169</td><td class="number">$19,854</td><td class="pacing-medium">33.6%</td><td class="number">$62,134</td><td class="number">$0</td><td>-</td><td class="number">$50,276</td><td class="number">$0</td><td>-</td><td class="number">$59,783</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Sneakersnstuff Ab</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002a7BOXQA2/view" target="_blank">🔗</a></td><td class="number">$8.1M</td><td class="number">$179K</td><td class="number">2.86%</td><td class="number">$179,196</td><td class="number">-$12,809</td><td class="number">$17,325</td><td class="pacing-high">N/A</td><td class="number">$36,834</td><td class="number">$0</td><td>-</td><td class="number">$49,228</td><td class="number">$0</td><td>-</td><td class="number">$105,942</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Blank's GmbH & Co. KG</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/001OG00000wWBdFYAW/view" target="_blank">🔗</a></td><td class="number">$10.0M</td><td class="number">$109K</td><td class="number">4.02%</td><td class="number">$108,821</td><td class="number">$905</td><td class="number">$9,856</td><td class="pacing-high">1089.2% 🔥</td><td class="number">$11,414</td><td class="number">$0</td><td>-</td><td class="number">$38,405</td><td class="number">$0</td><td>-</td><td class="number">$58,097</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>GastroHero GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002cz2QWQAY/view" target="_blank">🔗</a></td><td class="number">$7.9M</td><td class="number">$107K</td><td class="number">3.27%</td><td class="number">$106,854</td><td class="number">$12,792</td><td class="number">$10,848</td><td class="pacing-high">84.8%</td><td class="number">$24,718</td><td class="number">$0</td><td>-</td><td class="number">$37,542</td><td class="number">$0</td><td>-</td><td class="number">$31,803</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Alfred Kärcher</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002a7A0CQAU/view" target="_blank">🔗</a></td><td class="number">$11.5M</td><td class="number">$59K</td><td class="number">2.82%</td><td class="number">$58,608</td><td class="number">$14,349</td><td class="number">$8,235</td><td class="pacing-high">57.4%</td><td class="number">$12,079</td><td class="number">$0</td><td>-</td><td class="number">$7,978</td><td class="number">$0</td><td>-</td><td class="number">$24,202</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Rebellion</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002lo8DLQAY/view" target="_blank">🔗</a></td><td class="number">$448K</td><td class="number">$42K</td><td class="number">3.38%</td><td class="number">$41,450</td><td class="number">$12,710</td><td class="number">$4,127</td><td class="pacing-medium">32.5%</td><td class="number">$10,009</td><td class="number">$0</td><td>-</td><td class="number">$9,054</td><td class="number">$0</td><td>-</td><td class="number">$9,677</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Sportspar GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czW9WQAU/view" target="_blank">🔗</a></td><td class="number">$23</td><td class="number">$28K</td><td class="number">1.36%</td><td class="number">$27,820</td><td class="number">$6,903</td><td class="number">$2,355</td><td class="pacing-medium">34.1%</td><td class="number">$6,956</td><td class="number">$0</td><td>-</td><td class="number">$6,968</td><td class="number">$0</td><td>-</td><td class="number">$6,993</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>REBO Landmaschinen GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002lHKFAQA4/view" target="_blank">🔗</a></td><td class="number">-</td><td class="number">$28K</td><td class="number">2.35%</td><td class="number">$27,681</td><td class="number">$6,843</td><td class="number">$2,342</td><td class="pacing-medium">34.2%</td><td class="number">$6,961</td><td class="number">$0</td><td>-</td><td class="number">$6,945</td><td class="number">$0</td><td>-</td><td class="number">$6,932</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>L. Stroetmann GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002nkJgpQAE/view" target="_blank">🔗</a></td><td class="number">-</td><td class="number">$28K</td><td class="number">2.33%</td><td class="number">$27,529</td><td class="number">$6,809</td><td class="number">$2,338</td><td class="pacing-medium">34.3%</td><td class="number">$6,852</td><td class="number">$0</td><td>-</td><td class="number">$6,935</td><td class="number">$0</td><td>-</td><td class="number">$6,933</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Micasa (MGB Delica)</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002miXRHQA2/view" target="_blank">🔗</a></td><td class="number">$7.4M</td><td class="number">$22K</td><td class="number">1.98%</td><td class="number">$21,716</td><td class="number">$75</td><td class="number">$2,336</td><td class="pacing-high">3095.0% 🔥</td><td class="number">$6,940</td><td class="number">$0</td><td>-</td><td class="number">$7,995</td><td class="number">$0</td><td>-</td><td class="number">$6,705</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>SCHIESSER GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002d0GK9QAM/view" target="_blank">🔗</a></td><td class="number">-</td><td class="number">$15K</td><td class="number">0.27%</td><td class="number">$14,718</td><td class="number">$0</td><td class="number">$2,340</td><td class="pacing-high">N/A</td><td class="number">$755</td><td class="number">$0</td><td>-</td><td class="number">$6,944</td><td class="number">$0</td><td>-</td><td class="number">$7,019</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Rebike Mobility GmbH</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002nDcMsQAK/view" target="_blank">🔗</a></td><td class="number">$107K</td><td class="number">$13K</td><td class="number">0.19%</td><td class="number">$13,257</td><td class="number">$0</td><td class="number">$2,264</td><td class="pacing-high">N/A</td><td class="number">$0</td><td class="number">$0</td><td>-</td><td class="number">$5,435</td><td class="number">$0</td><td>-</td><td class="number">$7,822</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>BayWa AG</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002a7A0EQAU/view" target="_blank">🔗</a></td><td class="number">$203</td><td class="number">$3K</td><td class="number">0.18%</td><td class="number">$2,835</td><td class="number">$0</td><td class="number">$0</td><td>-</td><td class="number">$0</td><td class="number">$0</td><td>-</td><td class="number">-$4,109</td><td class="number">$0</td><td>-</td><td class="number">$6,944</td><td class="number">$0</td><td>-</td></tr>
+                            <tr><td>Selsey</td><td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/001OG00000y990PYAQ/view" target="_blank">🔗</a></td><td class="number">$6.2K</td><td class="number">$371</td><td class="number">0.02%</td><td class="number">$371</td><td class="number">$0</td><td class="number">$2,340</td><td class="pacing-high">N/A</td><td class="number">-$13,652</td><td class="number">$0</td><td>-</td><td class="number">$6,956</td><td class="number">$0</td><td>-</td><td class="number">$7,068</td><td class="number">$0</td><td>-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Take Rate Opportunities -->
+            <section class="take-rate-section">
+                <h2><span class="emoji">📉</span> Take Rate Optimization Opportunities</h2>
+                <p class="section-description">Accounts with take rates below 4% have significant revenue growth potential through product enablement.</p>
+                
+                <div class="take-rate-chart">
+                    <div class="chart-header">
+                        <span>Take Rate Distribution</span>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-dot low"></span> < 3% (High Opportunity)</span>
+                            <span class="legend-item"><span class="legend-dot medium"></span> 3-5%</span>
+                            <span class="legend-item"><span class="legend-dot high"></span> > 5%</span>
+                        </div>
+                    </div>
+                    <div class="bar-chart" id="take-rate-bars">
+                        <div class="bar-row">
+                            <span class="bar-label">Selsey</span>
+                            <div class="bar-container"><div class="bar low" style="width: 0.4%"><span class="bar-value">0.02%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">BayWa AG</span>
+                            <div class="bar-container"><div class="bar low" style="width: 1.8%"><span class="bar-value">0.18%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Rebike Mobility</span>
+                            <div class="bar-container"><div class="bar low" style="width: 1.9%"><span class="bar-value">0.19%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">SCHIESSER GmbH</span>
+                            <div class="bar-container"><div class="bar low" style="width: 2.7%"><span class="bar-value">0.27%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Tennis Point</span>
+                            <div class="bar-container"><div class="bar low" style="width: 13.5%"><span class="bar-value">1.35%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Sportspar GmbH</span>
+                            <div class="bar-container"><div class="bar low" style="width: 13.6%"><span class="bar-value">1.36%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Micasa</span>
+                            <div class="bar-container"><div class="bar low" style="width: 19.8%"><span class="bar-value">1.98%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">L. Stroetmann</span>
+                            <div class="bar-container"><div class="bar low" style="width: 23.3%"><span class="bar-value">2.33%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">REBO Landmasch.</span>
+                            <div class="bar-container"><div class="bar low" style="width: 23.5%"><span class="bar-value">2.35%</span></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-label">Sneakersnstuff</span>
+                            <div class="bar-container"><div class="bar low" style="width: 28.6%"><span class="bar-value">2.86%</span></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="opportunities-table">
+                    <h3>🎯 Product Enablement Recommendations</h3>
+                    <p class="recommendation-note">💡 Installments: UK/US only | Capital: Germany only</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Country</th>
+                                    <th>Current Take Rate</th>
+                                    <th>L12M GMV</th>
+                                    <th>Potential Products</th>
+                                    <th>Est. Revenue Uplift</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/001OG00000y990PYAQ/view" target="_blank">Selsey</a></td>
+                                    <td>🇵🇱 Poland</td>
+                                    <td class="number pacing-low">0.02%</td>
+                                    <td class="number">$6.2K</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag shipping">Shipping Labels</span>
+                                    </td>
+                                    <td class="number pacing-high">+$63K/yr</td>
+                                </tr>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002a7A0EQAU/view" target="_blank">BayWa AG</a></td>
+                                    <td>🇩🇪 Germany</td>
+                                    <td class="number pacing-low">0.18%</td>
+                                    <td class="number">$203</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag b2b">B2B</span>
+                                        <span class="product-tag capital">Capital</span>
+                                    </td>
+                                    <td class="number pacing-high">+$61K/yr</td>
+                                </tr>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002nDcMsQAK/view" target="_blank">Rebike Mobility GmbH</a></td>
+                                    <td>🇩🇪 Germany</td>
+                                    <td class="number pacing-low">0.19%</td>
+                                    <td class="number">$107K</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag capital">Capital</span>
+                                        <span class="product-tag pos">POS Pro</span>
+                                    </td>
+                                    <td class="number pacing-high">+$270K/yr</td>
+                                </tr>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002d0GK9QAM/view" target="_blank">SCHIESSER GmbH</a></td>
+                                    <td>🇩🇪 Germany</td>
+                                    <td class="number pacing-low">0.27%</td>
+                                    <td class="number">-</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag capital">Capital</span>
+                                        <span class="product-tag pos">POS Pro</span>
+                                    </td>
+                                    <td class="number pacing-high">+$200K/yr</td>
+                                </tr>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002d0FStQAM/view" target="_blank">Tennis Point GmbH</a></td>
+                                    <td>🇩🇪 Germany</td>
+                                    <td class="number pacing-low">1.35%</td>
+                                    <td class="number">$454</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag capital">Capital</span>
+                                        <span class="product-tag shipping">Shipping Labels</span>
+                                    </td>
+                                    <td class="number pacing-high">+$445K/yr</td>
+                                </tr>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002czW9WQAU/view" target="_blank">Sportspar GmbH</a></td>
+                                    <td>🇩🇪 Germany</td>
+                                    <td class="number pacing-low">1.36%</td>
+                                    <td class="number">$23</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag capital">Capital</span>
+                                        <span class="product-tag shipping">Shipping Labels</span>
+                                    </td>
+                                    <td class="number pacing-high">+$53K/yr</td>
+                                </tr>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002miXRHQA2/view" target="_blank">Micasa (MGB Delica)</a></td>
+                                    <td>🇨🇭 Switzerland</td>
+                                    <td class="number pacing-low">1.98%</td>
+                                    <td class="number">$1.1M</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag b2b">B2B</span>
+                                    </td>
+                                    <td class="number pacing-high">+$22K/yr</td>
+                                </tr>
+                                <tr>
+                                    <td><a class="account-link" href="https://banff.lightning.force.com/lightning/r/Account/0018V00002nkJgpQAE/view" target="_blank">L. Stroetmann GmbH</a></td>
+                                    <td>🇩🇪 Germany</td>
+                                    <td class="number pacing-low">2.33%</td>
+                                    <td class="number">$1.2M</td>
+                                    <td>
+                                        <span class="product-tag payments">Shopify Payments</span>
+                                        <span class="product-tag b2b">B2B</span>
+                                        <span class="product-tag capital">Capital</span>
+                                    </td>
+                                    <td class="number pacing-high">+$20K/yr</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="take-rate-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon">💰</div>
+                        <div class="summary-content">
+                            <div class="summary-value">$1.13M</div>
+                            <div class="summary-label">Total Potential Revenue Uplift</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">📊</div>
+                        <div class="summary-content">
+                            <div class="summary-value">8</div>
+                            <div class="summary-label">Accounts Below 3% Take Rate</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🎯</div>
+                        <div class="summary-content">
+                            <div class="summary-value">4.49%</div>
+                            <div class="summary-label">Portfolio Avg Take Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>💰 Incentive Compensation Tool | Data from Revenue MCP & BigQuery</p>
+        <p style="margin-top: 0.5rem;">Q1 2026 data is Jan 1-15 only (~17% of quarter elapsed)</p>
+    </footer>
+
+    <script>
+        // Google OAuth Configuration
+        const REVENUE_API_BASE = 'https://revenue-funnel.shopify.io';
+        const GOOGLE_CLIENT_ID = ''; // Will be set after OAuth redirect
+        
+        // Legacy function removed - using new Google OAuth flow
+        
+        function checkAuthStatus() {
+            // Legacy function - kept for compatibility
+            const token = localStorage.getItem('google_access_token');
+            const userInfo = localStorage.getItem('user_info');
+            
+            if (token && userInfo) {
+                const user = JSON.parse(userInfo);
+                showAuthenticatedState(user);
+            } else {
+                // Check if we just came back from OAuth redirect
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                if (accessToken) {
+                    localStorage.setItem('google_access_token', accessToken);
+                    fetchUserInfo(accessToken);
+                    window.location.hash = ''; // Clean URL
+                }
+            }
+        }
+        
+        // GitHub data repository URL
+        const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/MareikeMarks/IncentiveCompensationTool/main/data';
+
+        // Load CSM data - tries GitHub first, falls back to pre-loaded data for Maya
+        async function loadCSMData() {
+            const nameInput = document.getElementById('csm-name-input');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+
+            document.getElementById('loading').classList.add('active');
+
+            // Convert name to filename format (e.g., "Maya Marks" -> "maya-marks")
+            const fileName = name.toLowerCase().replace(/\s+/g, '-');
+
+            // Check if it's Maya (pre-loaded data)
+            if (name.toLowerCase().includes('maya') && name.toLowerCase().includes('marks')) {
+                setTimeout(() => {
+                    document.getElementById('loading').classList.remove('active');
+                    document.getElementById('current-csm-badge').style.display = 'flex';
+                    document.getElementById('current-csm-name').textContent = 'Maya Marks';
+                    document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+                return;
+            }
+
+            // Try to fetch from GitHub for other CSMs
+            try {
+                const response = await fetch(`${GITHUB_DATA_URL}/${fileName}.json`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboardFromGitHub(data);
+                } else {
+                    // Data not found - show instructions
+                    document.getElementById('loading').classList.remove('active');
+                    alert(`Data for "${name}" not found.\n\nTo add your data:\n1. Run this in Cursor: "Generate my book of business JSON for ${name}"\n2. Save the JSON file to the GitHub repo\n3. Reload this page`);
+                }
+            } catch (error) {
+                document.getElementById('loading').classList.remove('active');
+                alert(`Could not load data: ${error.message}\n\nMake sure the GitHub repo is set up correctly.`);
+            }
+        }
+
+        function updateDashboardFromGitHub(data) {
+            document.getElementById('loading').classList.remove('active');
+            
+            // Update header
+            document.getElementById('current-csm-badge').style.display = 'flex';
+            document.getElementById('current-csm-name').textContent = data.csm_name;
+            
+            // Update metrics
+            if (data.totals) {
+                document.getElementById('metric-accounts').textContent = data.totals.account_count || data.accounts.length;
+                document.getElementById('metric-gmv').textContent = formatCurrency(data.totals.total_l12m_gmv);
+                document.getElementById('metric-2025-rev').textContent = formatCurrency(data.totals.total_2025_revenue);
+                document.getElementById('metric-take-rate').textContent = (data.totals.avg_take_rate || 0).toFixed(2) + '%';
+            }
+            
+            // Update table
+            const tbody = document.getElementById('full-book');
+            tbody.innerHTML = '';
+            
+            data.accounts.forEach(account => {
+                const q1Yoy = account.q1_2025 > 0 ? ((account.q1_2026 / account.q1_2025) * 100).toFixed(1) : 'N/A';
+                const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${account.name}</td>
+                    <td><a class="account-link" href="${account.sfdc_url}" target="_blank">🔗</a></td>
+                    <td class="number">${formatCurrency(account.l12m_gmv)}</td>
+                    <td class="number">${formatCurrency(account.l12m_revenue)}</td>
+                    <td class="number">${(account.take_rate || 0).toFixed(2)}%</td>
+                    <td class="number">${formatCurrency((account.q1_2025 || 0) + (account.q2_2025 || 0) + (account.q3_2025 || 0) + (account.q4_2025 || 0))}</td>
+                    <td class="number">${formatCurrency(account.q1_2025)}</td>
+                    <td class="number">${formatCurrency(account.q1_2026)}</td>
+                    <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
+                    <td class="number">${formatCurrency(account.q2_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                    <td class="number">${formatCurrency(account.q3_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                    <td class="number">${formatCurrency(account.q4_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize on page load - show Maya's data by default
+        window.onload = function() {
+            document.getElementById('current-csm-badge').style.display = 'flex';
+            document.getElementById('current-csm-name').textContent = 'Maya Marks';
+        };
+
+        let currentCSMName = 'Maya Marks';
+
+        function loadBookOfBusiness() {
+            const nameInput = document.getElementById('csm-name-input');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            currentCSMName = name;
+            
+            // Check if name matches pre-loaded data (Maya Marks)
+            if (name.toLowerCase().includes('maya') || name.toLowerCase().includes('marks')) {
+                // Show loading briefly
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('paste-data-section').style.display = 'none';
+                
+                setTimeout(() => {
+                    document.getElementById('loading').classList.remove('active');
+                    
+                    // Update header with CSM name
+                    document.getElementById('current-csm-badge').style.display = 'flex';
+                    document.getElementById('current-csm-name').textContent = 'Maya Marks';
+                    
+                    // Scroll to report
+                    document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
+                }, 500);
+            } else {
+                // Show paste section for other CSMs
+                const cursorPrompt = `Generate my book of business data as JSON for the Quick Incentive Compensation Tool.
+
+My name is: ${name}
+
+Return ONLY this JSON structure (no markdown, no explanation):
+{
+  "csm_name": "${name}",
+  "accounts": [
+    {
+      "name": "Account Name",
+      "sfdc_url": "https://banff.lightning.force.com/...",
+      "l12m_gmv": 1000000,
+      "l12m_revenue": 50000,
+      "take_rate": 5.0,
+      "country": "Germany",
+      "q1_2025": 10000,
+      "q2_2025": 12000,
+      "q3_2025": 13000,
+      "q4_2025": 15000,
+      "q1_2026": 5000
+    }
+  ],
+  "totals": {
+    "account_count": 37,
+    "total_l12m_gmv": 1380000000,
+    "total_l12m_revenue": 16000000,
+    "avg_take_rate": 1.19,
+    "total_2025_revenue": 15700000,
+    "q1_2025_total": 2000000,
+    "q1_2026_total": 800000,
+    "q1_yoy_pacing": 40
+  }
+}`;
+
+                document.getElementById('cursor-prompt-text').textContent = cursorPrompt;
+                document.getElementById('paste-data-section').style.display = 'block';
+                document.getElementById('paste-data-section').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function copyPrompt() {
+            const prompt = document.getElementById('cursor-prompt-text').textContent;
+            navigator.clipboard.writeText(prompt).then(() => {
+                alert('✅ Prompt copied! Now paste it in Cursor.');
+            });
+        }
+
+        function loadFromJSON() {
+            const jsonInput = document.getElementById('json-data-input').value.trim();
+            
+            if (!jsonInput) {
+                alert('Please paste your JSON data from Cursor');
+                return;
+            }
+
+            try {
+                const data = JSON.parse(jsonInput);
+                
+                if (!data.accounts || !data.totals) {
+                    alert('Invalid JSON format. Make sure Cursor returned the correct structure.');
+                    return;
+                }
+
+                // Update the dashboard with the new data
+                updateDashboardWithData(data);
+                
+                // Hide paste section and show report
+                document.getElementById('paste-data-section').style.display = 'none';
+                document.getElementById('current-csm-badge').style.display = 'flex';
+                document.getElementById('current-csm-name').textContent = data.csm_name || currentCSMName;
+                
+                // Update metrics
+                document.getElementById('metric-accounts').textContent = data.totals.account_count;
+                document.getElementById('metric-2025-rev').textContent = formatCurrency(data.totals.total_2025_revenue);
+                document.getElementById('metric-gmv').textContent = formatCurrency(data.totals.total_l12m_gmv);
+                document.getElementById('metric-take-rate').textContent = data.totals.avg_take_rate.toFixed(2) + '%';
+                
+                // Scroll to report
+                document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (e) {
+                alert('Error parsing JSON: ' + e.message + '\n\nMake sure you copied the complete JSON from Cursor.');
+            }
+        }
+
+        function updateDashboardWithData(data) {
+            // Update the main book of business table
+            const tbody = document.getElementById('full-book');
+            tbody.innerHTML = '';
+            
+            data.accounts.forEach(account => {
+                const q1Yoy = account.q1_2025 > 0 ? ((account.q1_2026 / account.q1_2025) * 100).toFixed(1) : 'N/A';
+                const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${account.name}</td>
+                    <td><a class="account-link" href="${account.sfdc_url}" target="_blank">🔗</a></td>
+                    <td class="number">${formatCurrency(account.l12m_gmv)}</td>
+                    <td class="number">${formatCurrency(account.l12m_revenue)}</td>
+                    <td class="number">${account.take_rate.toFixed(2)}%</td>
+                    <td class="number">${formatCurrency(account.q1_2025 + account.q2_2025 + account.q3_2025 + account.q4_2025)}</td>
+                    <td class="number">${formatCurrency(account.q1_2025)}</td>
+                    <td class="number">${formatCurrency(account.q1_2026)}</td>
+                    <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
+                    <td class="number">${formatCurrency(account.q2_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                    <td class="number">${formatCurrency(account.q3_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                    <td class="number">${formatCurrency(account.q4_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function formatCurrency(value) {
+            if (value === null || value === undefined) return '-';
+            if (value >= 1000000000) return '$' + (value / 1000000000).toFixed(1) + 'B';
+            if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
+            return '$' + value.toFixed(0);
+        }
+        
+        function fetchUserInfo(token) {
+            fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(response => response.json())
+            .then(user => {
+                localStorage.setItem('user_info', JSON.stringify(user));
+                showAuthenticatedState(user);
+            })
+            .catch(error => {
+                console.error('Error fetching user info:', error);
+                signOut();
+            });
+        }
+        
+        function showAuthenticatedState(user) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('user-section').classList.remove('hidden');
+            
+            document.getElementById('user-name').textContent = user.name || user.email;
+            document.getElementById('user-email').textContent = user.email;
+            
+            if (user.picture) {
+                const avatar = document.getElementById('user-avatar');
+                avatar.style.backgroundImage = `url(${user.picture})`;
+                avatar.style.backgroundSize = 'cover';
+                avatar.textContent = '';
+            }
+        }
+        
+        function signOut() {
+            localStorage.removeItem('google_access_token');
+            localStorage.removeItem('user_info');
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('user-section').classList.add('hidden');
+            document.getElementById('report-content').classList.remove('active');
+        }
+        
+        async function loadMyBookOfBusiness() {
+            const token = localStorage.getItem('google_access_token');
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            
+            if (!token) {
+                alert('Please sign in first');
+                return;
+            }
+            
+            const btn = document.getElementById('load-data-btn');
+            btn.textContent = '⏳ Loading...';
+            btn.disabled = true;
+            
+            try {
+                // Call Revenue Funnel API to get accounts for this user
+                const response = await fetch(`${REVENUE_API_BASE}/api/book-of-business`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.accounts || data.accounts.length === 0) {
+                    throw new Error('No accounts found for your book of business');
+                }
+                
+                // Update dashboard with the data
+                updateDashboard(data);
+                
+                // Show report
+                document.getElementById('report-content').classList.add('active');
+                document.getElementById('current-csm-badge').style.display = 'flex';
+                document.getElementById('current-csm-name').textContent = userInfo.name || userInfo.email;
+                
+                // Scroll to report
+                document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error loading book of business:', error);
+                alert(`Error loading data: ${error.message}\n\nThe API endpoint may not be available yet. Contact #help-revenue-funnel for support.`);
+            } finally {
+                btn.textContent = '🚀 Load My Book of Business';
+                btn.disabled = false;
+            }
+        }
+        
+        function updateDashboard(data) {
+            const metrics = data.portfolio_metrics;
+            const accounts = data.accounts;
+            
+            // Update top metrics
+            document.getElementById('metric-accounts').textContent = metrics.total_accounts;
+            document.getElementById('metric-2025-rev').textContent = formatCurrency(metrics.total_2025_revenue, true);
+            document.getElementById('metric-gmv').textContent = formatCurrency(metrics.total_l12m_gmv, true);
+            document.getElementById('metric-take-rate').textContent = metrics.avg_take_rate.toFixed(2) + '%';
+            
+            // Update YoY comparison
+            updateYoYComparison(metrics);
+            
+            // Update quarterly performance
+            updateQuarterlyPerformance(metrics);
+            
+            // Update all accounts Q1 table
+            updateAllAccountsQ1(accounts);
+            
+            // Update needs attention table
+            updateNeedsAttention(accounts);
+            
+            // Update full book of business table
+            updateFullBook(accounts);
+            
+            // Update take rate opportunities
+            updateTakeRateOpportunities(accounts);
+        }
+        
+        function formatCurrency(value, short = false) {
+            if (short) {
+                if (value >= 1000000000) return '$' + (value / 1000000000).toFixed(1) + 'B';
+                if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+            return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+        
+        function formatPercent(value) {
+            if (value === null || value === undefined) return 'N/A';
+            return value.toFixed(1) + '%';
+        }
+        
+        function getPacingClass(value) {
+            if (value === null || value === undefined) return '';
+            if (value > 40) return 'pacing-high';
+            if (value >= 25) return 'pacing-medium';
+            return 'pacing-low';
+        }
+        
+        function updateYoYComparison(metrics) {
+            // Update YoY comparison card values
+            const q1_2025_el = document.querySelector('.yoy-metric-value.previous');
+            const q1_2026_el = document.querySelector('.yoy-metric-value.current');
+            const pacing_el = document.querySelector('.yoy-metric-value.pacing-value');
+            const projected_el = document.querySelector('.yoy-projected strong');
+            
+            if (q1_2025_el) q1_2025_el.textContent = formatCurrency(metrics.q1_2025_total, true);
+            if (q1_2026_el) q1_2026_el.textContent = formatCurrency(metrics.q1_2026_total, true);
+            if (pacing_el) pacing_el.textContent = formatPercent(metrics.portfolio_q1_yoy_pacing);
+            if (projected_el) projected_el.textContent = formatCurrency(metrics.q1_2026_total * 6, true);
+        }
+        
+        function updateQuarterlyPerformance(metrics) {
+            // This would update the quarterly grid - for now we'll keep the static values
+            // A full implementation would rebuild the quarterly cards dynamically
+        }
+        
+        function updateAllAccountsQ1(accounts) {
+            const tbody = document.getElementById('all-accounts-q1');
+            if (!tbody) return;
+            
+            // Sort by Q1 2026 revenue
+            const sorted = [...accounts].sort((a, b) => b.q1_2026 - a.q1_2026);
+            
+            tbody.innerHTML = sorted.map(acc => `
+                <tr>
+                    <td>${acc.account_name}</td>
+                    <td class="number">${formatCurrency(acc.q1_2025)}</td>
+                    <td class="number">${formatCurrency(acc.q1_2026)}</td>
+                    <td class="${getPacingClass(acc.q1_yoy_pacing)}">${formatPercent(acc.q1_yoy_pacing)}${acc.q1_yoy_pacing > 100 ? ' 🔥' : ''}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateNeedsAttention(accounts) {
+            const tbody = document.getElementById('needs-attention');
+            if (!tbody) return;
+            
+            // Filter to accounts with pacing < 25%
+            const needsAttention = accounts
+                .filter(acc => acc.q1_yoy_pacing !== null && acc.q1_yoy_pacing < 25)
+                .sort((a, b) => a.q1_yoy_pacing - b.q1_yoy_pacing);
+            
+            tbody.innerHTML = needsAttention.map(acc => `
+                <tr>
+                    <td>${acc.account_name}</td>
+                    <td class="number">${formatCurrency(acc.q1_2025)}</td>
+                    <td class="number">${formatCurrency(acc.q1_2026)}</td>
+                    <td class="pacing-low">${formatPercent(acc.q1_yoy_pacing)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateFullBook(accounts) {
+            const tbody = document.getElementById('full-book');
+            if (!tbody) return;
+            
+            tbody.innerHTML = accounts.map(acc => `
+                <tr>
+                    <td>${acc.account_name}</td>
+                    <td><a class="account-link" href="${acc.salesforce_url}" target="_blank">🔗</a></td>
+                    <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
+                    <td class="number">${formatCurrency(acc.l12m_revenue, true)}</td>
+                    <td class="number">${acc.take_rate.toFixed(2)}%</td>
+                    <td class="number">${formatCurrency(acc.total_2025)}</td>
+                    <td class="number">${formatCurrency(acc.q1_2025)}</td>
+                    <td class="number">${formatCurrency(acc.q1_2026)}</td>
+                    <td class="${getPacingClass(acc.q1_yoy_pacing)}">${formatPercent(acc.q1_yoy_pacing)}</td>
+                    <td class="number">${formatCurrency(acc.q2_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                    <td class="number">${formatCurrency(acc.q3_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                    <td class="number">${formatCurrency(acc.q4_2025)}</td>
+                    <td class="number">$0</td>
+                    <td>-</td>
+                </tr>
+            `).join('');
+            
+            // Update filter count
+            document.getElementById('filter-count').textContent = `Showing ${accounts.length} accounts`;
+        }
+        
+        function updateTakeRateOpportunities(accounts) {
+            // Filter accounts with take rate < 3%
+            const lowTakeRate = accounts
+                .filter(acc => acc.take_rate < 3)
+                .sort((a, b) => a.take_rate - b.take_rate);
+            
+            // Update the bar chart and recommendations table would go here
+            // For now, the static content serves as an example
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('csm-name-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadBookOfBusiness();
+            }
+        });
+
+        // Filter functionality for Book of Business table
+        function filterTable() {
+            const searchText = document.getElementById('account-search').value.toLowerCase();
+            const pacingFilter = document.getElementById('pacing-filter').value;
+            const revenueFilter = document.getElementById('revenue-filter').value;
+            
+            const table = document.getElementById('full-book');
+            const rows = table.getElementsByTagName('tr');
+            let visibleCount = 0;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName('td');
+                
+                // Skip summary rows
+                if (cells.length < 5) {
+                    continue;
+                }
+                
+                const accountName = cells[0].textContent.toLowerCase();
+                const revenue2025Text = cells[5].textContent.replace(/[$,]/g, '');
+                const revenue2025 = parseFloat(revenue2025Text) || 0;
+                const yoyPacingCell = cells[8].textContent;
+                
+                // Parse YoY pacing
+                let pacingValue = 0;
+                let pacingCategory = 'na';
+                if (yoyPacingCell && yoyPacingCell !== '-' && yoyPacingCell !== 'N/A') {
+                    pacingValue = parseFloat(yoyPacingCell.replace('%', '').replace('🔥', '').trim());
+                    if (pacingValue > 40) pacingCategory = 'high';
+                    else if (pacingValue >= 25) pacingCategory = 'medium';
+                    else pacingCategory = 'low';
+                }
+                
+                // Apply filters
+                let showRow = true;
+                
+                // Search filter
+                if (searchText && !accountName.includes(searchText)) {
+                    showRow = false;
+                }
+                
+                // Pacing filter
+                if (pacingFilter !== 'all') {
+                    if (pacingFilter === 'high' && pacingCategory !== 'high') showRow = false;
+                    if (pacingFilter === 'medium' && pacingCategory !== 'medium') showRow = false;
+                    if (pacingFilter === 'low' && pacingCategory !== 'low') showRow = false;
+                }
+                
+                // Revenue filter
+                if (revenueFilter !== 'all') {
+                    if (revenueFilter === '1m' && revenue2025 < 1000000) showRow = false;
+                    if (revenueFilter === '500k' && (revenue2025 < 500000 || revenue2025 >= 1000000)) showRow = false;
+                    if (revenueFilter === '100k' && (revenue2025 < 100000 || revenue2025 >= 500000)) showRow = false;
+                    if (revenueFilter === 'under100k' && revenue2025 >= 100000) showRow = false;
+                }
+                
+                if (showRow) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            }
+            
+            // Update count
+            document.getElementById('filter-count').textContent = `Showing ${visibleCount} accounts`;
+        }
+        
+        function clearFilters() {
+            document.getElementById('account-search').value = '';
+            document.getElementById('pacing-filter').value = 'all';
+            document.getElementById('revenue-filter').value = 'all';
+            filterTable();
+        }
+
+        // Sorting functionality
+        let currentSortCol = -1;
+        let currentSortDir = 'none';
+
+        function sortTable(colIndex, type) {
+            const table = document.getElementById('book-table');
+            const tbody = document.getElementById('full-book');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const headers = table.querySelectorAll('th.sortable');
+            
+            // Determine sort direction
+            if (currentSortCol === colIndex) {
+                currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortDir = 'desc'; // Default to descending for numbers
+                if (type === 'string') currentSortDir = 'asc';
+            }
+            currentSortCol = colIndex;
+            
+            // Update header styles
+            headers.forEach(h => {
+                h.classList.remove('asc', 'desc');
+            });
+            const currentHeader = table.querySelector(`th[data-col="${colIndex}"]`);
+            if (currentHeader) {
+                currentHeader.classList.add(currentSortDir);
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                const cellA = a.cells[colIndex];
+                const cellB = b.cells[colIndex];
+                
+                if (!cellA || !cellB) return 0;
+                
+                let valA = cellA.textContent.trim();
+                let valB = cellB.textContent.trim();
+                
+                // Parse based on type
+                if (type === 'currency') {
+                    valA = parseFloat(valA.replace(/[$,KM]/g, '')) || 0;
+                    valB = parseFloat(valB.replace(/[$,KM]/g, '')) || 0;
+                    // Handle K and M suffixes
+                    if (cellA.textContent.includes('K')) valA *= 1000;
+                    if (cellA.textContent.includes('M')) valA *= 1000000;
+                    if (cellB.textContent.includes('K')) valB *= 1000;
+                    if (cellB.textContent.includes('M')) valB *= 1000000;
+                } else if (type === 'percent') {
+                    valA = parseFloat(valA.replace(/[%🔥]/g, '')) || -999;
+                    valB = parseFloat(valB.replace(/[%🔥]/g, '')) || -999;
+                    if (valA === -999 || cellA.textContent === '-' || cellA.textContent === 'N/A') valA = -999;
+                    if (valB === -999 || cellB.textContent === '-' || cellB.textContent === 'N/A') valB = -999;
+                }
+                
+                // Compare
+                let comparison = 0;
+                if (type === 'string') {
+                    comparison = valA.localeCompare(valB);
+                } else {
+                    comparison = valA - valB;
+                }
+                
+                return currentSortDir === 'asc' ? comparison : -comparison;
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+</body>
+</html>
