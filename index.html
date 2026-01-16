@@ -1701,7 +1701,7 @@
                         sa.name AS account_name,
                         sa.account_url,
                         sa.merchant_success_manager,
-                        sa.country_code,
+                        sa.account_country_code,
                         m.shop_id
                     FROM \`shopify-dw.sales.sales_accounts\` sa
                     LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
@@ -1723,7 +1723,7 @@
                         accountMap[r.account_id] = {
                             name: r.account_name,
                             sfdc_url: r.account_url || `https://shopify.lightning.force.com/lightning/r/Account/${r.account_id}/view`,
-                            country: r.country_code || 'US',
+                            country: r.account_country_code || 'US',
                             shop_ids: []
                         };
                     }
