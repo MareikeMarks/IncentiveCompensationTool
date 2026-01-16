@@ -1768,12 +1768,19 @@
                 // Build revenue and GMV maps
                 const revenueMap = {};
                 (revenueResult.results || []).forEach(r => {
-                    revenueMap[r.shop_id] = r;
+                    revenueMap[r.shop_id] = {
+                        l12m_revenue: parseFloat(r.l12m_revenue) || 0,
+                        q1_2025: parseFloat(r.q1_2025) || 0,
+                        q2_2025: parseFloat(r.q2_2025) || 0,
+                        q3_2025: parseFloat(r.q3_2025) || 0,
+                        q4_2025: parseFloat(r.q4_2025) || 0,
+                        q1_2026: parseFloat(r.q1_2026) || 0
+                    };
                 });
                 
                 const gmvMap = {};
                 (gmvResult.results || []).forEach(r => {
-                    gmvMap[r.shop_id] = r.l12m_gmv || 0;
+                    gmvMap[r.shop_id] = parseFloat(r.l12m_gmv) || 0;
                 });
                 
                 // Aggregate data by account
