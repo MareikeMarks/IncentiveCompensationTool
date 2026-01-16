@@ -1757,7 +1757,7 @@
                     SELECT 
                         shop_id,
                         SUM(gmv_usd) AS l12m_gmv
-                    FROM \`shopify-dw.finance.gmv\`
+                    FROM \`shopify-dw.finance.shop_gmv_daily_summary\`
                     WHERE shop_id IN (${shopIds.join(',')})
                     AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
                     GROUP BY shop_id
