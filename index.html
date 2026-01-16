@@ -1882,8 +1882,8 @@
             // Update metrics
             if (data.totals) {
                 document.getElementById('metric-accounts').textContent = data.totals.account_count || data.accounts.length;
-                document.getElementById('metric-gmv').textContent = formatCurrency(data.totals.total_l12m_gmv);
-                document.getElementById('metric-2025-rev').textContent = formatCurrency(data.totals.total_2025_revenue);
+                document.getElementById('metric-gmv').textContent = formatCurrency(data.totals.total_l12m_gmv, true);
+                document.getElementById('metric-2025-rev').textContent = formatCurrency(data.totals.total_2025_revenue, true);
                 document.getElementById('metric-take-rate').textContent = (data.totals.avg_take_rate || 0).toFixed(2) + '%';
             }
             
@@ -1964,13 +1964,7 @@
             });
         }
 
-        function formatCurrency(value) {
-            if (value === null || value === undefined) return '-';
-            if (value >= 1000000000) return '$' + (value / 1000000000).toFixed(1) + 'B';
-            if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
-            if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
-            return '$' + value.toFixed(0);
-        }
+        // formatCurrency is defined below - removed duplicate
         
         function updateDashboard(data) {
             const metrics = data.portfolio_metrics;
