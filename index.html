@@ -1864,49 +1864,6 @@
         // Initialize auth on page load
         document.addEventListener('DOMContentLoaded', initAuth);
 
-        // Legacy function for GitHub fallback (keeping for compatibility)
-        async function loadCSMData() {
-            const nameInput = document.getElementById('csm-name-input');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                alert('Please enter your name');
-                return;
-            }
-
-            document.getElementById('loading').classList.add('active');
-
-            // Convert name to filename format (e.g., "Maya Marks" -> "maya-marks")
-            const fileName = name.toLowerCase().replace(/\s+/g, '-');
-
-            // Check if it's Maya (pre-loaded data)
-            if (name.toLowerCase().includes('maya') && name.toLowerCase().includes('marks')) {
-                setTimeout(() => {
-                    document.getElementById('loading').classList.remove('active');
-                    document.getElementById('current-csm-badge').style.display = 'flex';
-                    document.getElementById('current-csm-name').textContent = 'Maya Marks';
-                    document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
-                }, 300);
-                return;
-            }
-
-            // Try to fetch from GitHub for other CSMs
-            try {
-                const response = await fetch(`${GITHUB_DATA_URL}/${fileName}.json`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    updateDashboardFromGitHub(data);
-                } else {
-                    // Data not found - show instructions
-                    document.getElementById('loading').classList.remove('active');
-                    alert(`Data for "${name}" not found.\n\nTo add your data:\n1. Run this in Cursor: "Generate my book of business JSON for ${name}"\n2. Save the JSON file to the GitHub repo\n3. Reload this page`);
-                }
-            } catch (error) {
-                document.getElementById('loading').classList.remove('active');
-                alert(`Could not load data: ${error.message}\n\nMake sure the GitHub repo is set up correctly.`);
-            }
-        }
 
         function updateDashboardFromGitHub(data) {
             document.getElementById('loading').classList.remove('active');
@@ -1965,121 +1922,6 @@
             document.getElementById('report-content').classList.add('active');
         };
 
-        let currentCSMName = 'Maya Marks';
-
-        function loadBookOfBusiness() {
-            const nameInput = document.getElementById('csm-name-input');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                alert('Please enter your name');
-                return;
-            }
-            
-            currentCSMName = name;
-            
-            // Check if name matches pre-loaded data (Maya Marks)
-            if (name.toLowerCase().includes('maya') || name.toLowerCase().includes('marks')) {
-                // Show loading briefly
-                document.getElementById('loading').classList.add('active');
-                document.getElementById('paste-data-section').style.display = 'none';
-                
-                setTimeout(() => {
-                    document.getElementById('loading').classList.remove('active');
-                    
-                    // Update header with CSM name
-                    document.getElementById('current-csm-badge').style.display = 'flex';
-                    document.getElementById('current-csm-name').textContent = 'Maya Marks';
-                    
-                    // Scroll to report
-                    document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
-                }, 500);
-            } else {
-                // Show paste section for other CSMs
-                const cursorPrompt = `Generate my book of business data as JSON for the Quick Incentive Compensation Tool.
-
-My name is: ${name}
-
-Return ONLY this JSON structure (no markdown, no explanation):
-{
-  "csm_name": "${name}",
-  "accounts": [
-    {
-      "name": "Account Name",
-      "sfdc_url": "https://banff.lightning.force.com/...",
-      "l12m_gmv": 1000000,
-      "l12m_revenue": 50000,
-      "take_rate": 5.0,
-      "country": "Germany",
-      "q1_2025": 10000,
-      "q2_2025": 12000,
-      "q3_2025": 13000,
-      "q4_2025": 15000,
-      "q1_2026": 5000
-    }
-  ],
-  "totals": {
-    "account_count": 37,
-    "total_l12m_gmv": 1380000000,
-    "total_l12m_revenue": 16000000,
-    "avg_take_rate": 1.19,
-    "total_2025_revenue": 15700000,
-    "q1_2025_total": 2000000,
-    "q1_2026_total": 800000,
-    "q1_yoy_pacing": 40
-  }
-}`;
-
-                document.getElementById('cursor-prompt-text').textContent = cursorPrompt;
-                document.getElementById('paste-data-section').style.display = 'block';
-                document.getElementById('paste-data-section').scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        function copyPrompt() {
-            const prompt = document.getElementById('cursor-prompt-text').textContent;
-            navigator.clipboard.writeText(prompt).then(() => {
-                alert('✅ Prompt copied! Now paste it in Cursor.');
-            });
-        }
-
-        function loadFromJSON() {
-            const jsonInput = document.getElementById('json-data-input').value.trim();
-            
-            if (!jsonInput) {
-                alert('Please paste your JSON data from Cursor');
-                return;
-            }
-
-            try {
-                const data = JSON.parse(jsonInput);
-                
-                if (!data.accounts || !data.totals) {
-                    alert('Invalid JSON format. Make sure Cursor returned the correct structure.');
-                    return;
-                }
-
-                // Update the dashboard with the new data
-                updateDashboardWithData(data);
-                
-                // Hide paste section and show report
-                document.getElementById('paste-data-section').style.display = 'none';
-                document.getElementById('current-csm-badge').style.display = 'flex';
-                document.getElementById('current-csm-name').textContent = data.csm_name || currentCSMName;
-                
-                // Update metrics
-                document.getElementById('metric-accounts').textContent = data.totals.account_count;
-                document.getElementById('metric-2025-rev').textContent = formatCurrency(data.totals.total_2025_revenue);
-                document.getElementById('metric-gmv').textContent = formatCurrency(data.totals.total_l12m_gmv);
-                document.getElementById('metric-take-rate').textContent = data.totals.avg_take_rate.toFixed(2) + '%';
-                
-                // Scroll to report
-                document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
-                
-            } catch (e) {
-                alert('Error parsing JSON: ' + e.message + '\n\nMake sure you copied the complete JSON from Cursor.');
-            }
-        }
 
         function updateDashboardWithData(data) {
             // Update the main book of business table
@@ -2268,12 +2110,6 @@ Return ONLY this JSON structure (no markdown, no explanation):
             // For now, the static content serves as an example
         }
 
-        // Allow Enter key to submit
-        document.getElementById('csm-name-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loadBookOfBusiness();
-            }
-        });
 
         // Filter functionality for Book of Business table
         function filterTable() {
