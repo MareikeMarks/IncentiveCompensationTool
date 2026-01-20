@@ -2009,32 +2009,29 @@
                     const gmvYoy = acc.q1_gmv_2025 > 0 ? gmvYoyNum.toFixed(1) : 'N/A';
                     const gmvYoyClass = gmvYoy === 'N/A' ? '' : (gmvYoyNum >= 100 ? 'pacing-high' : gmvYoyNum >= 50 ? 'pacing-medium' : 'pacing-low');
                     
-                    // Determine likely cause based on GMV pattern and SP status
+                    // Determine likely cause based on GMV vs Revenue pattern
+                    // Key insight: If GMV is healthy but revenue isn't, it's a payment capture issue
                     let likelyCause = '';
                     let causeClass = '';
                     const revYoyNum = parseFloat(revYoy) || 0;
                     
                     if (gmvYoyNum >= 80 && revYoyNum < 25) {
-                        // GMV stable/growing but revenue tanked = payment provider change
+                        // 🚨 GMV stable/growing but revenue tanked = PAYMENT ISSUE (actionable!)
                         if (acc.sp_currently_disabled) {
-                            // SP is now off - they switched away
                             likelyCause = '💳 SP Disabled';
                             causeClass = 'style="color: #ff4444; font-weight: 700; background: rgba(255,68,68,0.15);"';
                         } else {
-                            // SP still on but revenue down - might have added external provider (Adyen, etc)
-                            likelyCause = '💳 External PSP Added?';
+                            likelyCause = '💳 External PSP?';
                             causeClass = 'style="color: var(--accent-purple); font-weight: 600;"';
                         }
-                    } else if (gmvYoyNum < 50 && revYoyNum < 25) {
-                        // Both GMV and revenue down = actual sales decline
-                        likelyCause = '📉 Sales Decline';
-                        causeClass = 'style="color: var(--accent-orange);"';
                     } else if (gmvYoyNum >= 50 && gmvYoyNum < 80 && revYoyNum < 25) {
-                        // GMV slightly down, revenue way down = mixed/investigate
-                        likelyCause = '🔍 Investigate';
+                        // GMV somewhat down but revenue way more down = possible payment shift
+                        likelyCause = '🔍 Mixed - Check PSP';
                         causeClass = 'style="color: var(--accent-yellow);"';
                     } else {
-                        likelyCause = '-';
+                        // GMV down tracks with revenue down = normal business decline
+                        likelyCause = '📉 GMV Decline';
+                        causeClass = 'style="color: var(--text-secondary);"';
                     }
                     
                     return `<tr>
