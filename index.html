@@ -1206,63 +1206,8 @@
             <!-- Quarterly Performance -->
             <section>
                 <h2><span class="emoji">📈</span> Quarterly Performance</h2>
-                <div class="quarterly-grid">
-                    <div class="quarter-card">
-                        <div class="quarter-label">Q1</div>
-                        <div class="quarter-values">
-                            <div class="quarter-row">
-                                <span class="year-label">2025</span>
-                                <span class="quarter-value">$2.55M</span>
-                            </div>
-                            <div class="quarter-row">
-                                <span class="year-label">2026</span>
-                                <span class="quarter-value" style="color: var(--accent-green);">$930K</span>
-                            </div>
-                            <span class="yoy-badge yoy-positive">36.5% YoY</span>
-                        </div>
-                    </div>
-                    <div class="quarter-card">
-                        <div class="quarter-label">Q2</div>
-                        <div class="quarter-values">
-                            <div class="quarter-row">
-                                <span class="year-label">2025</span>
-                                <span class="quarter-value">$3.71M</span>
-                            </div>
-                            <div class="quarter-row">
-                                <span class="year-label">2026</span>
-                                <span class="quarter-value" style="color: var(--text-secondary);">-</span>
-                            </div>
-                            <span class="yoy-badge yoy-neutral">Not started</span>
-                        </div>
-                    </div>
-                    <div class="quarter-card">
-                        <div class="quarter-label">Q3</div>
-                        <div class="quarter-values">
-                            <div class="quarter-row">
-                                <span class="year-label">2025</span>
-                                <span class="quarter-value">$3.96M</span>
-                            </div>
-                            <div class="quarter-row">
-                                <span class="year-label">2026</span>
-                                <span class="quarter-value" style="color: var(--text-secondary);">-</span>
-                            </div>
-                            <span class="yoy-badge yoy-neutral">Not started</span>
-                        </div>
-                    </div>
-                    <div class="quarter-card">
-                        <div class="quarter-label">Q4</div>
-                        <div class="quarter-values">
-                            <div class="quarter-row">
-                                <span class="year-label">2025</span>
-                                <span class="quarter-value">$5.50M</span>
-                            </div>
-                            <div class="quarter-row">
-                                <span class="year-label">2026</span>
-                                <span class="quarter-value" style="color: var(--text-secondary);">-</span>
-                            </div>
-                            <span class="yoy-badge yoy-neutral">Not started</span>
-                        </div>
-                    </div>
+                <div class="quarterly-grid" id="quarterly-performance-grid">
+                    <!-- Dynamically populated -->
                 </div>
             </section>
 
@@ -1707,7 +1652,8 @@
                 
                 // Aggregate data by account
                 const accounts = [];
-                let totalGmv = 0, totalRevenue = 0, total2025 = 0, totalQ1_2025 = 0;
+                let totalGmv = 0, totalRevenue = 0, total2025 = 0;
+                let totalQ1_2025 = 0, totalQ2_2025 = 0, totalQ3_2025 = 0, totalQ4_2025 = 0;
                 let totalQ1_2026 = 0, totalQ2_2026 = 0, totalQ3_2026 = 0, totalQ4_2026 = 0;
                 
                 Object.entries(accountMap).forEach(([accountId, account]) => {
@@ -1778,6 +1724,9 @@
                     totalRevenue += accRevenue;
                     total2025 += acc2025;
                     totalQ1_2025 += accQ1_25;
+                    totalQ2_2025 += accQ2_25;
+                    totalQ3_2025 += accQ3_25;
+                    totalQ4_2025 += accQ4_25;
                     totalQ1_2026 += accQ1_26;
                     totalQ2_2026 += accQ2_26;
                     totalQ3_2026 += accQ3_26;
@@ -1816,6 +1765,12 @@
                         q1_2026_ytd: totalQ1_2026,
                         pacing_rate: totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025) * 100 : 0
                     },
+                    quarter_totals_2025: {
+                        'Q1': totalQ1_2025,
+                        'Q2': totalQ2_2025,
+                        'Q3': totalQ3_2025,
+                        'Q4': totalQ4_2025
+                    },
                     quarter_totals: quarterTotals,
                     selected_quarter: selectedQuarter,
                     selected_quarter_ytd: selectedQuarterRevenue,
@@ -1842,7 +1797,50 @@
         
         // Initialize auth on page load
         document.addEventListener('DOMContentLoaded', initAuth);
-
+        
+        // Update Quarterly Performance grid with live data
+        function updateQuarterlyPerformance(data) {
+            const grid = document.getElementById('quarterly-performance-grid');
+            if (!grid) return;
+            
+            const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+            const totals2025 = data.quarter_totals_2025 || {};
+            const totals2026 = data.quarter_totals || {};
+            
+            grid.innerHTML = quarters.map(q => {
+                const val2025 = totals2025[q] || 0;
+                const val2026 = totals2026[`${q}-2026`] || 0;
+                const yoy = val2025 > 0 ? ((val2026 / val2025) * 100).toFixed(1) : 0;
+                const hasData2026 = val2026 > 0;
+                
+                // Determine badge style
+                let badgeClass = 'yoy-neutral';
+                let badgeText = 'Not started';
+                if (hasData2026) {
+                    badgeClass = yoy >= 50 ? 'yoy-positive' : yoy >= 25 ? 'yoy-neutral' : 'yoy-negative';
+                    badgeText = `${yoy}% YoY`;
+                }
+                
+                return `
+                    <div class="quarter-card">
+                        <div class="quarter-label">${q}</div>
+                        <div class="quarter-values">
+                            <div class="quarter-row">
+                                <span class="year-label">2025</span>
+                                <span class="quarter-value">${formatCurrency(val2025, true)}</span>
+                            </div>
+                            <div class="quarter-row">
+                                <span class="year-label">2026</span>
+                                <span class="quarter-value" style="color: ${hasData2026 ? 'var(--accent-green)' : 'var(--text-secondary)'};">
+                                    ${hasData2026 ? formatCurrency(val2026, true) : '-'}
+                                </span>
+                            </div>
+                            <span class="yoy-badge ${badgeClass}">${badgeText}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
 
         function updateDashboardFromGitHub(data) {
             document.getElementById('loading').classList.remove('active');
@@ -1858,6 +1856,9 @@
                 document.getElementById('metric-2025-rev').textContent = formatCurrency(data.totals.total_2025_revenue, true);
                 document.getElementById('metric-take-rate').textContent = (data.totals.avg_take_rate || 0).toFixed(2) + '%';
             }
+            
+            // Update Quarterly Performance grid
+            updateQuarterlyPerformance(data);
             
             // Update NRR tracker section with selected quarter
             const quarterRevenue = data.selected_quarter_ytd || data.q1_comparison?.q1_2026_ytd || 0;
