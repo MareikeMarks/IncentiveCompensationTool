@@ -1141,70 +1141,43 @@
                 </div>
             </div>
 
-            <!-- Q1 YoY Comparison -->
-            <div class="yoy-comparison-card">
+            <!-- Q1 2026 NRR Target Tracker -->
+            <div class="yoy-comparison-card" id="nrr-target-section">
                 <div class="yoy-header">
-                    <span class="yoy-title">📊 Q1 Year-over-Year Comparison</span>
-                    <span class="yoy-note">Jan 1-15 data (~17% of quarter)</span>
+                    <span class="yoy-title">🎯 Q1 2026 NRR Target</span>
+                    <span class="yoy-note" id="quarter-progress-note">~22% of quarter elapsed</span>
                 </div>
                 <div class="yoy-metrics">
                     <div class="yoy-metric">
-                        <div class="yoy-metric-label">Q1 2025 (Full Quarter)</div>
-                        <div class="yoy-metric-value previous" id="q1-2025-full">$2.55M</div>
+                        <div class="yoy-metric-label">Q1 2026 (YTD)</div>
+                        <div class="yoy-metric-value current" id="q1-2026-ytd">$0</div>
                     </div>
                     <div class="yoy-arrow">→</div>
                     <div class="yoy-metric">
-                        <div class="yoy-metric-label">Q1 2026 (YTD)</div>
-                        <div class="yoy-metric-value current" id="q1-2026-ytd">$930K</div>
+                        <div class="yoy-metric-label">My Target</div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--accent-purple); font-size: 1.5rem;">$</span>
+                            <input type="number" id="nrr-target-input" placeholder="Enter target" 
+                                style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border); 
+                                background: var(--bg-secondary); color: var(--accent-purple); width: 120px; 
+                                font-size: 1.25rem; font-weight: 700; text-align: center;"
+                                onchange="updateNRRTracker()" onkeyup="updateNRRTracker()">
+                        </div>
                     </div>
                     <div class="yoy-metric pacing">
-                        <div class="yoy-metric-label">Current Pacing</div>
-                        <div class="yoy-metric-value pacing-value" id="q1-pacing">36.5%</div>
-                        <div class="yoy-projected">Projected if pace holds: <strong id="q1-projected">$5.58M</strong></div>
+                        <div class="yoy-metric-label">Pacing to Target</div>
+                        <div class="yoy-metric-value pacing-value" id="nrr-pacing">-</div>
+                        <div id="nrr-status" style="font-size: 0.85rem; margin-top: 0.25rem;"></div>
                     </div>
                 </div>
-            </div>
-
-            <!-- NRR Target Tracker -->
-            <div class="yoy-comparison-card" id="nrr-target-section">
-                <div class="yoy-header">
-                    <span class="yoy-title">🎯 Q1 2026 NRR Target Tracker</span>
-                    <span class="yoy-note">Set your target and track progress</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                    <label style="color: var(--text-secondary);">My Q1 Target: $</label>
-                    <input type="number" id="nrr-target-input" placeholder="e.g. 500000" 
-                        style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border); 
-                        background: var(--card-bg); color: var(--text-primary); width: 150px; font-size: 1rem;"
-                        onchange="updateNRRTracker()" onkeyup="updateNRRTracker()">
-                    <button onclick="updateNRRTracker()" 
-                        style="padding: 0.5rem 1rem; border-radius: 8px; background: var(--accent-green); 
-                        color: #0a0a0f; border: none; cursor: pointer; font-weight: 600;">Update</button>
-                </div>
-                <div id="nrr-tracker-content" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: var(--text-secondary);">Progress to Target</span>
-                        <span id="nrr-progress-percent" style="color: var(--accent-green); font-weight: 600;">0%</span>
+                <div id="nrr-progress-container" style="margin-top: 1rem; display: none;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.85rem;">
+                        <span style="color: var(--text-secondary);">Progress: <span id="nrr-current-display">$0</span></span>
+                        <span style="color: var(--text-secondary);">Target: <span id="nrr-target-display">$0</span></span>
                     </div>
-                    <div style="background: var(--bg-secondary); border-radius: 8px; height: 24px; overflow: hidden; margin-bottom: 1rem;">
+                    <div style="background: var(--bg-secondary); border-radius: 8px; height: 12px; overflow: hidden;">
                         <div id="nrr-progress-bar" style="height: 100%; background: linear-gradient(90deg, var(--accent-green), var(--accent-blue)); 
                             border-radius: 8px; transition: width 0.5s ease; width: 0%;"></div>
-                    </div>
-                    <div class="yoy-metrics" style="margin-top: 1rem;">
-                        <div class="yoy-metric">
-                            <div class="yoy-metric-label">Current Q1 Revenue</div>
-                            <div class="yoy-metric-value current" id="nrr-current">$0</div>
-                        </div>
-                        <div class="yoy-arrow">→</div>
-                        <div class="yoy-metric">
-                            <div class="yoy-metric-label">Your Target</div>
-                            <div class="yoy-metric-value" style="color: var(--accent-purple);" id="nrr-target-display">$0</div>
-                        </div>
-                        <div class="yoy-metric pacing">
-                            <div class="yoy-metric-label">Projected EOQ</div>
-                            <div class="yoy-metric-value" id="nrr-projected-eoq" style="color: var(--accent-yellow);">$0</div>
-                            <div id="nrr-status" style="font-size: 0.85rem; margin-top: 0.25rem;"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1949,21 +1922,16 @@
                 document.getElementById('metric-take-rate').textContent = (data.totals.avg_take_rate || 0).toFixed(2) + '%';
             }
             
-            // Update Q1 YoY comparison section
+            // Update Q1 2026 NRR section
             if (data.q1_comparison) {
-                const q1_2025 = data.q1_comparison.q1_2025 || 0;
                 const q1_2026 = data.q1_comparison.q1_2026_ytd || 0;
-                const pacing = data.q1_comparison.pacing_rate || 0;
-                const projected = q1_2026 / quarterElapsedPercent;
                 
-                document.getElementById('q1-2025-full').textContent = formatCurrency(q1_2025, true);
+                // Update Q1 2026 YTD display
                 document.getElementById('q1-2026-ytd').textContent = formatCurrency(q1_2026, true);
-                document.getElementById('q1-pacing').textContent = pacing.toFixed(1) + '%';
-                document.getElementById('q1-projected').textContent = formatCurrency(projected, true);
                 
                 // Set global variables for NRR tracker
                 currentQ1Revenue = q1_2026;
-                projectedQ1Revenue = projected;
+                projectedQ1Revenue = q1_2026 / quarterElapsedPercent;
                 
                 // Update NRR tracker if target is set
                 if (document.getElementById('nrr-target-input').value) {
@@ -2017,31 +1985,42 @@
             const target = parseFloat(targetInput.value) || 0;
             
             if (target <= 0) {
-                document.getElementById('nrr-tracker-content').style.display = 'none';
+                document.getElementById('nrr-pacing').textContent = '-';
+                document.getElementById('nrr-status').innerHTML = '';
+                document.getElementById('nrr-progress-container').style.display = 'none';
                 return;
             }
             
-            document.getElementById('nrr-tracker-content').style.display = 'block';
+            // Show progress bar
+            document.getElementById('nrr-progress-container').style.display = 'block';
             
-            // Calculate progress
-            const progressPercent = Math.min((currentQ1Revenue / target) * 100, 100);
+            // Calculate pacing: if current pace continues, will we hit target?
             const projected = currentQ1Revenue / quarterElapsedPercent;
+            const pacingPercent = (projected / target) * 100;
+            const progressPercent = Math.min((currentQ1Revenue / target) * 100, 100);
             
-            // Update display
-            document.getElementById('nrr-progress-percent').textContent = progressPercent.toFixed(1) + '%';
+            // Update pacing display
+            document.getElementById('nrr-pacing').textContent = pacingPercent.toFixed(0) + '%';
             document.getElementById('nrr-progress-bar').style.width = progressPercent + '%';
-            document.getElementById('nrr-current').textContent = formatCurrency(currentQ1Revenue, true);
+            document.getElementById('nrr-current-display').textContent = formatCurrency(currentQ1Revenue, true);
             document.getElementById('nrr-target-display').textContent = formatCurrency(target, true);
-            document.getElementById('nrr-projected-eoq').textContent = formatCurrency(projected, true);
             
-            // Status message
+            // Status message and colors
             const statusEl = document.getElementById('nrr-status');
+            const pacingEl = document.getElementById('nrr-pacing');
             const diff = projected - target;
-            if (projected >= target) {
-                statusEl.innerHTML = `<span style="color: var(--accent-green);">✅ On track! +${formatCurrency(diff, true)} above target</span>`;
+            
+            if (pacingPercent >= 100) {
+                statusEl.innerHTML = `<span style="color: var(--accent-green);">✅ On track</span>`;
+                pacingEl.style.color = 'var(--accent-green)';
                 document.getElementById('nrr-progress-bar').style.background = 'linear-gradient(90deg, var(--accent-green), #00ff88)';
+            } else if (pacingPercent >= 80) {
+                statusEl.innerHTML = `<span style="color: var(--accent-yellow);">⚡ Close</span>`;
+                pacingEl.style.color = 'var(--accent-yellow)';
+                document.getElementById('nrr-progress-bar').style.background = 'linear-gradient(90deg, var(--accent-yellow), var(--accent-green))';
             } else {
-                statusEl.innerHTML = `<span style="color: var(--accent-orange);">⚠️ ${formatCurrency(Math.abs(diff), true)} below target pace</span>`;
+                statusEl.innerHTML = `<span style="color: var(--accent-orange);">⚠️ Behind</span>`;
+                pacingEl.style.color = 'var(--accent-orange)';
                 document.getElementById('nrr-progress-bar').style.background = 'linear-gradient(90deg, var(--accent-orange), var(--accent-yellow))';
             }
             
