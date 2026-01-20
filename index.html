@@ -1589,7 +1589,7 @@
                         SUM(gmv_usd) AS l12m_gmv,
                         SUM(CASE WHEN date BETWEEN '2025-01-01' AND '${q1End2025Str}' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
                         SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
-                    FROM \`shopify-dw.finance.shop_gmv_daily_summary\`
+                    FROM \`shopify-dw.finance.shop_gmv_daily_summary_v1\`
                     WHERE shop_id IN (${shopIds.join(',')})
                     AND date >= '2025-01-01'
                     GROUP BY shop_id
