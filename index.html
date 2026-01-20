@@ -1154,15 +1154,15 @@
                     </div>
                     <div class="yoy-arrow">→</div>
                     <div class="yoy-metric">
-                        <div class="yoy-metric-label">My Target (in thousands)</div>
+                        <div class="yoy-metric-label">My Target (in millions)</div>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="color: var(--accent-purple); font-size: 1.5rem;">$</span>
-                            <input type="number" id="nrr-target-input" placeholder="e.g. 3876" 
+                            <input type="number" id="nrr-target-input" placeholder="e.g. 3.88" step="0.01"
                                 style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border); 
-                                background: var(--bg-secondary); color: var(--accent-purple); width: 120px; 
+                                background: var(--bg-secondary); color: var(--accent-purple); width: 100px; 
                                 font-size: 1.25rem; font-weight: 700; text-align: center;"
                                 onchange="updateNRRTracker()" onkeyup="updateNRRTracker()">
-                            <span style="color: var(--text-secondary); font-size: 1rem;">K</span>
+                            <span style="color: var(--text-secondary); font-size: 1rem;">M</span>
                         </div>
                     </div>
                     <div class="yoy-metric pacing">
@@ -1999,8 +1999,8 @@
         // NRR Target Tracker function
         function updateNRRTracker() {
             const targetInput = document.getElementById('nrr-target-input');
-            const targetInK = parseFloat(targetInput.value) || 0;
-            const target = targetInK * 1000; // Convert from thousands to dollars
+            const targetInM = parseFloat(targetInput.value) || 0;
+            const target = targetInM * 1000000; // Convert from millions to dollars
             
             if (target <= 0) {
                 document.getElementById('nrr-pacing').textContent = '-';
@@ -2042,8 +2042,8 @@
                 document.getElementById('nrr-progress-bar').style.background = 'linear-gradient(90deg, var(--accent-orange), var(--accent-yellow))';
             }
             
-            // Save target to localStorage for persistence (save in K)
-            localStorage.setItem('nrr_target_q1_2026', targetInK);
+            // Save target to localStorage for persistence (save in M)
+            localStorage.setItem('nrr_target_q1_2026', targetInM);
         }
         
         // Load saved NRR target on page load
