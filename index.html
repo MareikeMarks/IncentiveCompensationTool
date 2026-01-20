@@ -2455,9 +2455,11 @@
                 }
                 
                 const accountName = cells[0].textContent.toLowerCase();
-                const revenue2025Text = cells[5].textContent.replace(/[$,]/g, '');
+                // Column indices after adding Segment column:
+                // 0=Account, 1=SFDC, 2=Segment, 3=GMV, 4=Rev, 5=TakeRate, 6=2025Total, 7=Q1'25, 8=Q1'26, 9=Q1YoY
+                const revenue2025Text = cells[6].textContent.replace(/[$,]/g, '');
                 const revenue2025 = parseFloat(revenue2025Text) || 0;
-                const yoyPacingCell = cells[8].textContent;
+                const yoyPacingCell = cells[9].textContent;
                 
                 // Parse YoY pacing
                 let pacingValue = 0;
