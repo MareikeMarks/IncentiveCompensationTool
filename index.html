@@ -1699,6 +1699,8 @@
                 showAuthStatus(`🔍 Searching for: "${name}"`, 'success');
                 
                 // Query 1: Get accounts for this CSM from sales data
+                // Filters: account_type = 'Customer' to exclude churned/prospects
+                //          service_model != 'No Current Service Model' to get active CSM accounts
                 const accountsQuery = `
                     SELECT DISTINCT
                         sa.account_id,
@@ -1706,11 +1708,16 @@
                         sa.account_url,
                         sa.merchant_success_manager,
                         sa.account_country_code,
+                        sa.account_type,
+                        sa.service_model,
                         m.shop_id
                     FROM \`shopify-dw.sales.sales_accounts\` sa
                     LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
                         ON sa.account_id = m.salesforce_account_id
                     WHERE LOWER(sa.merchant_success_manager) LIKE '%${name.toLowerCase().split(' ').join('%')}%'
+                    AND sa.account_type = 'Customer'
+                    AND sa.service_model IS NOT NULL 
+                    AND sa.service_model != 'No Current Service Model'
                     AND m.shop_id IS NOT NULL
                 `;
                 
@@ -1722,13 +1729,10 @@
                 
                 // Debug: Show what CSM names were found in the results
                 const foundCSMs = [...new Set(accountsResult.results.map(r => r.merchant_success_manager))];
+                const serviceModels = [...new Set(accountsResult.results.map(r => r.service_model))];
                 console.log('📋 Found CSM names in results:', foundCSMs);
-                console.log('📊 Number of accounts found:', accountsResult.results.length);
-                
-                // If CSM names don't match searched name, warn
-                if (foundCSMs.length > 0 && !foundCSMs.some(csm => csm && csm.toLowerCase().includes(name.toLowerCase().split(' ')[0]))) {
-                    console.warn('⚠️ CSM name mismatch! Searched for:', name, 'but found:', foundCSMs);
-                }
+                console.log('📊 Number of active customer accounts found:', accountsResult.results.length);
+                console.log('🏷️ Service models:', serviceModels);
                 
                 const shopIds = accountsResult.results.map(r => r.shop_id).filter(Boolean);
                 const accountMap = {};
