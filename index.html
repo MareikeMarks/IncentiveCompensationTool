@@ -2057,11 +2057,11 @@
             `;
             tbody.appendChild(totalRow);
             
-            // Update Q1 Performance table
+            // Update Q1 Performance table (show ALL accounts)
             const q1Tbody = document.getElementById('all-accounts-q1');
             if (q1Tbody) {
                 const sortedByQ1 = [...data.accounts].sort((a, b) => (b.q1_2026 || 0) - (a.q1_2026 || 0));
-                q1Tbody.innerHTML = sortedByQ1.slice(0, 10).map(acc => {
+                q1Tbody.innerHTML = sortedByQ1.map(acc => {
                     const q1Yoy = acc.q1_2025 > 0 ? ((acc.q1_2026 / acc.q1_2025) * 100).toFixed(1) : 'N/A';
                     const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
                     return `<tr>
