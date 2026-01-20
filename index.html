@@ -1727,12 +1727,12 @@
                     throw new Error(`No accounts found for "${name}". Make sure your name matches how it appears in Salesforce.`);
                 }
                 
-                // Debug: Show what CSM names were found in the results
+                // Debug: Show account stats (note: results.length includes shop duplicates)
                 const foundCSMs = [...new Set(accountsResult.results.map(r => r.merchant_success_manager))];
-                const serviceModels = [...new Set(accountsResult.results.map(r => r.service_model))];
-                console.log('📋 Found CSM names in results:', foundCSMs);
-                console.log('📊 Number of active customer accounts found:', accountsResult.results.length);
-                console.log('🏷️ Service models:', serviceModels);
+                const uniqueAccountIds = [...new Set(accountsResult.results.map(r => r.account_id))];
+                console.log('📋 CSM:', foundCSMs.join(', '));
+                console.log('📊 Distinct accounts:', uniqueAccountIds.length);
+                console.log('🔗 Total shop mappings:', accountsResult.results.length);
                 
                 const shopIds = accountsResult.results.map(r => r.shop_id).filter(Boolean);
                 const accountMap = {};
