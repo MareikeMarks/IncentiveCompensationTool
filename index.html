@@ -1661,25 +1661,13 @@
                 const gmvResult = await quick.dw.querySync(gmvQuery);
                 
                 // Query 4: Get Shopify Payments status (was it disabled?)
+                // Use current status table for accurate detection
                 const spStatusQuery = `
-                    WITH sp_q1_2025_start AS (
-                        SELECT shop_id, is_enabled AS sp_enabled_q1_2025_start
-                        FROM \`shopify-dw.money_products.shopify_payments_adoption_daily_snapshot\`
-                        WHERE snapshot_date = '2025-01-01'
-                        AND shop_id IN (${shopIds.join(',')})
-                    ),
-                    sp_current AS (
-                        SELECT shop_id, is_enabled AS sp_enabled_current
-                        FROM \`shopify-dw.money_products.shopify_payments_adoption_daily_snapshot\`
-                        WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM \`shopify-dw.money_products.shopify_payments_adoption_daily_snapshot\`)
-                        AND shop_id IN (${shopIds.join(',')})
-                    )
                     SELECT 
-                        COALESCE(s.shop_id, c.shop_id) AS shop_id,
-                        s.sp_enabled_q1_2025_start,
-                        c.sp_enabled_current
-                    FROM sp_q1_2025_start s
-                    FULL OUTER JOIN sp_current c ON s.shop_id = c.shop_id
+                        shop_id, 
+                        is_enabled AS sp_enabled_current
+                    FROM \`shopify-dw.money_products.shopify_payments_adoption_current\`
+                    WHERE shop_id IN (${shopIds.join(',')})
                 `;
                 
                 const spStatusResult = await quick.dw.querySync(spStatusQuery);
@@ -1689,8 +1677,7 @@
                 const spStatusMap = {};
                 (spStatusResult.results || []).forEach(r => {
                     spStatusMap[r.shop_id] = {
-                        sp_enabled_q1_2025: r.sp_enabled_q1_2025_start,
-                        sp_enabled_current: r.sp_enabled_current
+                        sp_enabled_current: r.sp_enabled_current === true  // Explicitly true only
                     };
                 });
                 
@@ -1734,7 +1721,7 @@
                     let accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0;
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
-                    let spWasEnabled = false, spNowDisabled = false;
+                    let spEnabledShops = 0, spDisabledShops = 0;
                     
                     account.shop_ids.forEach(shopId => {
                         const gmvData = gmvMap[shopId];
@@ -1755,13 +1742,19 @@
                             accQ3_26 += rev.q3_2026 || 0;
                             accQ4_26 += rev.q4_2026 || 0;
                         }
-                        // Check Shopify Payments status
+                        // Check Shopify Payments current status
                         const spStatus = spStatusMap[shopId];
                         if (spStatus) {
-                            if (spStatus.sp_enabled_q1_2025) spWasEnabled = true;
-                            if (spStatus.sp_enabled_q1_2025 && !spStatus.sp_enabled_current) spNowDisabled = true;
+                            if (spStatus.sp_enabled_current) {
+                                spEnabledShops++;
+                            } else {
+                                spDisabledShops++;
+                            }
                         }
                     });
+                    
+                    // SP is disabled for account if NO shops have SP enabled
+                    const spCurrentlyDisabled = spEnabledShops === 0 && spDisabledShops > 0;
                     
                     const takeRate = accGmv > 0 ? (accRevenue / accGmv) * 100 : 0;
                     const acc2025 = accQ1_25 + accQ2_25 + accQ3_25 + accQ4_25;
@@ -1784,8 +1777,7 @@
                         q1_gmv_2025: accQ1Gmv25,
                         q1_gmv_2026: accQ1Gmv26,
                         country: account.country,
-                        sp_was_enabled: spWasEnabled,
-                        sp_disabled: spNowDisabled  // TRUE = SP was enabled in Q1 2025 but now disabled
+                        sp_currently_disabled: spCurrentlyDisabled  // TRUE = No shops have SP enabled currently
                     });
                     
                     totalGmv += accGmv;
@@ -2017,19 +2009,22 @@
                     const gmvYoy = acc.q1_gmv_2025 > 0 ? gmvYoyNum.toFixed(1) : 'N/A';
                     const gmvYoyClass = gmvYoy === 'N/A' ? '' : (gmvYoyNum >= 100 ? 'pacing-high' : gmvYoyNum >= 50 ? 'pacing-medium' : 'pacing-low');
                     
-                    // Determine likely cause - PRIORITY: actual SP status > pattern inference
+                    // Determine likely cause based on GMV pattern and SP status
                     let likelyCause = '';
                     let causeClass = '';
                     const revYoyNum = parseFloat(revYoy) || 0;
                     
-                    if (acc.sp_disabled) {
-                        // CONFIRMED: Shopify Payments was disabled (was on in Q1 2025, now off)
-                        likelyCause = '💳 SP Disabled (Confirmed)';
-                        causeClass = 'style="color: #ff4444; font-weight: 700; background: rgba(255,68,68,0.15);"';
-                    } else if (gmvYoyNum >= 80 && revYoyNum < 25) {
-                        // GMV stable/growing but revenue tanked = likely payment provider change
-                        likelyCause = '💳 Payment Change (Likely)';
-                        causeClass = 'style="color: var(--accent-purple); font-weight: 600;"';
+                    if (gmvYoyNum >= 80 && revYoyNum < 25) {
+                        // GMV stable/growing but revenue tanked = payment provider change
+                        if (acc.sp_currently_disabled) {
+                            // SP is now off - they switched away
+                            likelyCause = '💳 SP Disabled';
+                            causeClass = 'style="color: #ff4444; font-weight: 700; background: rgba(255,68,68,0.15);"';
+                        } else {
+                            // SP still on but revenue down - might have added external provider (Adyen, etc)
+                            likelyCause = '💳 External PSP Added?';
+                            causeClass = 'style="color: var(--accent-purple); font-weight: 600;"';
+                        }
                     } else if (gmvYoyNum < 50 && revYoyNum < 25) {
                         // Both GMV and revenue down = actual sales decline
                         likelyCause = '📉 Sales Decline';
