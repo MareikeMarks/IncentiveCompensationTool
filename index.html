@@ -1302,7 +1302,6 @@
                                 <th>Q1 '26 GMV</th>
                                 <th>GMV YoY</th>
                                 <th>Likely Cause</th>
-                                <th>SP Status</th>
                             </tr>
                         </thead>
                         <tbody id="needs-attention">
@@ -2076,28 +2075,6 @@
                         causeClass = 'style="color: var(--text-secondary);"';
                     }
                     
-                    // Format SP disabled date - ONLY show if SP is actually disabled currently
-                    let spDateDisplay = '-';
-                    if (acc.sp_currently_disabled && acc.sp_disabled_date) {
-                        // Handle BigQuery date format (could be YYYY-MM-DD string or {value: ...} object)
-                        let dateStr = acc.sp_disabled_date;
-                        if (typeof dateStr === 'object' && dateStr.value) {
-                            dateStr = dateStr.value;
-                        }
-                        if (dateStr && dateStr !== 'null') {
-                            // Parse YYYY-MM-DD format
-                            const parts = String(dateStr).split('-');
-                            if (parts.length === 3) {
-                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                spDateDisplay = months[parseInt(parts[1]) - 1] + ' ' + parts[0];
-                            }
-                        }
-                    } else if (acc.sp_currently_disabled) {
-                        spDateDisplay = 'Yes';  // SP is disabled but we don't have the date
-                    }
-                    // Show "Active" if SP is enabled
-                    const spStatusDisplay = acc.sp_currently_disabled ? spDateDisplay : '✅';
-                    
                     return `<tr>
                         <td>${acc.name}</td>
                         <td class="number">${formatCurrency(acc.q1_2025)}</td>
@@ -2107,7 +2084,6 @@
                         <td class="number">${formatCurrency(acc.q1_gmv_2026 || 0, true)}</td>
                         <td class="${gmvYoyClass}">${gmvYoy}${gmvYoy !== 'N/A' ? '%' : ''}</td>
                         <td ${causeClass}>${likelyCause}</td>
-                        <td style="font-size: 0.85em; color: ${acc.sp_currently_disabled ? '#ff6b6b' : 'var(--accent-green)'};">${spStatusDisplay}</td>
                     </tr>`;
                 }).join('');
             }
