@@ -1147,15 +1147,23 @@
                 </div>
             </div>
 
-            <!-- Q1 2026 NRR Target Tracker -->
+            <!-- NRR Target Tracker (Configurable by Quarter) -->
             <div class="yoy-comparison-card" id="nrr-target-section">
                 <div class="yoy-header">
-                    <span class="yoy-title">🎯 Q1 2026 NRR Target</span>
+                    <span class="yoy-title">🎯 <span id="nrr-quarter-title">Q1 2026</span> NRR Target</span>
+                    <select id="quarter-selector" onchange="onQuarterChange()" 
+                        style="padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--border); 
+                        background: var(--bg-secondary); color: var(--accent-blue); font-weight: 600; cursor: pointer;">
+                        <option value="Q1-2026">Q1 2026</option>
+                        <option value="Q2-2026">Q2 2026</option>
+                        <option value="Q3-2026">Q3 2026</option>
+                        <option value="Q4-2026">Q4 2026</option>
+                    </select>
                     <span class="yoy-note" id="quarter-progress-note">~22% of quarter elapsed</span>
                 </div>
                 <div class="yoy-metrics">
                     <div class="yoy-metric">
-                        <div class="yoy-metric-label">Q1 2026 (YTD)</div>
+                        <div class="yoy-metric-label"><span id="quarter-ytd-label">Q1 2026</span> (YTD)</div>
                         <div class="yoy-metric-value current" id="q1-2026-ytd">$0</div>
                     </div>
                     <div class="yoy-arrow">→</div>
@@ -1178,7 +1186,7 @@
                     </div>
                     <div class="yoy-arrow">→</div>
                     <div class="yoy-metric">
-                        <div class="yoy-metric-label">Estimated Q1 Total</div>
+                        <div class="yoy-metric-label">Estimated <span id="quarter-est-label">Q1</span> Total</div>
                         <div class="yoy-metric-value" id="nrr-projected" style="color: var(--accent-cyan);">-</div>
                         <div id="nrr-projected-note" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;"></div>
                     </div>
@@ -1744,7 +1752,7 @@
                     if (r.shop_id) accountMap[r.account_id].shop_ids.push(r.shop_id);
                 });
                 
-                // Query 2: Get revenue data for these shops
+                // Query 2: Get revenue data for these shops (includes all 2026 quarters)
                 const revenueQuery = `
                     WITH shop_revenue AS (
                         SELECT 
@@ -1754,7 +1762,10 @@
                             SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
                             SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
                             SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
-                            SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026
+                            SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026,
+                            SUM(CASE WHEN date BETWEEN '2026-04-01' AND '2026-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2026,
+                            SUM(CASE WHEN date BETWEEN '2026-07-01' AND '2026-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2026,
+                            SUM(CASE WHEN date BETWEEN '2026-10-01' AND '2026-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2026
                         FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
                         WHERE shop_id IN (${shopIds.join(',')})
                         AND account_type = 'Income'
@@ -1791,7 +1802,10 @@
                         q2_2025: parseFloat(r.q2_2025) || 0,
                         q3_2025: parseFloat(r.q3_2025) || 0,
                         q4_2025: parseFloat(r.q4_2025) || 0,
-                        q1_2026: q1_2026_val
+                        q1_2026: q1_2026_val,
+                        q2_2026: parseFloat(r.q2_2026) || 0,
+                        q3_2026: parseFloat(r.q3_2026) || 0,
+                        q4_2026: parseFloat(r.q4_2026) || 0
                     };
                 });
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
@@ -1804,10 +1818,13 @@
                 
                 // Aggregate data by account
                 const accounts = [];
-                let totalGmv = 0, totalRevenue = 0, total2025 = 0, totalQ1_2025 = 0, totalQ1_2026 = 0;
+                let totalGmv = 0, totalRevenue = 0, total2025 = 0, totalQ1_2025 = 0;
+                let totalQ1_2026 = 0, totalQ2_2026 = 0, totalQ3_2026 = 0, totalQ4_2026 = 0;
                 
                 Object.entries(accountMap).forEach(([accountId, account]) => {
-                    let accGmv = 0, accRevenue = 0, accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0, accQ1_26 = 0;
+                    let accGmv = 0, accRevenue = 0;
+                    let accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0;
+                    let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     
                     account.shop_ids.forEach(shopId => {
                         accGmv += gmvMap[shopId] || 0;
@@ -1819,6 +1836,9 @@
                             accQ3_25 += rev.q3_2025 || 0;
                             accQ4_25 += rev.q4_2025 || 0;
                             accQ1_26 += rev.q1_2026 || 0;
+                            accQ2_26 += rev.q2_2026 || 0;
+                            accQ3_26 += rev.q3_2026 || 0;
+                            accQ4_26 += rev.q4_2026 || 0;
                         }
                     });
                     
@@ -1837,6 +1857,9 @@
                         q3_2025: accQ3_25,
                         q4_2025: accQ4_25,
                         q1_2026: accQ1_26,
+                        q2_2026: accQ2_26,
+                        q3_2026: accQ3_26,
+                        q4_2026: accQ4_26,
                         country: account.country
                     });
                     
@@ -1845,6 +1868,9 @@
                     total2025 += acc2025;
                     totalQ1_2025 += accQ1_25;
                     totalQ1_2026 += accQ1_26;
+                    totalQ2_2026 += accQ2_26;
+                    totalQ3_2026 += accQ3_26;
+                    totalQ4_2026 += accQ4_26;
                 });
                 
                 // Sort accounts by L12M revenue
@@ -1852,6 +1878,15 @@
                 
                 console.log('📊 After aggregation - Total Q1 2026:', totalQ1_2026);
                 console.log('📊 Number of accounts:', accounts.length);
+                
+                // Get selected quarter's revenue
+                const quarterTotals = {
+                    'Q1-2026': totalQ1_2026,
+                    'Q2-2026': totalQ2_2026,
+                    'Q3-2026': totalQ3_2026,
+                    'Q4-2026': totalQ4_2026
+                };
+                const selectedQuarterRevenue = quarterTotals[selectedQuarter] || totalQ1_2026;
                 
                 // Build final data object
                 const data = {
@@ -1870,6 +1905,9 @@
                         q1_2026_ytd: totalQ1_2026,
                         pacing_rate: totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025) * 100 : 0
                     },
+                    quarter_totals: quarterTotals,
+                    selected_quarter: selectedQuarter,
+                    selected_quarter_ytd: selectedQuarterRevenue,
                     accounts: accounts
                 };
                 
@@ -1910,30 +1948,28 @@
                 document.getElementById('metric-take-rate').textContent = (data.totals.avg_take_rate || 0).toFixed(2) + '%';
             }
             
-            // Update Q1 2026 NRR section
-            if (data.q1_comparison) {
-                const q1_2026 = data.q1_comparison.q1_2026_ytd || 0;
-                console.log('💰 Q1 2026 YTD Revenue:', q1_2026, '→', formatCurrency(q1_2026, true));
-                
-                // Update Q1 2026 YTD display
-                const ytdElement = document.getElementById('q1-2026-ytd');
-                if (ytdElement) {
-                    ytdElement.textContent = formatCurrency(q1_2026, true);
-                    console.log('✅ Updated Q1 2026 YTD element');
-                } else {
-                    console.error('❌ Could not find q1-2026-ytd element');
-                }
-                
-                // Set global variables for NRR tracker
-                currentQ1Revenue = q1_2026;
-                projectedQ1Revenue = q1_2026 / quarterElapsedPercent;
-                
-                // Update NRR tracker if target is set
-                if (document.getElementById('nrr-target-input').value) {
-                    updateNRRTracker();
-                }
-            } else {
-                console.warn('⚠️ No q1_comparison data found');
+            // Update NRR tracker section with selected quarter
+            const quarterRevenue = data.selected_quarter_ytd || data.q1_comparison?.q1_2026_ytd || 0;
+            const config = quarterConfig[selectedQuarter];
+            console.log(`💰 ${config.label} YTD Revenue:`, quarterRevenue, '→', formatCurrency(quarterRevenue, true));
+            
+            // Update YTD display
+            const ytdElement = document.getElementById('q1-2026-ytd');
+            if (ytdElement) {
+                ytdElement.textContent = formatCurrency(quarterRevenue, true);
+                console.log('✅ Updated quarter YTD element');
+            }
+            
+            // Update quarter elapsed note
+            const elapsedPercent = getQuarterElapsedPercent(selectedQuarter);
+            document.getElementById('quarter-progress-note').textContent = `~${Math.round(elapsedPercent * 100)}% of quarter elapsed`;
+            
+            // Set global variables for NRR tracker
+            currentQuarterRevenue = quarterRevenue;
+            
+            // Update NRR tracker if target is set
+            if (document.getElementById('nrr-target-input').value) {
+                updateNRRTracker();
             }
             
             // Update table
@@ -2065,9 +2101,59 @@
         }
 
         // Global variables for NRR tracker
-        let currentQ1Revenue = 0;
-        let projectedQ1Revenue = 0;
-        let quarterElapsedPercent = 0.22; // ~20 days into Q1 (Jan 20 / 90 days)
+        let currentQuarterRevenue = 0;
+        let projectedQuarterRevenue = 0;
+        let selectedQuarter = 'Q1-2026';
+        
+        // Quarter date ranges
+        const quarterConfig = {
+            'Q1-2026': { start: new Date('2026-01-01'), end: new Date('2026-03-31'), label: 'Q1 2026', short: 'Q1' },
+            'Q2-2026': { start: new Date('2026-04-01'), end: new Date('2026-06-30'), label: 'Q2 2026', short: 'Q2' },
+            'Q3-2026': { start: new Date('2026-07-01'), end: new Date('2026-09-30'), label: 'Q3 2026', short: 'Q3' },
+            'Q4-2026': { start: new Date('2026-10-01'), end: new Date('2026-12-31'), label: 'Q4 2026', short: 'Q4' }
+        };
+        
+        function getQuarterElapsedPercent(quarter) {
+            const config = quarterConfig[quarter];
+            const now = new Date();
+            const start = config.start;
+            const end = config.end;
+            
+            // If quarter hasn't started yet
+            if (now < start) return 0;
+            // If quarter has ended
+            if (now > end) return 1;
+            
+            const totalDays = (end - start) / (1000 * 60 * 60 * 24);
+            const elapsedDays = (now - start) / (1000 * 60 * 60 * 24);
+            return elapsedDays / totalDays;
+        }
+        
+        function onQuarterChange() {
+            selectedQuarter = document.getElementById('quarter-selector').value;
+            const config = quarterConfig[selectedQuarter];
+            
+            // Save quarter selection
+            localStorage.setItem('selected_quarter', selectedQuarter);
+            
+            // Update labels
+            document.getElementById('nrr-quarter-title').textContent = config.label;
+            document.getElementById('quarter-ytd-label').textContent = config.label;
+            document.getElementById('quarter-est-label').textContent = config.short;
+            
+            // Update quarter elapsed note
+            const elapsedPercent = getQuarterElapsedPercent(selectedQuarter);
+            document.getElementById('quarter-progress-note').textContent = `~${Math.round(elapsedPercent * 100)}% of quarter elapsed`;
+            
+            // Load saved target for this quarter
+            loadSavedNRRTarget();
+            
+            // Reload data if we have a CSM name
+            const csmName = document.getElementById('csm-name-input').value.trim();
+            if (csmName) {
+                loadLiveData();
+            }
+        }
         
         // NRR Target Tracker function
         function updateNRRTracker() {
@@ -2086,14 +2172,15 @@
             document.getElementById('nrr-progress-container').style.display = 'block';
             
             // Calculate pacing: if current pace continues, will we hit target?
-            const projected = currentQ1Revenue / quarterElapsedPercent;
+            const quarterElapsedPercent = getQuarterElapsedPercent(selectedQuarter);
+            const projected = quarterElapsedPercent > 0 ? currentQuarterRevenue / quarterElapsedPercent : 0;
             const pacingPercent = (projected / target) * 100;
-            const progressPercent = Math.min((currentQ1Revenue / target) * 100, 100);
+            const progressPercent = Math.min((currentQuarterRevenue / target) * 100, 100);
             
             // Update pacing display
             document.getElementById('nrr-pacing').textContent = pacingPercent.toFixed(0) + '%';
             document.getElementById('nrr-progress-bar').style.width = progressPercent + '%';
-            document.getElementById('nrr-current-display').textContent = formatCurrency(currentQ1Revenue, true);
+            document.getElementById('nrr-current-display').textContent = formatCurrency(currentQuarterRevenue, true);
             document.getElementById('nrr-target-display').textContent = formatCurrency(target, true);
             
             // Update estimated Q1 total
@@ -2125,23 +2212,43 @@
                 document.getElementById('nrr-progress-bar').style.background = 'linear-gradient(90deg, var(--accent-orange), var(--accent-yellow))';
             }
             
-            // Save target to localStorage for persistence (save in M)
-            localStorage.setItem('nrr_target_q1_2026', targetInM);
+            // Save target to localStorage for persistence (save in M, per quarter)
+            localStorage.setItem('nrr_target_' + selectedQuarter, targetInM);
         }
         
-        // Load saved NRR target on page load
+        // Load saved NRR target for selected quarter
         function loadSavedNRRTarget() {
-            const savedTarget = localStorage.getItem('nrr_target_q1_2026');
-            if (savedTarget) {
-                document.getElementById('nrr-target-input').value = savedTarget;
+            const savedTarget = localStorage.getItem('nrr_target_' + selectedQuarter);
+            document.getElementById('nrr-target-input').value = savedTarget || '';
+            
+            // Update display if we have data
+            if (savedTarget && currentQuarterRevenue > 0) {
+                updateNRRTracker();
             }
         }
 
-        // Initialize on page load - show Maya's data by default
+        // Initialize on page load
         window.onload = function() {
             document.getElementById('current-csm-badge').style.display = 'flex';
-            document.getElementById('current-csm-name').textContent = 'Maya Marks';
+            document.getElementById('current-csm-name').textContent = 'Enter your name above';
             document.getElementById('report-content').classList.add('active');
+            
+            // Load saved quarter selection
+            const savedQuarter = localStorage.getItem('selected_quarter') || 'Q1-2026';
+            selectedQuarter = savedQuarter;
+            document.getElementById('quarter-selector').value = savedQuarter;
+            
+            // Update UI labels for selected quarter
+            const config = quarterConfig[selectedQuarter];
+            document.getElementById('nrr-quarter-title').textContent = config.label;
+            document.getElementById('quarter-ytd-label').textContent = config.label;
+            document.getElementById('quarter-est-label').textContent = config.short;
+            
+            // Update quarter elapsed note
+            const elapsedPercent = getQuarterElapsedPercent(selectedQuarter);
+            document.getElementById('quarter-progress-note').textContent = `~${Math.round(elapsedPercent * 100)}% of quarter elapsed`;
+            
+            // Load saved target for this quarter
             loadSavedNRRTarget();
         };
 
