@@ -1503,7 +1503,6 @@
                 
                 // Query 1: Get accounts for this CSM from sales data
                 // Filters: account_type = 'Customer' to exclude churned/prospects
-                //          service_model != 'No Current Service Model' to get active CSM accounts
                 //          Optionally exclude Mid-Market Scaled unless checkbox is checked
                 const includeMidMarketScaled = document.getElementById('include-midmarket-scaled').checked;
                 const midMarketFilter = includeMidMarketScaled ? '' : "AND sa.service_model != 'Mid-Market Scaled'";
@@ -1516,15 +1515,13 @@
                         sa.merchant_success_manager,
                         sa.account_country_code,
                         sa.account_type,
-                        sa.service_model,
+                        COALESCE(sa.service_model, 'SMB') AS service_model,
                         m.shop_id
                     FROM \`shopify-dw.sales.sales_accounts\` sa
                     LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
                         ON sa.account_id = m.salesforce_account_id
                     WHERE LOWER(sa.merchant_success_manager) LIKE '%${name.toLowerCase().split(' ').join('%')}%'
                     AND sa.account_type = 'Customer'
-                    AND sa.service_model IS NOT NULL 
-                    AND sa.service_model != 'No Current Service Model'
                     ${midMarketFilter}
                     AND m.shop_id IS NOT NULL
                 `;
