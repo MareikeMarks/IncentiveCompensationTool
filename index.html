@@ -1294,13 +1294,16 @@
                         <thead>
                             <tr>
                                 <th>Account</th>
-                                <th>Q1 2025</th>
-                                <th>Q1 2026</th>
-                                <th>YoY Pacing</th>
+                                <th>Q1 '25 Rev</th>
+                                <th>Q1 '26 Rev</th>
+                                <th>Rev YoY</th>
+                                <th>Q1 '25 GMV</th>
+                                <th>Q1 '26 GMV</th>
+                                <th>GMV YoY</th>
                             </tr>
                         </thead>
                         <tbody id="needs-attention">
-                            <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Load your data to see accounts needing attention</td></tr>
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Load your data to see accounts needing attention</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1629,14 +1632,16 @@
                 
                 const revenueResult = await quick.dw.querySync(revenueQuery);
                 
-                // Query 3: Get GMV data
+                // Query 3: Get GMV data (including quarterly breakdown)
                 const gmvQuery = `
                     SELECT 
                         shop_id,
-                        SUM(gmv_usd) AS l12m_gmv
+                        SUM(gmv_usd) AS l12m_gmv,
+                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
                     FROM \`shopify-dw.finance.shop_gmv_daily_summary\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+                    AND date >= '2025-01-01'
                     GROUP BY shop_id
                 `;
                 
@@ -1665,7 +1670,11 @@
                 
                 const gmvMap = {};
                 (gmvResult.results || []).forEach(r => {
-                    gmvMap[r.shop_id] = parseFloat(r.l12m_gmv) || 0;
+                    gmvMap[r.shop_id] = {
+                        l12m_gmv: parseFloat(r.l12m_gmv) || 0,
+                        q1_gmv_2025: parseFloat(r.q1_gmv_2025) || 0,
+                        q1_gmv_2026: parseFloat(r.q1_gmv_2026) || 0
+                    };
                 });
                 
                 // Aggregate data by account
@@ -1677,9 +1686,15 @@
                     let accGmv = 0, accRevenue = 0;
                     let accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0;
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
+                    let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
                     
                     account.shop_ids.forEach(shopId => {
-                        accGmv += gmvMap[shopId] || 0;
+                        const gmvData = gmvMap[shopId];
+                        if (gmvData) {
+                            accGmv += gmvData.l12m_gmv || 0;
+                            accQ1Gmv25 += gmvData.q1_gmv_2025 || 0;
+                            accQ1Gmv26 += gmvData.q1_gmv_2026 || 0;
+                        }
                         const rev = revenueMap[shopId];
                         if (rev) {
                             accRevenue += rev.l12m_revenue || 0;
@@ -1712,6 +1727,8 @@
                         q2_2026: accQ2_26,
                         q3_2026: accQ3_26,
                         q4_2026: accQ4_26,
+                        q1_gmv_2025: accQ1Gmv25,
+                        q1_gmv_2026: accQ1Gmv26,
                         country: account.country
                     });
                     
@@ -1939,12 +1956,17 @@
                 });
                 
                 needsAttentionTbody.innerHTML = needsAttention.slice(0, 10).map(acc => {
-                    const q1Yoy = acc.q1_2025 > 0 ? ((acc.q1_2026 / acc.q1_2025) * 100).toFixed(1) : 'N/A';
+                    const revYoy = acc.q1_2025 > 0 ? ((acc.q1_2026 / acc.q1_2025) * 100).toFixed(1) : 'N/A';
+                    const gmvYoy = acc.q1_gmv_2025 > 0 ? ((acc.q1_gmv_2026 / acc.q1_gmv_2025) * 100).toFixed(1) : 'N/A';
+                    const gmvYoyClass = gmvYoy === 'N/A' ? '' : (parseFloat(gmvYoy) >= 100 ? 'pacing-high' : parseFloat(gmvYoy) >= 50 ? 'pacing-medium' : 'pacing-low');
                     return `<tr>
                         <td>${acc.name}</td>
                         <td class="number">${formatCurrency(acc.q1_2025)}</td>
                         <td class="number">${formatCurrency(acc.q1_2026)}</td>
-                        <td class="pacing-low">${q1Yoy}%</td>
+                        <td class="pacing-low">${revYoy}%</td>
+                        <td class="number">${formatCurrency(acc.q1_gmv_2025 || 0, true)}</td>
+                        <td class="number">${formatCurrency(acc.q1_gmv_2026 || 0, true)}</td>
+                        <td class="${gmvYoyClass}">${gmvYoy}${gmvYoy !== 'N/A' ? '%' : ''}</td>
                     </tr>`;
                 }).join('');
             }
