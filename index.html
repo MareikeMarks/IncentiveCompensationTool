@@ -1694,6 +1694,10 @@
             loadBtn.disabled = true;
             
             try {
+                // Debug: Log the name being searched
+                console.log('🔍 Searching for CSM:', name);
+                showAuthStatus(`🔍 Searching for: "${name}"`, 'success');
+                
                 // Query 1: Get accounts for this CSM from sales data
                 const accountsQuery = `
                     SELECT DISTINCT
@@ -1714,6 +1718,16 @@
                 
                 if (!accountsResult.results || accountsResult.results.length === 0) {
                     throw new Error(`No accounts found for "${name}". Make sure your name matches how it appears in Salesforce.`);
+                }
+                
+                // Debug: Show what CSM names were found in the results
+                const foundCSMs = [...new Set(accountsResult.results.map(r => r.merchant_success_manager))];
+                console.log('📋 Found CSM names in results:', foundCSMs);
+                console.log('📊 Number of accounts found:', accountsResult.results.length);
+                
+                // If CSM names don't match searched name, warn
+                if (foundCSMs.length > 0 && !foundCSMs.some(csm => csm && csm.toLowerCase().includes(name.toLowerCase().split(' ')[0]))) {
+                    console.warn('⚠️ CSM name mismatch! Searched for:', name, 'but found:', foundCSMs);
                 }
                 
                 const shopIds = accountsResult.results.map(r => r.shop_id).filter(Boolean);
