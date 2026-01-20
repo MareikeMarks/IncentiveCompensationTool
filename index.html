@@ -1609,7 +1609,27 @@
                     if (r.shop_id) accountMap[r.account_id].shop_ids.push(r.shop_id);
                 });
                 
-                // Query 2: Get Revenue + GMV + SP Status in ONE query (optimized for 30+ users)
+                // Query 2: Get revenue data
+                const revenueQuery = `
+                    SELECT 
+                        shop_id,
+                        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN estimated_profit_usd ELSE 0 END) AS l12m_revenue,
+                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2025,
+                        SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
+                        SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
+                        SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026,
+                        SUM(CASE WHEN date BETWEEN '2026-04-01' AND '2026-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2026,
+                        SUM(CASE WHEN date BETWEEN '2026-07-01' AND '2026-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2026,
+                        SUM(CASE WHEN date BETWEEN '2026-10-01' AND '2026-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2026
+                    FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                    AND account_type = 'Income'
+                    AND date >= '2024-01-15'
+                    GROUP BY shop_id
+                `;
+                
+                // Query 3: Get GMV data
                 const today = new Date();
                 const q1Start2026 = new Date('2026-01-01');
                 const dayOfQuarter = Math.floor((today - q1Start2026) / (1000 * 60 * 60 * 24)) + 1;
@@ -1618,68 +1638,43 @@
                 const q1End2025Str = q1End2025Comparable.toISOString().split('T')[0];
                 console.log('📅 GMV YTD comparison: Q1 2025 (Jan 1 - ' + q1End2025Str + ') vs Q1 2026 (Jan 1 - today)');
                 
-                const combinedQuery = `
-                    WITH revenue AS (
-                        SELECT 
-                            shop_id,
-                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN estimated_profit_usd ELSE 0 END) AS l12m_revenue,
-                            SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2025,
-                            SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
-                            SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
-                            SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
-                            SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026,
-                            SUM(CASE WHEN date BETWEEN '2026-04-01' AND '2026-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2026,
-                            SUM(CASE WHEN date BETWEEN '2026-07-01' AND '2026-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2026,
-                            SUM(CASE WHEN date BETWEEN '2026-10-01' AND '2026-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2026
-                        FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
-                        WHERE shop_id IN (${shopIds.join(',')})
-                        AND account_type = 'Income'
-                        AND date >= '2024-01-15'
-                        GROUP BY shop_id
-                    ),
-                    gmv AS (
-                        SELECT 
-                            shop_id,
-                            SUM(gmv_usd) AS l12m_gmv,
-                            SUM(CASE WHEN date BETWEEN '2025-01-01' AND '${q1End2025Str}' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
-                            SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
-                        FROM \`shopify-dw.finance.shop_gmv_daily_summary\`
-                        WHERE shop_id IN (${shopIds.join(',')})
-                        AND date >= '2025-01-01'
-                        GROUP BY shop_id
-                    ),
-                    sp_status AS (
-                        SELECT shop_id, is_enabled AS sp_enabled
-                        FROM \`shopify-dw.money_products.shopify_payments_adoption_current\`
-                        WHERE shop_id IN (${shopIds.join(',')})
-                    )
+                const gmvQuery = `
                     SELECT 
-                        r.shop_id,
-                        r.l12m_revenue, r.q1_2025, r.q2_2025, r.q3_2025, r.q4_2025,
-                        r.q1_2026, r.q2_2026, r.q3_2026, r.q4_2026,
-                        g.l12m_gmv, g.q1_gmv_2025, g.q1_gmv_2026,
-                        s.sp_enabled
-                    FROM revenue r
-                    LEFT JOIN gmv g ON r.shop_id = g.shop_id
-                    LEFT JOIN sp_status s ON r.shop_id = s.shop_id
+                        shop_id,
+                        SUM(gmv_usd) AS l12m_gmv,
+                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '${q1End2025Str}' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
+                    FROM \`shopify-dw.finance.shop_gmv_daily_summary\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                    AND date >= '2025-01-01'
+                    GROUP BY shop_id
                 `;
                 
-                const combinedResult = await quick.dw.querySync(combinedQuery);
-                console.log('📊 Combined query returned', combinedResult.results?.length || 0, 'shops');
+                // Query 4: Get SP status
+                const spQuery = `
+                    SELECT shop_id, is_enabled AS sp_enabled
+                    FROM \`shopify-dw.money_products.shopify_payments_adoption_current\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                `;
                 
-                // Build maps from combined result
+                // Run all 3 queries in parallel for speed
+                const [revenueResult, gmvResult, spResult] = await Promise.all([
+                    quick.dw.querySync(revenueQuery),
+                    quick.dw.querySync(gmvQuery),
+                    quick.dw.querySync(spQuery)
+                ]);
+                
+                console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
+                console.log('📊 GMV query returned', gmvResult.results?.length || 0, 'shops');
+                console.log('📊 SP query returned', spResult.results?.length || 0, 'shops');
+                
+                // Build maps from results
                 const revenueMap = {};
-                const gmvMap = {};
-                const spStatusMap = {};
                 let debugQ1_2026_Total = 0;
-                
-                (combinedResult.results || []).forEach(r => {
-                    const shopId = r.shop_id;
+                (revenueResult.results || []).forEach(r => {
                     const q1_2026_val = parseFloat(r.q1_2026) || 0;
                     debugQ1_2026_Total += q1_2026_val;
-                    
-                    // Revenue data
-                    revenueMap[shopId] = {
+                    revenueMap[r.shop_id] = {
                         l12m_revenue: parseFloat(r.l12m_revenue) || 0,
                         q1_2025: parseFloat(r.q1_2025) || 0,
                         q2_2025: parseFloat(r.q2_2025) || 0,
@@ -1690,20 +1685,25 @@
                         q3_2026: parseFloat(r.q3_2026) || 0,
                         q4_2026: parseFloat(r.q4_2026) || 0
                     };
-                    
-                    // GMV data
-                    gmvMap[shopId] = {
+                });
+                
+                const gmvMap = {};
+                (gmvResult.results || []).forEach(r => {
+                    gmvMap[r.shop_id] = {
                         l12m_gmv: parseFloat(r.l12m_gmv) || 0,
                         q1_gmv_2025: parseFloat(r.q1_gmv_2025) || 0,
                         q1_gmv_2026: parseFloat(r.q1_gmv_2026) || 0
                     };
-                    
-                    // SP status
-                    spStatusMap[shopId] = {
+                });
+                
+                const spStatusMap = {};
+                (spResult.results || []).forEach(r => {
+                    spStatusMap[r.shop_id] = {
                         sp_enabled_current: r.sp_enabled === true
                     };
                 });
-                console.log('📊 Total Q1 2026 from combined query:', debugQ1_2026_Total);
+                
+                console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
                 
                 // Aggregate data by account
                 const accounts = [];
