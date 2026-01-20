@@ -1816,11 +1816,22 @@
             console.log('📊 Quarterly Performance - 2025:', totals2025);
             console.log('📊 Quarterly Performance - 2026:', totals2026);
             
+            // Determine which quarters have started in 2026
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1; // 1-12
+            const quarterStarted = {
+                'Q1': currentMonth >= 1,  // Jan-Mar
+                'Q2': currentMonth >= 4,  // Apr-Jun
+                'Q3': currentMonth >= 7,  // Jul-Sep
+                'Q4': currentMonth >= 10  // Oct-Dec
+            };
+            
             grid.innerHTML = quarters.map(q => {
                 const val2025 = totals2025[q] || 0;
                 const val2026 = totals2026[`${q}-2026`] || 0;
                 const yoy = val2025 > 0 ? ((val2026 / val2025) * 100).toFixed(1) : 0;
-                const hasData2026 = val2026 > 0;
+                // Only show 2026 data if the quarter has actually started
+                const hasData2026 = quarterStarted[q] && val2026 > 0;
                 
                 // Determine badge style
                 let badgeClass = 'yoy-neutral';
