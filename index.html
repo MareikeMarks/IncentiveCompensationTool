@@ -1776,7 +1776,7 @@
                             SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
                             SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
                             SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
-                            SUM(CASE WHEN date >= '2026-01-01' THEN estimated_profit_usd ELSE 0 END) AS q1_2026
+                            SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026
                         FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
                         WHERE shop_id IN (${shopIds.join(',')})
                         AND account_type = 'Income'
