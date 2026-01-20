@@ -1289,19 +1289,20 @@
             <!-- Needs Attention -->
             <section>
                 <h2><span class="emoji">⚠️</span> Needs Attention (Q1 YoY < 25%)</h2>
-                <p class="section-description">Accounts with revenue pacing below 25% YoY. GMV compares same days in Q1 (YTD vs YTD). Check "Likely Cause" - if GMV is growing but revenue isn't, likely a payment provider switch (e.g., Adyen).</p>
+                <p class="section-description">Accounts with revenue pacing below 25% YoY. GMV compares same days in Q1 (YTD vs YTD). "Likely Cause" shows payment issues when GMV is healthy but revenue isn't.</p>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
                                 <th>Account</th>
-                                <th>Q1 '25 Rev (YTD)</th>
-                                <th>Q1 '26 Rev (YTD)</th>
+                                <th>Q1 '25 Rev</th>
+                                <th>Q1 '26 Rev</th>
                                 <th>Rev YoY</th>
-                                <th>Q1 '25 GMV (YTD)</th>
-                                <th>Q1 '26 GMV (YTD)</th>
+                                <th>Q1 '25 GMV</th>
+                                <th>Q1 '26 GMV</th>
                                 <th>GMV YoY</th>
                                 <th>Likely Cause</th>
+                                <th>SP Disabled</th>
                             </tr>
                         </thead>
                         <tbody id="needs-attention">
@@ -1660,14 +1661,36 @@
                 
                 const gmvResult = await quick.dw.querySync(gmvQuery);
                 
-                // Query 4: Get Shopify Payments status (was it disabled?)
-                // Use current status table for accurate detection
+                // Query 4: Get Shopify Payments status AND disable date
                 const spStatusQuery = `
+                    WITH current_status AS (
+                        SELECT shop_id, is_enabled AS sp_enabled_current
+                        FROM \`shopify-dw.money_products.shopify_payments_adoption_current\`
+                        WHERE shop_id IN (${shopIds.join(',')})
+                    ),
+                    disable_dates AS (
+                        SELECT 
+                            shop_id,
+                            snapshot_date AS sp_disabled_date,
+                            ROW_NUMBER() OVER (PARTITION BY shop_id ORDER BY snapshot_date DESC) AS rn
+                        FROM (
+                            SELECT 
+                                shop_id,
+                                snapshot_date,
+                                is_enabled,
+                                LAG(is_enabled) OVER (PARTITION BY shop_id ORDER BY snapshot_date) AS prev_enabled
+                            FROM \`shopify-dw.money_products.shopify_payments_adoption_daily_snapshot\`
+                            WHERE shop_id IN (${shopIds.join(',')})
+                              AND snapshot_date >= '2020-01-01'
+                        )
+                        WHERE prev_enabled = TRUE AND is_enabled = FALSE
+                    )
                     SELECT 
-                        shop_id, 
-                        is_enabled AS sp_enabled_current
-                    FROM \`shopify-dw.money_products.shopify_payments_adoption_current\`
-                    WHERE shop_id IN (${shopIds.join(',')})
+                        c.shop_id,
+                        c.sp_enabled_current,
+                        d.sp_disabled_date
+                    FROM current_status c
+                    LEFT JOIN disable_dates d ON c.shop_id = d.shop_id AND d.rn = 1
                 `;
                 
                 const spStatusResult = await quick.dw.querySync(spStatusQuery);
@@ -1677,7 +1700,8 @@
                 const spStatusMap = {};
                 (spStatusResult.results || []).forEach(r => {
                     spStatusMap[r.shop_id] = {
-                        sp_enabled_current: r.sp_enabled_current === true  // Explicitly true only
+                        sp_enabled_current: r.sp_enabled_current === true,
+                        sp_disabled_date: r.sp_disabled_date || null
                     };
                 });
                 
@@ -1722,6 +1746,7 @@
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
                     let spEnabledShops = 0, spDisabledShops = 0;
+                    let latestSpDisableDate = null;
                     
                     account.shop_ids.forEach(shopId => {
                         const gmvData = gmvMap[shopId];
@@ -1742,13 +1767,19 @@
                             accQ3_26 += rev.q3_2026 || 0;
                             accQ4_26 += rev.q4_2026 || 0;
                         }
-                        // Check Shopify Payments current status
+                        // Check Shopify Payments current status and disable date
                         const spStatus = spStatusMap[shopId];
                         if (spStatus) {
                             if (spStatus.sp_enabled_current) {
                                 spEnabledShops++;
                             } else {
                                 spDisabledShops++;
+                            }
+                            // Track the most recent SP disable date
+                            if (spStatus.sp_disabled_date) {
+                                if (!latestSpDisableDate || spStatus.sp_disabled_date > latestSpDisableDate) {
+                                    latestSpDisableDate = spStatus.sp_disabled_date;
+                                }
                             }
                         }
                     });
@@ -1777,7 +1808,8 @@
                         q1_gmv_2025: accQ1Gmv25,
                         q1_gmv_2026: accQ1Gmv26,
                         country: account.country,
-                        sp_currently_disabled: spCurrentlyDisabled  // TRUE = No shops have SP enabled currently
+                        sp_currently_disabled: spCurrentlyDisabled,
+                        sp_disabled_date: latestSpDisableDate  // Date when SP was last disabled (if any)
                     });
                     
                     totalGmv += accGmv;
@@ -2034,6 +2066,13 @@
                         causeClass = 'style="color: var(--text-secondary);"';
                     }
                     
+                    // Format SP disabled date
+                    let spDateDisplay = '-';
+                    if (acc.sp_disabled_date) {
+                        const d = new Date(acc.sp_disabled_date);
+                        spDateDisplay = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }
+                    
                     return `<tr>
                         <td>${acc.name}</td>
                         <td class="number">${formatCurrency(acc.q1_2025)}</td>
@@ -2043,6 +2082,7 @@
                         <td class="number">${formatCurrency(acc.q1_gmv_2026 || 0, true)}</td>
                         <td class="${gmvYoyClass}">${gmvYoy}${gmvYoy !== 'N/A' ? '%' : ''}</td>
                         <td ${causeClass}>${likelyCause}</td>
+                        <td style="font-size: 0.85em; color: ${acc.sp_disabled_date ? '#ff6b6b' : 'var(--text-secondary)'};">${spDateDisplay}</td>
                     </tr>`;
                 }).join('');
             }
