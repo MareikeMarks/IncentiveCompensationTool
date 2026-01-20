@@ -1609,9 +1609,17 @@
                     if (r.shop_id) accountMap[r.account_id].shop_ids.push(r.shop_id);
                 });
                 
-                // Query 2: Get revenue data for these shops (includes all 2026 quarters)
-                const revenueQuery = `
-                    WITH shop_revenue AS (
+                // Query 2: Get Revenue + GMV + SP Status in ONE query (optimized for 30+ users)
+                const today = new Date();
+                const q1Start2026 = new Date('2026-01-01');
+                const dayOfQuarter = Math.floor((today - q1Start2026) / (1000 * 60 * 60 * 24)) + 1;
+                const q1End2025Comparable = new Date('2025-01-01');
+                q1End2025Comparable.setDate(q1End2025Comparable.getDate() + dayOfQuarter - 1);
+                const q1End2025Str = q1End2025Comparable.toISOString().split('T')[0];
+                console.log('📅 GMV YTD comparison: Q1 2025 (Jan 1 - ' + q1End2025Str + ') vs Q1 2026 (Jan 1 - today)');
+                
+                const combinedQuery = `
+                    WITH revenue AS (
                         SELECT 
                             shop_id,
                             SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN estimated_profit_usd ELSE 0 END) AS l12m_revenue,
@@ -1628,99 +1636,50 @@
                         AND account_type = 'Income'
                         AND date >= '2024-01-15'
                         GROUP BY shop_id
-                    )
-                    SELECT * FROM shop_revenue
-                `;
-                
-                const revenueResult = await quick.dw.querySync(revenueQuery);
-                
-                // Query 3: Get GMV data (YTD comparison - same days in Q1 for fair comparison)
-                // Get current day of quarter to compare same period YoY
-                const today = new Date();
-                const q1Start2026 = new Date('2026-01-01');
-                const dayOfQuarter = Math.floor((today - q1Start2026) / (1000 * 60 * 60 * 24)) + 1;
-                const q1End2025Comparable = new Date('2025-01-01');
-                q1End2025Comparable.setDate(q1End2025Comparable.getDate() + dayOfQuarter - 1);
-                const q1End2025Str = q1End2025Comparable.toISOString().split('T')[0];
-                
-                const gmvQuery = `
-                    SELECT 
-                        shop_id,
-                        SUM(gmv_usd) AS l12m_gmv,
-                        -- Q1 2025 YTD (same number of days as Q1 2026 for fair comparison)
-                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '${q1End2025Str}' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
-                        -- Q1 2026 YTD
-                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
-                    FROM \`shopify-dw.finance.shop_gmv_daily_summary\`
-                    WHERE shop_id IN (${shopIds.join(',')})
-                    AND date >= '2025-01-01'
-                    GROUP BY shop_id
-                `;
-                console.log('📅 GMV comparison: Q1 2025 (Jan 1 - ' + q1End2025Str + ') vs Q1 2026 (Jan 1 - today)');
-                
-                const gmvResult = await quick.dw.querySync(gmvQuery);
-                
-                // Query 4: Get Shopify Payments status AND disable date
-                const spStatusQuery = `
-                    WITH current_status AS (
-                        SELECT shop_id, is_enabled AS sp_enabled_current
-                        FROM \`shopify-dw.money_products.shopify_payments_adoption_current\`
-                        WHERE shop_id IN (${shopIds.join(',')})
                     ),
-                    disable_dates AS (
+                    gmv AS (
                         SELECT 
                             shop_id,
-                            snapshot_date AS sp_disabled_date,
-                            ROW_NUMBER() OVER (PARTITION BY shop_id ORDER BY snapshot_date DESC) AS rn
-                        FROM (
-                            SELECT 
-                                shop_id,
-                                snapshot_date,
-                                is_enabled,
-                                LAG(is_enabled) OVER (PARTITION BY shop_id ORDER BY snapshot_date) AS prev_enabled
-                            FROM \`shopify-dw.money_products.shopify_payments_adoption_daily_snapshot\`
-                            WHERE shop_id IN (${shopIds.join(',')})
-                              AND snapshot_date >= '2020-01-01'
-                        )
-                        WHERE prev_enabled = TRUE AND is_enabled = FALSE
+                            SUM(gmv_usd) AS l12m_gmv,
+                            SUM(CASE WHEN date BETWEEN '2025-01-01' AND '${q1End2025Str}' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
+                            SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
+                        FROM \`shopify-dw.finance.shop_gmv_daily_summary\`
+                        WHERE shop_id IN (${shopIds.join(',')})
+                        AND date >= '2025-01-01'
+                        GROUP BY shop_id
+                    ),
+                    sp_status AS (
+                        SELECT shop_id, is_enabled AS sp_enabled
+                        FROM \`shopify-dw.money_products.shopify_payments_adoption_current\`
+                        WHERE shop_id IN (${shopIds.join(',')})
                     )
                     SELECT 
-                        c.shop_id,
-                        c.sp_enabled_current,
-                        d.sp_disabled_date
-                    FROM current_status c
-                    LEFT JOIN disable_dates d ON c.shop_id = d.shop_id AND d.rn = 1
+                        COALESCE(r.shop_id, g.shop_id, s.shop_id) AS shop_id,
+                        r.l12m_revenue, r.q1_2025, r.q2_2025, r.q3_2025, r.q4_2025,
+                        r.q1_2026, r.q2_2026, r.q3_2026, r.q4_2026,
+                        g.l12m_gmv, g.q1_gmv_2025, g.q1_gmv_2026,
+                        s.sp_enabled
+                    FROM revenue r
+                    FULL OUTER JOIN gmv g ON r.shop_id = g.shop_id
+                    FULL OUTER JOIN sp_status s ON COALESCE(r.shop_id, g.shop_id) = s.shop_id
                 `;
                 
-                const spStatusResult = await quick.dw.querySync(spStatusQuery);
-                console.log('📊 SP Status query returned', spStatusResult.results?.length || 0, 'shops');
+                const combinedResult = await quick.dw.querySync(combinedQuery);
+                console.log('📊 Combined query returned', combinedResult.results?.length || 0, 'shops');
                 
-                // Build SP status map
-                const spStatusMap = {};
-                (spStatusResult.results || []).forEach(r => {
-                    // Handle BigQuery date format - extract string value
-                    let disabledDate = null;
-                    if (r.sp_disabled_date) {
-                        if (typeof r.sp_disabled_date === 'object' && r.sp_disabled_date.value) {
-                            disabledDate = r.sp_disabled_date.value;
-                        } else if (typeof r.sp_disabled_date === 'string') {
-                            disabledDate = r.sp_disabled_date;
-                        }
-                    }
-                    spStatusMap[r.shop_id] = {
-                        sp_enabled_current: r.sp_enabled_current === true,
-                        sp_disabled_date: disabledDate
-                    };
-                });
-                console.log('📊 Sample SP status:', Object.values(spStatusMap).slice(0, 3));
-                
-                // Build revenue and GMV maps
+                // Build maps from combined result
                 const revenueMap = {};
+                const gmvMap = {};
+                const spStatusMap = {};
                 let debugQ1_2026_Total = 0;
-                (revenueResult.results || []).forEach(r => {
+                
+                (combinedResult.results || []).forEach(r => {
+                    const shopId = r.shop_id;
                     const q1_2026_val = parseFloat(r.q1_2026) || 0;
                     debugQ1_2026_Total += q1_2026_val;
-                    revenueMap[r.shop_id] = {
+                    
+                    // Revenue data
+                    revenueMap[shopId] = {
                         l12m_revenue: parseFloat(r.l12m_revenue) || 0,
                         q1_2025: parseFloat(r.q1_2025) || 0,
                         q2_2025: parseFloat(r.q2_2025) || 0,
@@ -1731,18 +1690,20 @@
                         q3_2026: parseFloat(r.q3_2026) || 0,
                         q4_2026: parseFloat(r.q4_2026) || 0
                     };
-                });
-                console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
-                console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
-                
-                const gmvMap = {};
-                (gmvResult.results || []).forEach(r => {
-                    gmvMap[r.shop_id] = {
+                    
+                    // GMV data
+                    gmvMap[shopId] = {
                         l12m_gmv: parseFloat(r.l12m_gmv) || 0,
                         q1_gmv_2025: parseFloat(r.q1_gmv_2025) || 0,
                         q1_gmv_2026: parseFloat(r.q1_gmv_2026) || 0
                     };
+                    
+                    // SP status
+                    spStatusMap[shopId] = {
+                        sp_enabled_current: r.sp_enabled === true
+                    };
                 });
+                console.log('📊 Total Q1 2026 from combined query:', debugQ1_2026_Total);
                 
                 // Aggregate data by account
                 const accounts = [];
@@ -1755,7 +1716,6 @@
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
                     let spEnabledShops = 0, spDisabledShops = 0;
-                    let latestSpDisableDate = null;
                     
                     account.shop_ids.forEach(shopId => {
                         const gmvData = gmvMap[shopId];
@@ -1776,19 +1736,13 @@
                             accQ3_26 += rev.q3_2026 || 0;
                             accQ4_26 += rev.q4_2026 || 0;
                         }
-                        // Check Shopify Payments current status and disable date
+                        // Check Shopify Payments current status
                         const spStatus = spStatusMap[shopId];
                         if (spStatus) {
                             if (spStatus.sp_enabled_current) {
                                 spEnabledShops++;
                             } else {
                                 spDisabledShops++;
-                            }
-                            // Track the most recent SP disable date
-                            if (spStatus.sp_disabled_date) {
-                                if (!latestSpDisableDate || spStatus.sp_disabled_date > latestSpDisableDate) {
-                                    latestSpDisableDate = spStatus.sp_disabled_date;
-                                }
                             }
                         }
                     });
@@ -1817,8 +1771,7 @@
                         q1_gmv_2025: accQ1Gmv25,
                         q1_gmv_2026: accQ1Gmv26,
                         country: account.country,
-                        sp_currently_disabled: spCurrentlyDisabled,
-                        sp_disabled_date: latestSpDisableDate  // Date when SP was last disabled (if any)
+                        sp_currently_disabled: spCurrentlyDisabled
                     });
                     
                     totalGmv += accGmv;
