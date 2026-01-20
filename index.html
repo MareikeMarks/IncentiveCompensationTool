@@ -1089,7 +1089,7 @@
             <div id="auth-status" style="display: none; margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem;"></div>
             
             <!-- Name Input -->
-            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center; margin-bottom: 1rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center; margin-bottom: 0.75rem;">
                 <input 
                     type="text" 
                     id="csm-name-input" 
@@ -1101,6 +1101,12 @@
                 <button id="load-btn" onclick="loadLiveData()" style="padding: 0.75rem 1.5rem; border-radius: 8px; background: linear-gradient(135deg, #00ff88, #00d4ff); color: #0a0a0f; border: none; cursor: pointer; font-weight: 600;">
                     ⚡ Load Live Data
                 </button>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                <input type="checkbox" id="include-midmarket-scaled" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="include-midmarket-scaled" style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">
+                    Include Mid-Market Scaled accounts <span style="color: var(--accent-purple);">(check if you're a Mid-Market Scaled CSM)</span>
+                </label>
             </div>
             
             <!-- Error Message -->
@@ -1328,23 +1334,24 @@
                         <thead>
                             <tr>
                                 <th class="sortable" data-col="0" onclick="sortTable(0, 'string')">Account <span class="sort-icon">⇅</span></th>
-                                <th>Salesforce</th>
-                                <th class="sortable" data-col="2" onclick="sortTable(2, 'currency')">L12M GMV (Rolling) <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="3" onclick="sortTable(3, 'currency')">L12M Rev <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="4" onclick="sortTable(4, 'percent')">Take Rate <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="5" onclick="sortTable(5, 'currency')">2025 Total <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="6" onclick="sortTable(6, 'currency')">Q1 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="7" onclick="sortTable(7, 'currency')">Q1 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="8" onclick="sortTable(8, 'percent')">Q1 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="9" onclick="sortTable(9, 'currency')">Q2 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="10" onclick="sortTable(10, 'currency')">Q2 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="11" onclick="sortTable(11, 'percent')">Q2 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="12" onclick="sortTable(12, 'currency')">Q3 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="13" onclick="sortTable(13, 'currency')">Q3 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="14" onclick="sortTable(14, 'percent')">Q3 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="15" onclick="sortTable(15, 'currency')">Q4 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="16" onclick="sortTable(16, 'currency')">Q4 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="17" onclick="sortTable(17, 'percent')">Q4 YoY <span class="sort-icon">⇅</span></th>
+                                <th>SFDC</th>
+                                <th class="sortable" data-col="2" onclick="sortTable(2, 'string')">Segment <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="3" onclick="sortTable(3, 'currency')">L12M GMV <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="4" onclick="sortTable(4, 'currency')">L12M Rev <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="5" onclick="sortTable(5, 'percent')">Take Rate <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="6" onclick="sortTable(6, 'currency')">2025 Total <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="7" onclick="sortTable(7, 'currency')">Q1 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="8" onclick="sortTable(8, 'currency')">Q1 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="9" onclick="sortTable(9, 'percent')">Q1 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="10" onclick="sortTable(10, 'currency')">Q2 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="11" onclick="sortTable(11, 'currency')">Q2 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="12" onclick="sortTable(12, 'percent')">Q2 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="13" onclick="sortTable(13, 'currency')">Q3 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="14" onclick="sortTable(14, 'currency')">Q3 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="15" onclick="sortTable(15, 'percent')">Q3 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="16" onclick="sortTable(16, 'currency')">Q4 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="17" onclick="sortTable(17, 'currency')">Q4 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="18" onclick="sortTable(18, 'percent')">Q4 YoY <span class="sort-icon">⇅</span></th>
                             </tr>
                         </thead>
                         <tbody id="full-book">
@@ -1684,6 +1691,10 @@
                 // Query 1: Get accounts for this CSM from sales data
                 // Filters: account_type = 'Customer' to exclude churned/prospects
                 //          service_model != 'No Current Service Model' to get active CSM accounts
+                //          Optionally exclude Mid-Market Scaled unless checkbox is checked
+                const includeMidMarketScaled = document.getElementById('include-midmarket-scaled').checked;
+                const midMarketFilter = includeMidMarketScaled ? '' : "AND sa.service_model != 'Mid-Market Scaled'";
+                
                 const accountsQuery = `
                     SELECT DISTINCT
                         sa.account_id,
@@ -1701,6 +1712,7 @@
                     AND sa.account_type = 'Customer'
                     AND sa.service_model IS NOT NULL 
                     AND sa.service_model != 'No Current Service Model'
+                    ${midMarketFilter}
                     AND m.shop_id IS NOT NULL
                 `;
                 
@@ -1725,6 +1737,7 @@
                             name: r.account_name,
                             sfdc_url: r.account_url || `https://shopify.lightning.force.com/lightning/r/Account/${r.account_id}/view`,
                             country: r.account_country_code || 'US',
+                            service_model: r.service_model || 'Unknown',
                             shop_ids: []
                         };
                     }
@@ -1815,6 +1828,7 @@
                     accounts.push({
                         name: account.name,
                         sfdc_url: account.sfdc_url,
+                        service_model: account.service_model,
                         l12m_gmv: accGmv,
                         l12m_revenue: accRevenue,
                         take_rate: takeRate,
@@ -1946,10 +1960,19 @@
                 const q1Yoy = account.q1_2025 > 0 ? ((account.q1_2026 / account.q1_2025) * 100).toFixed(1) : 'N/A';
                 const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
                 
+                // Get short segment name
+                const segmentShort = {
+                    'Large Accounts': 'Large',
+                    'Enterprise': 'Ent',
+                    'Mid-Market Assigned': 'MM-A',
+                    'Mid-Market Scaled': 'MM-S'
+                }[account.service_model] || account.service_model;
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${account.name}</td>
                     <td><a class="account-link" href="${account.sfdc_url}" target="_blank">🔗</a></td>
+                    <td style="font-size: 0.8em; color: var(--text-secondary);">${segmentShort}</td>
                     <td class="number">${formatCurrency(account.l12m_gmv)}</td>
                     <td class="number">${formatCurrency(account.l12m_revenue)}</td>
                     <td class="number">${(account.take_rate || 0).toFixed(2)}%</td>
@@ -1977,6 +2000,7 @@
             totalRow.style.cssText = 'background: var(--accent-blue); font-weight: 700; position: sticky; bottom: 0;';
             totalRow.innerHTML = `
                 <td style="color: white;">📊 TOTAL (${data.accounts.length} accounts)</td>
+                <td></td>
                 <td></td>
                 <td class="number" style="color: white;">${formatCurrency(totals.l12m_gmv, true)}</td>
                 <td class="number" style="color: white;">${formatCurrency(totals.l12m_revenue, true)}</td>
