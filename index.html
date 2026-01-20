@@ -2383,11 +2383,6 @@
             if (projected_el) projected_el.textContent = formatCurrency(metrics.q1_2026_total * 6, true);
         }
         
-        function updateQuarterlyPerformance(metrics) {
-            // This would update the quarterly grid - for now we'll keep the static values
-            // A full implementation would rebuild the quarterly cards dynamically
-        }
-        
         function updateAllAccountsQ1(accounts) {
             const tbody = document.getElementById('all-accounts-q1');
             if (!tbody) return;
