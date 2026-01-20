@@ -1699,11 +1699,21 @@
                 // Build SP status map
                 const spStatusMap = {};
                 (spStatusResult.results || []).forEach(r => {
+                    // Handle BigQuery date format - extract string value
+                    let disabledDate = null;
+                    if (r.sp_disabled_date) {
+                        if (typeof r.sp_disabled_date === 'object' && r.sp_disabled_date.value) {
+                            disabledDate = r.sp_disabled_date.value;
+                        } else if (typeof r.sp_disabled_date === 'string') {
+                            disabledDate = r.sp_disabled_date;
+                        }
+                    }
                     spStatusMap[r.shop_id] = {
                         sp_enabled_current: r.sp_enabled_current === true,
-                        sp_disabled_date: r.sp_disabled_date || null
+                        sp_disabled_date: disabledDate
                     };
                 });
+                console.log('📊 Sample SP status:', Object.values(spStatusMap).slice(0, 3));
                 
                 // Build revenue and GMV maps
                 const revenueMap = {};
@@ -2069,8 +2079,19 @@
                     // Format SP disabled date
                     let spDateDisplay = '-';
                     if (acc.sp_disabled_date) {
-                        const d = new Date(acc.sp_disabled_date);
-                        spDateDisplay = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                        // Handle BigQuery date format (could be YYYY-MM-DD string or {value: ...} object)
+                        let dateStr = acc.sp_disabled_date;
+                        if (typeof dateStr === 'object' && dateStr.value) {
+                            dateStr = dateStr.value;
+                        }
+                        if (dateStr && dateStr !== 'null') {
+                            // Parse YYYY-MM-DD format
+                            const parts = String(dateStr).split('-');
+                            if (parts.length === 3) {
+                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                spDateDisplay = months[parseInt(parts[1]) - 1] + ' ' + parts[0];
+                            }
+                        }
                     }
                     
                     return `<tr>
