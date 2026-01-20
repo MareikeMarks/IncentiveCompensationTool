@@ -1207,7 +1207,10 @@
             <section>
                 <h2><span class="emoji">📈</span> Quarterly Performance</h2>
                 <div class="quarterly-grid" id="quarterly-performance-grid">
-                    <!-- Dynamically populated -->
+                    <div class="quarter-card"><div class="quarter-label">Q1</div><div class="quarter-values"><span style="color: var(--text-secondary);">Loading...</span></div></div>
+                    <div class="quarter-card"><div class="quarter-label">Q2</div><div class="quarter-values"><span style="color: var(--text-secondary);">Loading...</span></div></div>
+                    <div class="quarter-card"><div class="quarter-label">Q3</div><div class="quarter-values"><span style="color: var(--text-secondary);">Loading...</span></div></div>
+                    <div class="quarter-card"><div class="quarter-label">Q4</div><div class="quarter-values"><span style="color: var(--text-secondary);">Loading...</span></div></div>
                 </div>
             </section>
 
@@ -1801,11 +1804,17 @@
         // Update Quarterly Performance grid with live data
         function updateQuarterlyPerformance(data) {
             const grid = document.getElementById('quarterly-performance-grid');
-            if (!grid) return;
+            if (!grid) {
+                console.error('❌ quarterly-performance-grid not found');
+                return;
+            }
             
             const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
             const totals2025 = data.quarter_totals_2025 || {};
             const totals2026 = data.quarter_totals || {};
+            
+            console.log('📊 Quarterly Performance - 2025:', totals2025);
+            console.log('📊 Quarterly Performance - 2026:', totals2026);
             
             grid.innerHTML = quarters.map(q => {
                 const val2025 = totals2025[q] || 0;
