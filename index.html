@@ -1926,7 +1926,23 @@
             const tbody = document.getElementById('full-book');
             tbody.innerHTML = '';
             
+            // Calculate totals
+            let totals = {
+                l12m_gmv: 0, l12m_revenue: 0, total_2025: 0,
+                q1_2025: 0, q1_2026: 0, q2_2025: 0, q3_2025: 0, q4_2025: 0
+            };
+            
             data.accounts.forEach(account => {
+                // Accumulate totals
+                totals.l12m_gmv += account.l12m_gmv || 0;
+                totals.l12m_revenue += account.l12m_revenue || 0;
+                totals.q1_2025 += account.q1_2025 || 0;
+                totals.q1_2026 += account.q1_2026 || 0;
+                totals.q2_2025 += account.q2_2025 || 0;
+                totals.q3_2025 += account.q3_2025 || 0;
+                totals.q4_2025 += account.q4_2025 || 0;
+                totals.total_2025 += (account.q1_2025 || 0) + (account.q2_2025 || 0) + (account.q3_2025 || 0) + (account.q4_2025 || 0);
+                
                 const q1Yoy = account.q1_2025 > 0 ? ((account.q1_2026 / account.q1_2025) * 100).toFixed(1) : 'N/A';
                 const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
                 
@@ -1953,6 +1969,33 @@
                 `;
                 tbody.appendChild(row);
             });
+            
+            // Add total row
+            const totalQ1Yoy = totals.q1_2025 > 0 ? ((totals.q1_2026 / totals.q1_2025) * 100).toFixed(1) : 'N/A';
+            const totalTakeRate = totals.l12m_gmv > 0 ? (totals.l12m_revenue / totals.l12m_gmv) * 100 : 0;
+            const totalRow = document.createElement('tr');
+            totalRow.style.cssText = 'background: var(--accent-blue); font-weight: 700; position: sticky; bottom: 0;';
+            totalRow.innerHTML = `
+                <td style="color: white;">📊 TOTAL (${data.accounts.length} accounts)</td>
+                <td></td>
+                <td class="number" style="color: white;">${formatCurrency(totals.l12m_gmv, true)}</td>
+                <td class="number" style="color: white;">${formatCurrency(totals.l12m_revenue, true)}</td>
+                <td class="number" style="color: white;">${totalTakeRate.toFixed(2)}%</td>
+                <td class="number" style="color: white;">${formatCurrency(totals.total_2025, true)}</td>
+                <td class="number" style="color: white;">${formatCurrency(totals.q1_2025, true)}</td>
+                <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totals.q1_2026, true)}</td>
+                <td style="color: white;">${totalQ1Yoy}%</td>
+                <td class="number" style="color: white;">${formatCurrency(totals.q2_2025, true)}</td>
+                <td class="number" style="color: white;">$0</td>
+                <td style="color: white;">-</td>
+                <td class="number" style="color: white;">${formatCurrency(totals.q3_2025, true)}</td>
+                <td class="number" style="color: white;">$0</td>
+                <td style="color: white;">-</td>
+                <td class="number" style="color: white;">${formatCurrency(totals.q4_2025, true)}</td>
+                <td class="number" style="color: white;">$0</td>
+                <td style="color: white;">-</td>
+            `;
+            tbody.appendChild(totalRow);
             
             // Update Q1 Performance table
             const q1Tbody = document.getElementById('all-accounts-q1');
