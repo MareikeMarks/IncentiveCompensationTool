@@ -1925,9 +1925,16 @@
             // Update Q1 2026 NRR section
             if (data.q1_comparison) {
                 const q1_2026 = data.q1_comparison.q1_2026_ytd || 0;
+                console.log('💰 Q1 2026 YTD Revenue:', q1_2026, '→', formatCurrency(q1_2026, true));
                 
                 // Update Q1 2026 YTD display
-                document.getElementById('q1-2026-ytd').textContent = formatCurrency(q1_2026, true);
+                const ytdElement = document.getElementById('q1-2026-ytd');
+                if (ytdElement) {
+                    ytdElement.textContent = formatCurrency(q1_2026, true);
+                    console.log('✅ Updated Q1 2026 YTD element');
+                } else {
+                    console.error('❌ Could not find q1-2026-ytd element');
+                }
                 
                 // Set global variables for NRR tracker
                 currentQ1Revenue = q1_2026;
@@ -1937,6 +1944,8 @@
                 if (document.getElementById('nrr-target-input').value) {
                     updateNRRTracker();
                 }
+            } else {
+                console.warn('⚠️ No q1_comparison data found');
             }
             
             // Update table
