@@ -1802,16 +1802,21 @@
                 
                 // Build revenue and GMV maps
                 const revenueMap = {};
+                let debugQ1_2026_Total = 0;
                 (revenueResult.results || []).forEach(r => {
+                    const q1_2026_val = parseFloat(r.q1_2026) || 0;
+                    debugQ1_2026_Total += q1_2026_val;
                     revenueMap[r.shop_id] = {
                         l12m_revenue: parseFloat(r.l12m_revenue) || 0,
                         q1_2025: parseFloat(r.q1_2025) || 0,
                         q2_2025: parseFloat(r.q2_2025) || 0,
                         q3_2025: parseFloat(r.q3_2025) || 0,
                         q4_2025: parseFloat(r.q4_2025) || 0,
-                        q1_2026: parseFloat(r.q1_2026) || 0
+                        q1_2026: q1_2026_val
                     };
                 });
+                console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
+                console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
                 
                 const gmvMap = {};
                 (gmvResult.results || []).forEach(r => {
@@ -1864,6 +1869,9 @@
                 
                 // Sort accounts by L12M revenue
                 accounts.sort((a, b) => b.l12m_revenue - a.l12m_revenue);
+                
+                console.log('📊 After aggregation - Total Q1 2026:', totalQ1_2026);
+                console.log('📊 Number of accounts:', accounts.length);
                 
                 // Build final data object
                 const data = {
