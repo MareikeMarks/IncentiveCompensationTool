@@ -1289,6 +1289,7 @@
             <!-- Needs Attention -->
             <section>
                 <h2><span class="emoji">⚠️</span> Needs Attention (Q1 YoY < 25%)</h2>
+                <p class="section-description">Accounts with revenue pacing below 25% YoY. Check "Likely Cause" to see if GMV is growing (suggesting payment provider switch like Adyen).</p>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -1300,10 +1301,11 @@
                                 <th>Q1 '25 GMV</th>
                                 <th>Q1 '26 GMV</th>
                                 <th>GMV YoY</th>
+                                <th>Likely Cause</th>
                             </tr>
                         </thead>
                         <tbody id="needs-attention">
-                            <tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Load your data to see accounts needing attention</td></tr>
+                            <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Load your data to see accounts needing attention</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1957,8 +1959,31 @@
                 
                 needsAttentionTbody.innerHTML = needsAttention.slice(0, 10).map(acc => {
                     const revYoy = acc.q1_2025 > 0 ? ((acc.q1_2026 / acc.q1_2025) * 100).toFixed(1) : 'N/A';
-                    const gmvYoy = acc.q1_gmv_2025 > 0 ? ((acc.q1_gmv_2026 / acc.q1_gmv_2025) * 100).toFixed(1) : 'N/A';
-                    const gmvYoyClass = gmvYoy === 'N/A' ? '' : (parseFloat(gmvYoy) >= 100 ? 'pacing-high' : parseFloat(gmvYoy) >= 50 ? 'pacing-medium' : 'pacing-low');
+                    const gmvYoyNum = acc.q1_gmv_2025 > 0 ? (acc.q1_gmv_2026 / acc.q1_gmv_2025) * 100 : 0;
+                    const gmvYoy = acc.q1_gmv_2025 > 0 ? gmvYoyNum.toFixed(1) : 'N/A';
+                    const gmvYoyClass = gmvYoy === 'N/A' ? '' : (gmvYoyNum >= 100 ? 'pacing-high' : gmvYoyNum >= 50 ? 'pacing-medium' : 'pacing-low');
+                    
+                    // Determine likely cause
+                    let likelyCause = '';
+                    let causeClass = '';
+                    const revYoyNum = parseFloat(revYoy) || 0;
+                    
+                    if (gmvYoyNum >= 80 && revYoyNum < 25) {
+                        // GMV stable/growing but revenue tanked = payment provider change
+                        likelyCause = '💳 Payment Provider Switch';
+                        causeClass = 'style="color: var(--accent-purple); font-weight: 600;"';
+                    } else if (gmvYoyNum < 50 && revYoyNum < 25) {
+                        // Both GMV and revenue down = actual sales decline
+                        likelyCause = '📉 Sales Decline';
+                        causeClass = 'style="color: var(--accent-orange);"';
+                    } else if (gmvYoyNum >= 50 && gmvYoyNum < 80 && revYoyNum < 25) {
+                        // GMV slightly down, revenue way down = mixed/investigate
+                        likelyCause = '🔍 Investigate';
+                        causeClass = 'style="color: var(--accent-yellow);"';
+                    } else {
+                        likelyCause = '-';
+                    }
+                    
                     return `<tr>
                         <td>${acc.name}</td>
                         <td class="number">${formatCurrency(acc.q1_2025)}</td>
@@ -1967,6 +1992,7 @@
                         <td class="number">${formatCurrency(acc.q1_gmv_2025 || 0, true)}</td>
                         <td class="number">${formatCurrency(acc.q1_gmv_2026 || 0, true)}</td>
                         <td class="${gmvYoyClass}">${gmvYoy}${gmvYoy !== 'N/A' ? '%' : ''}</td>
+                        <td ${causeClass}>${likelyCause}</td>
                     </tr>`;
                 }).join('');
             }
