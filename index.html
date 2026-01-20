@@ -1170,6 +1170,12 @@
                         <div class="yoy-metric-value pacing-value" id="nrr-pacing">-</div>
                         <div id="nrr-status" style="font-size: 0.85rem; margin-top: 0.25rem;"></div>
                     </div>
+                    <div class="yoy-arrow">→</div>
+                    <div class="yoy-metric">
+                        <div class="yoy-metric-label">Estimated Q1 Total</div>
+                        <div class="yoy-metric-value" id="nrr-projected" style="color: var(--accent-cyan);">-</div>
+                        <div id="nrr-projected-note" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;"></div>
+                    </div>
                 </div>
                 <div id="nrr-progress-container" style="margin-top: 1rem; display: none;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.85rem;">
@@ -2022,6 +2028,16 @@
             document.getElementById('nrr-progress-bar').style.width = progressPercent + '%';
             document.getElementById('nrr-current-display').textContent = formatCurrency(currentQ1Revenue, true);
             document.getElementById('nrr-target-display').textContent = formatCurrency(target, true);
+            
+            // Update estimated Q1 total
+            document.getElementById('nrr-projected').textContent = formatCurrency(projected, true);
+            const projectedDiff = projected - target;
+            const projectedNote = document.getElementById('nrr-projected-note');
+            if (projectedDiff >= 0) {
+                projectedNote.innerHTML = `<span style="color: var(--accent-green);">+${formatCurrency(projectedDiff, true)} over target</span>`;
+            } else {
+                projectedNote.innerHTML = `<span style="color: var(--accent-red);">${formatCurrency(projectedDiff, true)} under target</span>`;
+            }
             
             // Status message and colors
             const statusEl = document.getElementById('nrr-status');
