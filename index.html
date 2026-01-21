@@ -1443,7 +1443,7 @@
                         </div>
                         <div class="summary-card" style="padding: 1rem; text-align: center;">
                             <div class="summary-value" id="portfolio-sp-take-rate" style="font-size: 1.5rem; color: #10b981;">-</div>
-                            <div class="summary-label" style="font-size: 0.8rem;">Portfolio SP Take Rate</div>
+                            <div class="summary-label" style="font-size: 0.8rem;">Pure SP Take Rate <span class="info-tooltip" style="font-size: 0.65rem;">ⓘ<span class="tooltip-text">SP Revenue ÷ GPV: Uses only Shopify Payments fees (processing + FX + chargeback)</span></span></div>
                         </div>
                         <div class="summary-card" style="padding: 1rem; text-align: center;">
                             <div class="summary-value" id="portfolio-sp-penetration" style="font-size: 1.5rem; color: #6366f1;">-</div>
@@ -1480,12 +1480,12 @@
                                     <th>Account</th>
                                     <th>Country</th>
                                     <th>Shops</th>
-                                    <th>GMV Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">Revenue ÷ GMV: Overall revenue as % of total sales</span></span></th>
-                                    <th>SP Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">Revenue ÷ GPV: Revenue earned per Shopify Payments dollar</span></span></th>
-                                    <th>SP Penetration <span class="info-tooltip">ⓘ<span class="tooltip-text">GPV ÷ GMV: % of total sales processed through Shopify Payments</span></span></th>
+                                    <th>GMV Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">Total Revenue ÷ GMV: Overall Shopify revenue as % of total sales</span></span></th>
+                                    <th>Pure SP Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">SP Revenue ÷ GPV: Processing fees from SP transactions only. True SP efficiency metric.</span></span></th>
+                                    <th>SP Penetration <span class="info-tooltip">ⓘ<span class="tooltip-text">GPV ÷ GMV: % of total sales processed through Shopify Payments. Low = using external PSP.</span></span></th>
                                     <th>L12M GMV <span class="info-tooltip">ⓘ<span class="tooltip-text">Gross Merchandise Volume: Total sales value (all payment methods) over last 12 months</span></span></th>
                                     <th>L12M GPV <span class="info-tooltip">ⓘ<span class="tooltip-text">Gross Payments Volume: Total value of transactions processed through Shopify Payments (L12M)</span></span></th>
-                                    <th>L12M Revenue</th>
+                                    <th>L12M SP Revenue <span class="info-tooltip">ⓘ<span class="tooltip-text">Revenue from Shopify Payments only: Processing fees + FX fees + Chargeback fees</span></span></th>
                                     <th>Opportunity</th>
                                 </tr>
                             </thead>
@@ -1702,18 +1702,33 @@
                     GROUP BY shop_id
                 `;
                 
-                // Run all 4 queries in parallel for speed
-                const [revenueResult, gmvResult, spResult, gpvResult] = await Promise.all([
+                // Query 6: Get SP-specific revenue (processing fees from Shopify Payments only)
+                const spRevenueQuery = `
+                    SELECT 
+                        shop_id,
+                        SUM(processing_revenue_usd) AS l12m_sp_revenue,
+                        SUM(fx_fee_revenue_usd) AS l12m_fx_revenue,
+                        SUM(chargeback_fee_revenue_usd) AS l12m_chargeback_revenue
+                    FROM \`shopify-dw.finance.payments_revenue_and_costs_v1\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+                    GROUP BY shop_id
+                `;
+                
+                // Run all 5 queries in parallel for speed
+                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult] = await Promise.all([
                     quick.dw.querySync(revenueQuery),
                     quick.dw.querySync(gmvQuery),
                     quick.dw.querySync(spQuery),
-                    quick.dw.querySync(gpvQuery)
+                    quick.dw.querySync(gpvQuery),
+                    quick.dw.querySync(spRevenueQuery)
                 ]);
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
                 console.log('📊 GMV query returned', gmvResult.results?.length || 0, 'shops');
                 console.log('📊 SP query returned', spResult.results?.length || 0, 'shops');
                 console.log('📊 GPV query returned', gpvResult.results?.length || 0, 'shops');
+                console.log('📊 SP Revenue query returned', spRevenueResult.results?.length || 0, 'shops');
                 
                 // Build maps from results
                 const revenueMap = {};
@@ -1757,17 +1772,26 @@
                     };
                 });
                 
+                const spRevenueMap = {};
+                (spRevenueResult.results || []).forEach(r => {
+                    spRevenueMap[r.shop_id] = {
+                        l12m_sp_revenue: parseFloat(r.l12m_sp_revenue) || 0,
+                        l12m_fx_revenue: parseFloat(r.l12m_fx_revenue) || 0,
+                        l12m_chargeback_revenue: parseFloat(r.l12m_chargeback_revenue) || 0
+                    };
+                });
+                
                 console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
                 
                 // Aggregate data by account
                 const accounts = [];
                 let totalGmv = 0, totalRevenue = 0, total2025 = 0;
-                let totalGpv = 0;
+                let totalGpv = 0, totalSpRevenue = 0;
                 let totalQ1_2025 = 0, totalQ2_2025 = 0, totalQ3_2025 = 0, totalQ4_2025 = 0;
                 let totalQ1_2026 = 0, totalQ2_2026 = 0, totalQ3_2026 = 0, totalQ4_2026 = 0;
                 
                 Object.entries(accountMap).forEach(([accountId, account]) => {
-                    let accGmv = 0, accRevenue = 0, accGpv = 0;
+                    let accGmv = 0, accRevenue = 0, accGpv = 0, accSpRevenue = 0;
                     let accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0;
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
@@ -1783,6 +1807,13 @@
                         const gpvData = gpvMap[shopId];
                         if (gpvData) {
                             accGpv += gpvData.l12m_gpv || 0;
+                        }
+                        const spRevData = spRevenueMap[shopId];
+                        if (spRevData) {
+                            // SP Revenue = Processing fees + FX fees + Chargeback fees
+                            accSpRevenue += (spRevData.l12m_sp_revenue || 0) + 
+                                           (spRevData.l12m_fx_revenue || 0) + 
+                                           (spRevData.l12m_chargeback_revenue || 0);
                         }
                         const rev = revenueMap[shopId];
                         if (rev) {
@@ -1811,11 +1842,13 @@
                     const spCurrentlyDisabled = spEnabledShops === 0 && spDisabledShops > 0;
                     
                     // Calculate take rates:
-                    // GMV Take Rate = Revenue / GMV (overall revenue efficiency)
-                    // SP Take Rate = Revenue / GPV (SP-specific revenue efficiency)
+                    // GMV Take Rate = Total Revenue / GMV (overall revenue efficiency)
+                    // SP Take Rate (Old) = Total Revenue / GPV (includes non-SP revenue in numerator)
+                    // Pure SP Take Rate = SP-only Revenue / GPV (true SP efficiency)
                     // SP Penetration = GPV / GMV (% of sales through SP)
                     const takeRate = accGmv > 0 ? (accRevenue / accGmv) * 100 : 0;
                     const spTakeRate = accGpv > 0 ? (accRevenue / accGpv) * 100 : 0;
+                    const pureSpTakeRate = accGpv > 0 ? (accSpRevenue / accGpv) * 100 : 0;
                     const spPenetration = accGmv > 0 ? (accGpv / accGmv) * 100 : 0;
                     const acc2025 = accQ1_25 + accQ2_25 + accQ3_25 + accQ4_25;
                     
@@ -1827,8 +1860,10 @@
                         l12m_gmv: accGmv,
                         l12m_gpv: accGpv,
                         l12m_revenue: accRevenue,
+                        l12m_sp_revenue: accSpRevenue,
                         take_rate: takeRate,
                         sp_take_rate: spTakeRate,
+                        pure_sp_take_rate: pureSpTakeRate,
                         sp_penetration: spPenetration,
                         q1_2025: accQ1_25,
                         q2_2025: accQ2_25,
@@ -1846,6 +1881,7 @@
                     
                     totalGmv += accGmv;
                     totalGpv += accGpv;
+                    totalSpRevenue += accSpRevenue;
                     totalRevenue += accRevenue;
                     total2025 += acc2025;
                     totalQ1_2025 += accQ1_25;
@@ -1883,9 +1919,11 @@
                         total_l12m_gmv: totalGmv,
                         total_l12m_gpv: totalGpv,
                         total_l12m_revenue: totalRevenue,
+                        total_l12m_sp_revenue: totalSpRevenue,
                         total_2025_revenue: total2025,
                         avg_take_rate: totalGmv > 0 ? (totalRevenue / totalGmv) * 100 : 0,
                         avg_sp_take_rate: totalGpv > 0 ? (totalRevenue / totalGpv) * 100 : 0,
+                        avg_pure_sp_take_rate: totalGpv > 0 ? (totalSpRevenue / totalGpv) * 100 : 0,
                         sp_penetration: totalGmv > 0 ? (totalGpv / totalGmv) * 100 : 0
                     },
                     q1_comparison: {
@@ -2199,9 +2237,10 @@
             const totalGmv = accounts.reduce((sum, acc) => sum + (acc.l12m_gmv || 0), 0);
             const totalGpv = accounts.reduce((sum, acc) => sum + (acc.l12m_gpv || 0), 0);
             const totalRevenue = accounts.reduce((sum, acc) => sum + (acc.l12m_revenue || 0), 0);
+            const totalSpRevenue = accounts.reduce((sum, acc) => sum + (acc.l12m_sp_revenue || 0), 0);
             
             const portfolioGmvTakeRate = totalGmv > 0 ? (totalRevenue / totalGmv) * 100 : 0;
-            const portfolioSpTakeRate = totalGpv > 0 ? (totalRevenue / totalGpv) * 100 : 0;
+            const portfolioPureSpTakeRate = totalGpv > 0 ? (totalSpRevenue / totalGpv) * 100 : 0;
             const portfolioSpPenetration = totalGmv > 0 ? (totalGpv / totalGmv) * 100 : 0;
             
             // Update portfolio summary cards
@@ -2209,7 +2248,7 @@
             if (gmvTrEl) gmvTrEl.textContent = portfolioGmvTakeRate.toFixed(2) + '%';
             
             const spTrEl = document.getElementById('portfolio-sp-take-rate');
-            if (spTrEl) spTrEl.textContent = portfolioSpTakeRate.toFixed(2) + '%';
+            if (spTrEl) spTrEl.textContent = portfolioPureSpTakeRate.toFixed(2) + '%';
             
             const spPenEl = document.getElementById('portfolio-sp-penetration');
             if (spPenEl) spPenEl.textContent = portfolioSpPenetration.toFixed(1) + '%';
@@ -2247,7 +2286,7 @@
                     tbody.innerHTML = lowTakeRate.map(acc => {
                         const countryFlag = getCountryFlag(acc.country);
                         const spPen = acc.sp_penetration || 0;
-                        const spTr = acc.sp_take_rate || 0;
+                        const pureSpTr = acc.pure_sp_take_rate || 0;
                         
                         // Determine opportunity type based on metrics
                         let opportunity = '';
@@ -2259,7 +2298,7 @@
                             oppStyle = 'color: #ef4444; font-weight: 600;';
                         } else if (spPen >= 30 && spPen < 70) {
                             // Moderate SP penetration, room to grow
-                            if (spTr < 3) {
+                            if (pureSpTr < 2) {
                                 opportunity = '📈 Upsell SP Products';
                                 oppStyle = 'color: #f59e0b; font-weight: 600;';
                             } else {
@@ -2268,7 +2307,7 @@
                             }
                         } else if (spPen >= 70) {
                             // High SP penetration but low GMV take rate = upsell products
-                            if (spTr < 3) {
+                            if (pureSpTr < 2) {
                                 opportunity = '💎 Upsell Products';
                                 oppStyle = 'color: #10b981; font-weight: 600;';
                             } else {
@@ -2279,6 +2318,8 @@
                         
                         // Color code SP penetration
                         const spPenClass = spPen < 30 ? 'pacing-low' : spPen < 70 ? 'pacing-medium' : 'pacing-high';
+                        // Color code Pure SP Take Rate (typical range 1.5-3% for healthy SP accounts)
+                        const pureSpTrClass = pureSpTr < 1.5 ? 'pacing-low' : pureSpTr < 2.5 ? 'pacing-medium' : 'pacing-high';
                         
                         return `
                             <tr>
@@ -2286,11 +2327,11 @@
                                 <td>${countryFlag} ${acc.country || 'Unknown'}</td>
                                 <td class="number">${acc.shop_count || 0}</td>
                                 <td class="number pacing-low">${acc.take_rate.toFixed(2)}%</td>
-                                <td class="number" style="color: #10b981;">${spTr.toFixed(2)}%</td>
+                                <td class="number ${pureSpTrClass}">${pureSpTr.toFixed(2)}%</td>
                                 <td class="number ${spPenClass}">${spPen.toFixed(1)}%</td>
                                 <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
                                 <td class="number">${formatCurrency(acc.l12m_gpv || 0, true)}</td>
-                                <td class="number">${formatCurrency(acc.l12m_revenue, true)}</td>
+                                <td class="number">${formatCurrency(acc.l12m_sp_revenue || 0, true)}</td>
                                 <td style="${oppStyle}">${opportunity}</td>
                             </tr>
                         `;
