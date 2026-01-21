@@ -1368,55 +1368,30 @@
                     <h4 style="margin: 0 0 0.75rem 0; color: var(--text-primary); font-size: 0.95rem;">📊 Understanding Take Rate Metrics</h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
                         <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
-                            <div style="font-weight: 600; color: #f59e0b; margin-bottom: 0.25rem;">GMV Take Rate = Revenue ÷ GMV</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Overall revenue as % of total sales. Low rate can mean merchant uses external PSP (Adyen, Stripe) OR has low SP product adoption.</div>
+                            <div style="font-weight: 600; color: #f59e0b; margin-bottom: 0.25rem;">GMV Take Rate = Total Revenue ÷ GMV</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Overall Shopify revenue as % of total sales. Low rate can mean merchant uses external PSP (Adyen, Stripe) OR has low SP product adoption.</div>
                         </div>
                         <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
-                            <div style="font-weight: 600; color: #10b981; margin-bottom: 0.25rem;">SP Take Rate = Revenue ÷ GPV</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Revenue per SP payment dollar. High rate means SP products well-adopted. Low rate means opportunity for Markets, Installments, etc.</div>
+                            <div style="font-weight: 600; color: #10b981; margin-bottom: 0.25rem;">Pure SP Take Rate = SP Revenue ÷ GPV</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">SP processing fees as % of SP payment volume. High rate = SP products well-adopted. Low rate = opportunity for Markets, Installments, etc.</div>
                         </div>
                         <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
                             <div style="font-weight: 600; color: #6366f1; margin-bottom: 0.25rem;">SP Penetration = GPV ÷ GMV</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">% of sales through Shopify Payments. Low penetration means merchant routes payments elsewhere - opportunity to win back volume.</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">% of sales through Shopify Payments. Low penetration = merchant routes payments elsewhere. Opportunity to win back volume.</div>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Portfolio Summary Cards -->
-                <div class="take-rate-summary" style="margin-bottom: 1.5rem;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem;">
-                        <div class="summary-card" style="padding: 1rem; text-align: center;">
-                            <div class="summary-value" id="portfolio-gmv-take-rate" style="font-size: 1.5rem; color: #f59e0b;">-</div>
-                            <div class="summary-label" style="font-size: 0.8rem;">Portfolio GMV Take Rate</div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #60a5fa; margin-bottom: 0.25rem;">GPV = Gross Payments Volume</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Total $ value of transactions processed through Shopify Payments only (not Adyen, Stripe, etc.).</div>
                         </div>
-                        <div class="summary-card" style="padding: 1rem; text-align: center;">
-                            <div class="summary-value" id="portfolio-sp-take-rate" style="font-size: 1.5rem; color: #10b981;">-</div>
-                            <div class="summary-label" style="font-size: 0.8rem;">Pure SP Take Rate</div>
-                        </div>
-                        <div class="summary-card" style="padding: 1rem; text-align: center;">
-                            <div class="summary-value" id="portfolio-sp-penetration" style="font-size: 1.5rem; color: #6366f1;">-</div>
-                            <div class="summary-label" style="font-size: 0.8rem;">Avg SP Penetration</div>
-                        </div>
-                        <div class="summary-card" style="padding: 1rem; text-align: center;">
-                            <div class="summary-value" id="low-take-rate-count" style="font-size: 1.5rem; color: #ef4444;">-</div>
-                            <div class="summary-label" style="font-size: 0.8rem;">Accounts <3% GMV TR</div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #a78bfa; margin-bottom: 0.25rem;">SP Revenue = Processing + FX + Chargeback Fees</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Revenue from Shopify Payments transactions only. Does not include subscription fees or third-party gateway fees.</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="opportunities-table">
                     <h3>🎯 Low GMV Take Rate Accounts (< 3%)</h3>
-                    <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 0.75rem 0;"><strong>📊 Key Metrics Explained:</strong></p>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">
-                            <div><strong>GMV Take Rate</strong> = Total Revenue ÷ GMV (all Shopify revenue as % of sales)</div>
-                            <div><strong>Pure SP Take Rate</strong> = SP Revenue ÷ GPV (SP processing fees only)</div>
-                            <div><strong>SP Penetration</strong> = GPV ÷ GMV (% of sales through Shopify Payments)</div>
-                            <div><strong>GMV</strong> = Gross Merchandise Volume (all sales, any payment method)</div>
-                            <div><strong>GPV</strong> = Gross Payments Volume (sales through SP only)</div>
-                            <div><strong>SP Revenue</strong> = Processing + FX + Chargeback fees from SP</div>
-                        </div>
-                    </div>
                     <div class="table-container">
                         <table id="low-take-rate-table">
                             <thead>
@@ -2177,26 +2152,6 @@
         
         // Update Take Rate section with live data
         function updateTakeRateSection(accounts) {
-            // Calculate portfolio-level metrics
-            const totalGmv = accounts.reduce((sum, acc) => sum + (acc.l12m_gmv || 0), 0);
-            const totalGpv = accounts.reduce((sum, acc) => sum + (acc.l12m_gpv || 0), 0);
-            const totalRevenue = accounts.reduce((sum, acc) => sum + (acc.l12m_revenue || 0), 0);
-            const totalSpRevenue = accounts.reduce((sum, acc) => sum + (acc.l12m_sp_revenue || 0), 0);
-            
-            const portfolioGmvTakeRate = totalGmv > 0 ? (totalRevenue / totalGmv) * 100 : 0;
-            const portfolioPureSpTakeRate = totalGpv > 0 ? (totalSpRevenue / totalGpv) * 100 : 0;
-            const portfolioSpPenetration = totalGmv > 0 ? (totalGpv / totalGmv) * 100 : 0;
-            
-            // Update portfolio summary cards
-            const gmvTrEl = document.getElementById('portfolio-gmv-take-rate');
-            if (gmvTrEl) gmvTrEl.textContent = portfolioGmvTakeRate.toFixed(2) + '%';
-            
-            const spTrEl = document.getElementById('portfolio-sp-take-rate');
-            if (spTrEl) spTrEl.textContent = portfolioPureSpTakeRate.toFixed(2) + '%';
-            
-            const spPenEl = document.getElementById('portfolio-sp-penetration');
-            if (spPenEl) spPenEl.textContent = portfolioSpPenetration.toFixed(1) + '%';
-            
             // Filter accounts with take rate < 3% and > 0%
             const lowTakeRate = accounts
                 .filter(acc => acc.take_rate < 3 && acc.take_rate > 0)
@@ -2262,12 +2217,6 @@
                         `;
                     }).join('');
                 }
-            }
-            
-            // Update summary counts
-            const lowTakeRateCountEl = document.getElementById('low-take-rate-count');
-            if (lowTakeRateCountEl) {
-                lowTakeRateCountEl.textContent = lowTakeRate.length;
             }
         }
         
