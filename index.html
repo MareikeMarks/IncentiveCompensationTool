@@ -1361,11 +1361,52 @@
             <!-- Take Rate Opportunities -->
             <section class="take-rate-section">
                 <h2><span class="emoji">📉</span> Take Rate Optimization Opportunities</h2>
-                <p class="section-description">Accounts with take rates below 4% have significant revenue growth potential through product enablement.</p>
+                <p class="section-description">Identify accounts with SP growth potential. Low GMV Take Rate but high SP Take Rate = merchant uses another payment provider.</p>
+                
+                <!-- Take Rate Explainer -->
+                <div class="take-rate-explainer" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1)); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <h4 style="margin: 0 0 0.75rem 0; color: var(--text-primary); font-size: 0.95rem;">📊 Understanding Take Rate Metrics</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #f59e0b; margin-bottom: 0.25rem;">GMV Take Rate = Revenue ÷ GMV</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Overall revenue as % of total sales. Low rate can mean merchant uses external PSP (Adyen, Stripe) OR has low SP product adoption.</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #10b981; margin-bottom: 0.25rem;">SP Take Rate = Revenue ÷ GPV</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Revenue per SP payment dollar. High rate means SP products well-adopted. Low rate means opportunity for Markets, Installments, etc.</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #6366f1; margin-bottom: 0.25rem;">SP Penetration = GPV ÷ GMV</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">% of sales through Shopify Payments. Low penetration means merchant routes payments elsewhere - opportunity to win back volume.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Portfolio Summary Cards -->
+                <div class="take-rate-summary" style="margin-bottom: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem;">
+                        <div class="summary-card" style="padding: 1rem; text-align: center;">
+                            <div class="summary-value" id="portfolio-gmv-take-rate" style="font-size: 1.5rem; color: #f59e0b;">-</div>
+                            <div class="summary-label" style="font-size: 0.8rem;">Portfolio GMV Take Rate</div>
+                        </div>
+                        <div class="summary-card" style="padding: 1rem; text-align: center;">
+                            <div class="summary-value" id="portfolio-sp-take-rate" style="font-size: 1.5rem; color: #10b981;">-</div>
+                            <div class="summary-label" style="font-size: 0.8rem;">Portfolio SP Take Rate</div>
+                        </div>
+                        <div class="summary-card" style="padding: 1rem; text-align: center;">
+                            <div class="summary-value" id="portfolio-sp-penetration" style="font-size: 1.5rem; color: #6366f1;">-</div>
+                            <div class="summary-label" style="font-size: 0.8rem;">Avg SP Penetration</div>
+                        </div>
+                        <div class="summary-card" style="padding: 1rem; text-align: center;">
+                            <div class="summary-value" id="low-take-rate-count" style="font-size: 1.5rem; color: #ef4444;">-</div>
+                            <div class="summary-label" style="font-size: 0.8rem;">Accounts <3% GMV TR</div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="take-rate-chart">
                     <div class="chart-header">
-                        <span>Take Rate Distribution (Lowest 10)</span>
+                        <span>GMV Take Rate Distribution (Lowest 10)</span>
                         <div class="chart-legend">
                             <span class="legend-item"><span class="legend-dot low"></span> < 3% (High Opportunity)</span>
                             <span class="legend-item"><span class="legend-dot medium"></span> 3-5%</span>
@@ -1378,33 +1419,28 @@
                 </div>
 
                 <div class="opportunities-table">
-                    <h3>🎯 Low Take Rate Accounts</h3>
+                    <h3>🎯 Low GMV Take Rate Accounts (< 3%)</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Compare SP Take Rate vs GMV Take Rate to identify if low rate is due to external PSP or low SP product adoption.</p>
                     <div class="table-container">
-                        <table>
+                        <table id="low-take-rate-table">
                             <thead>
                                 <tr>
                                     <th>Account</th>
                                     <th>Country</th>
                                     <th>Shops</th>
-                                    <th>Current Take Rate</th>
+                                    <th>GMV Take Rate</th>
+                                    <th>SP Take Rate</th>
+                                    <th>SP Penetration</th>
                                     <th>L12M GMV</th>
+                                    <th>L12M GPV</th>
                                     <th>L12M Revenue</th>
+                                    <th>Opportunity</th>
                                 </tr>
                             </thead>
                             <tbody id="low-take-rate-tbody">
-                                <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Load your data to see low take rate accounts</td></tr>
+                                <tr><td colspan="10" style="text-align: center; color: var(--text-secondary);">Load your data to see low take rate accounts</td></tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                <div class="take-rate-summary">
-                    <div class="summary-card">
-                        <div class="summary-icon">📊</div>
-                        <div class="summary-content">
-                            <div class="summary-value" id="low-take-rate-count">-</div>
-                            <div class="summary-label">Accounts Below 3% Take Rate</div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1603,16 +1639,29 @@
                     WHERE shop_id IN (${shopIds.join(',')})
                 `;
                 
-                // Run all 3 queries in parallel for speed
-                const [revenueResult, gmvResult, spResult] = await Promise.all([
+                // Query 5: Get GPV (Gross Payments Volume - payments through Shopify Payments only)
+                const gpvQuery = `
+                    SELECT 
+                        shop_id,
+                        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS l12m_gpv
+                    FROM \`shopify-dw.finance.shop_gpv_daily_summary_v1\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+                    GROUP BY shop_id
+                `;
+                
+                // Run all 4 queries in parallel for speed
+                const [revenueResult, gmvResult, spResult, gpvResult] = await Promise.all([
                     quick.dw.querySync(revenueQuery),
                     quick.dw.querySync(gmvQuery),
-                    quick.dw.querySync(spQuery)
+                    quick.dw.querySync(spQuery),
+                    quick.dw.querySync(gpvQuery)
                 ]);
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
                 console.log('📊 GMV query returned', gmvResult.results?.length || 0, 'shops');
                 console.log('📊 SP query returned', spResult.results?.length || 0, 'shops');
+                console.log('📊 GPV query returned', gpvResult.results?.length || 0, 'shops');
                 
                 // Build maps from results
                 const revenueMap = {};
@@ -1649,16 +1698,24 @@
                     };
                 });
                 
+                const gpvMap = {};
+                (gpvResult.results || []).forEach(r => {
+                    gpvMap[r.shop_id] = {
+                        l12m_gpv: parseFloat(r.l12m_gpv) || 0
+                    };
+                });
+                
                 console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
                 
                 // Aggregate data by account
                 const accounts = [];
                 let totalGmv = 0, totalRevenue = 0, total2025 = 0;
+                let totalGpv = 0;
                 let totalQ1_2025 = 0, totalQ2_2025 = 0, totalQ3_2025 = 0, totalQ4_2025 = 0;
                 let totalQ1_2026 = 0, totalQ2_2026 = 0, totalQ3_2026 = 0, totalQ4_2026 = 0;
                 
                 Object.entries(accountMap).forEach(([accountId, account]) => {
-                    let accGmv = 0, accRevenue = 0;
+                    let accGmv = 0, accRevenue = 0, accGpv = 0;
                     let accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0;
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
@@ -1670,6 +1727,10 @@
                             accGmv += gmvData.l12m_gmv || 0;
                             accQ1Gmv25 += gmvData.q1_gmv_2025 || 0;
                             accQ1Gmv26 += gmvData.q1_gmv_2026 || 0;
+                        }
+                        const gpvData = gpvMap[shopId];
+                        if (gpvData) {
+                            accGpv += gpvData.l12m_gpv || 0;
                         }
                         const rev = revenueMap[shopId];
                         if (rev) {
@@ -1697,7 +1758,13 @@
                     // SP is disabled for account if NO shops have SP enabled
                     const spCurrentlyDisabled = spEnabledShops === 0 && spDisabledShops > 0;
                     
+                    // Calculate take rates:
+                    // GMV Take Rate = Revenue / GMV (overall revenue efficiency)
+                    // SP Take Rate = Revenue / GPV (SP-specific revenue efficiency)
+                    // SP Penetration = GPV / GMV (% of sales through SP)
                     const takeRate = accGmv > 0 ? (accRevenue / accGmv) * 100 : 0;
+                    const spTakeRate = accGpv > 0 ? (accRevenue / accGpv) * 100 : 0;
+                    const spPenetration = accGmv > 0 ? (accGpv / accGmv) * 100 : 0;
                     const acc2025 = accQ1_25 + accQ2_25 + accQ3_25 + accQ4_25;
                     
                     accounts.push({
@@ -1706,8 +1773,11 @@
                         service_model: account.service_model,
                         shop_count: account.shop_ids.length,
                         l12m_gmv: accGmv,
+                        l12m_gpv: accGpv,
                         l12m_revenue: accRevenue,
                         take_rate: takeRate,
+                        sp_take_rate: spTakeRate,
+                        sp_penetration: spPenetration,
                         q1_2025: accQ1_25,
                         q2_2025: accQ2_25,
                         q3_2025: accQ3_25,
@@ -1723,6 +1793,7 @@
                     });
                     
                     totalGmv += accGmv;
+                    totalGpv += accGpv;
                     totalRevenue += accRevenue;
                     total2025 += acc2025;
                     totalQ1_2025 += accQ1_25;
@@ -1758,9 +1829,12 @@
                     totals: {
                         account_count: accounts.length,
                         total_l12m_gmv: totalGmv,
+                        total_l12m_gpv: totalGpv,
                         total_l12m_revenue: totalRevenue,
                         total_2025_revenue: total2025,
-                        avg_take_rate: totalGmv > 0 ? (totalRevenue / totalGmv) * 100 : 0
+                        avg_take_rate: totalGmv > 0 ? (totalRevenue / totalGmv) * 100 : 0,
+                        avg_sp_take_rate: totalGpv > 0 ? (totalRevenue / totalGpv) * 100 : 0,
+                        sp_penetration: totalGmv > 0 ? (totalGpv / totalGmv) * 100 : 0
                     },
                     q1_comparison: {
                         q1_2025: totalQ1_2025,
@@ -2069,6 +2143,25 @@
         
         // Update Take Rate section with live data
         function updateTakeRateSection(accounts) {
+            // Calculate portfolio-level metrics
+            const totalGmv = accounts.reduce((sum, acc) => sum + (acc.l12m_gmv || 0), 0);
+            const totalGpv = accounts.reduce((sum, acc) => sum + (acc.l12m_gpv || 0), 0);
+            const totalRevenue = accounts.reduce((sum, acc) => sum + (acc.l12m_revenue || 0), 0);
+            
+            const portfolioGmvTakeRate = totalGmv > 0 ? (totalRevenue / totalGmv) * 100 : 0;
+            const portfolioSpTakeRate = totalGpv > 0 ? (totalRevenue / totalGpv) * 100 : 0;
+            const portfolioSpPenetration = totalGmv > 0 ? (totalGpv / totalGmv) * 100 : 0;
+            
+            // Update portfolio summary cards
+            const gmvTrEl = document.getElementById('portfolio-gmv-take-rate');
+            if (gmvTrEl) gmvTrEl.textContent = portfolioGmvTakeRate.toFixed(2) + '%';
+            
+            const spTrEl = document.getElementById('portfolio-sp-take-rate');
+            if (spTrEl) spTrEl.textContent = portfolioSpTakeRate.toFixed(2) + '%';
+            
+            const spPenEl = document.getElementById('portfolio-sp-penetration');
+            if (spPenEl) spPenEl.textContent = portfolioSpPenetration.toFixed(1) + '%';
+            
             // Filter accounts with take rate < 3% and > 0%
             const lowTakeRate = accounts
                 .filter(acc => acc.take_rate < 3 && acc.take_rate > 0)
@@ -2078,7 +2171,7 @@
             const barsContainer = document.getElementById('take-rate-bars');
             if (barsContainer) {
                 if (lowTakeRate.length === 0) {
-                    barsContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No accounts with take rate below 3% 🎉</p>';
+                    barsContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No accounts with GMV take rate below 3% 🎉</p>';
                 } else {
                     barsContainer.innerHTML = lowTakeRate.slice(0, 10).map(acc => {
                         const barClass = acc.take_rate < 1 ? 'low' : acc.take_rate < 3 ? 'low' : acc.take_rate < 5 ? 'medium' : 'high';
@@ -2093,22 +2186,60 @@
                 }
             }
             
-            // Update the table
+            // Update the table with all new columns
             const tbody = document.getElementById('low-take-rate-tbody');
             if (tbody) {
                 if (lowTakeRate.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No accounts with take rate below 3% 🎉</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-secondary);">No accounts with GMV take rate below 3% 🎉</td></tr>';
                 } else {
                     tbody.innerHTML = lowTakeRate.map(acc => {
                         const countryFlag = getCountryFlag(acc.country);
+                        const spPen = acc.sp_penetration || 0;
+                        const spTr = acc.sp_take_rate || 0;
+                        
+                        // Determine opportunity type based on metrics
+                        let opportunity = '';
+                        let oppStyle = '';
+                        
+                        if (spPen < 30) {
+                            // Low SP penetration = merchant routes most payments elsewhere
+                            opportunity = '🎯 Win Back Volume';
+                            oppStyle = 'color: #ef4444; font-weight: 600;';
+                        } else if (spPen >= 30 && spPen < 70) {
+                            // Moderate SP penetration, room to grow
+                            if (spTr < 3) {
+                                opportunity = '📈 Upsell SP Products';
+                                oppStyle = 'color: #f59e0b; font-weight: 600;';
+                            } else {
+                                opportunity = '🔄 Increase SP Share';
+                                oppStyle = 'color: #6366f1; font-weight: 600;';
+                            }
+                        } else if (spPen >= 70) {
+                            // High SP penetration but low GMV take rate = upsell products
+                            if (spTr < 3) {
+                                opportunity = '💎 Upsell Products';
+                                oppStyle = 'color: #10b981; font-weight: 600;';
+                            } else {
+                                opportunity = '✅ SP Optimized';
+                                oppStyle = 'color: var(--text-secondary);';
+                            }
+                        }
+                        
+                        // Color code SP penetration
+                        const spPenClass = spPen < 30 ? 'pacing-low' : spPen < 70 ? 'pacing-medium' : 'pacing-high';
+                        
                         return `
                             <tr>
                                 <td><a class="account-link" href="${acc.sfdc_url}" target="_blank">${acc.name}</a></td>
                                 <td>${countryFlag} ${acc.country || 'Unknown'}</td>
                                 <td class="number">${acc.shop_count || 0}</td>
                                 <td class="number pacing-low">${acc.take_rate.toFixed(2)}%</td>
+                                <td class="number" style="color: #10b981;">${spTr.toFixed(2)}%</td>
+                                <td class="number ${spPenClass}">${spPen.toFixed(1)}%</td>
                                 <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
+                                <td class="number">${formatCurrency(acc.l12m_gpv || 0, true)}</td>
                                 <td class="number">${formatCurrency(acc.l12m_revenue, true)}</td>
+                                <td style="${oppStyle}">${opportunity}</td>
                             </tr>
                         `;
                     }).join('');
@@ -2119,14 +2250,6 @@
             const lowTakeRateCountEl = document.getElementById('low-take-rate-count');
             if (lowTakeRateCountEl) {
                 lowTakeRateCountEl.textContent = lowTakeRate.length;
-            }
-            
-            const avgTakeRateEl = document.getElementById('avg-take-rate-display');
-            if (avgTakeRateEl) {
-                const avgTakeRate = accounts.length > 0 
-                    ? accounts.reduce((sum, acc) => sum + acc.take_rate, 0) / accounts.length 
-                    : 0;
-                avgTakeRateEl.textContent = avgTakeRate.toFixed(2) + '%';
             }
         }
         
