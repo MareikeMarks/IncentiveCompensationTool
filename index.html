@@ -1042,55 +1042,53 @@
         /* Info Tooltips */
         .info-tooltip {
             cursor: help;
-            font-size: 0.75rem;
-            color: var(--accent-blue);
-            opacity: 0.7;
+            font-size: 0.7rem;
+            color: #60a5fa;
             margin-left: 4px;
             position: relative;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(96, 165, 250, 0.15);
+            vertical-align: middle;
         }
         .info-tooltip:hover {
-            opacity: 1;
+            background: rgba(96, 165, 250, 0.3);
         }
-        .info-tooltip::after {
-            content: attr(data-tip);
+        .info-tooltip .tooltip-text {
+            display: none;
             position: absolute;
-            bottom: 120%;
+            bottom: calc(100% + 8px);
             left: 50%;
             transform: translateX(-50%);
-            background: #1a1a2e;
-            border: 1px solid var(--border);
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
+            background: #0f0f1a;
+            border: 1px solid #3b3b5c;
+            padding: 8px 12px;
+            border-radius: 8px;
             font-size: 0.75rem;
-            color: var(--text-primary);
+            color: #e2e8f0;
             white-space: normal;
-            width: max-content;
-            max-width: 250px;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            width: 220px;
+            z-index: 9999;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
             font-weight: 400;
-            line-height: 1.4;
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
+            line-height: 1.5;
+            text-align: left;
         }
-        .info-tooltip::before {
+        .info-tooltip .tooltip-text::after {
             content: '';
             position: absolute;
-            bottom: 100%;
+            top: 100%;
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
-            border-top-color: var(--border);
-            z-index: 1001;
-            opacity: 0;
-            visibility: hidden;
+            border-top-color: #3b3b5c;
         }
-        .info-tooltip:hover::after,
-        .info-tooltip:hover::before {
-            opacity: 1;
-            visibility: visible;
+        .info-tooltip:hover .tooltip-text {
+            display: block;
         }
 
         /* Footer */
@@ -1482,11 +1480,11 @@
                                     <th>Account</th>
                                     <th>Country</th>
                                     <th>Shops</th>
-                                    <th>GMV Take Rate <span class="info-tooltip" data-tip="Revenue ÷ GMV: Overall revenue as % of total sales">ⓘ</span></th>
-                                    <th>SP Take Rate <span class="info-tooltip" data-tip="Revenue ÷ GPV: Revenue earned per Shopify Payments dollar">ⓘ</span></th>
-                                    <th>SP Penetration <span class="info-tooltip" data-tip="GPV ÷ GMV: % of total sales processed through Shopify Payments">ⓘ</span></th>
-                                    <th>L12M GMV <span class="info-tooltip" data-tip="Gross Merchandise Volume: Total sales value (all payment methods) over last 12 months">ⓘ</span></th>
-                                    <th>L12M GPV <span class="info-tooltip" data-tip="Gross Payments Volume: Total value of transactions processed through Shopify Payments (L12M)">ⓘ</span></th>
+                                    <th>GMV Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">Revenue ÷ GMV: Overall revenue as % of total sales</span></span></th>
+                                    <th>SP Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">Revenue ÷ GPV: Revenue earned per Shopify Payments dollar</span></span></th>
+                                    <th>SP Penetration <span class="info-tooltip">ⓘ<span class="tooltip-text">GPV ÷ GMV: % of total sales processed through Shopify Payments</span></span></th>
+                                    <th>L12M GMV <span class="info-tooltip">ⓘ<span class="tooltip-text">Gross Merchandise Volume: Total sales value (all payment methods) over last 12 months</span></span></th>
+                                    <th>L12M GPV <span class="info-tooltip">ⓘ<span class="tooltip-text">Gross Payments Volume: Total value of transactions processed through Shopify Payments (L12M)</span></span></th>
                                     <th>L12M Revenue</th>
                                     <th>Opportunity</th>
                                 </tr>
