@@ -1403,20 +1403,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="take-rate-chart">
-                    <div class="chart-header">
-                        <span>GMV Take Rate Distribution (Lowest 10)</span>
-                        <div class="chart-legend">
-                            <span class="legend-item"><span class="legend-dot low"></span> < 3% (High Opportunity)</span>
-                            <span class="legend-item"><span class="legend-dot medium"></span> 3-5%</span>
-                            <span class="legend-item"><span class="legend-dot high"></span> > 5%</span>
-                        </div>
-                    </div>
-                    <div class="bar-chart" id="take-rate-bars">
-                        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Load your data to see take rate distribution</p>
-                    </div>
-                </div>
 
                 <div class="opportunities-table">
                     <h3>🎯 Low GMV Take Rate Accounts (< 3%)</h3>
@@ -2215,25 +2201,6 @@
             const lowTakeRate = accounts
                 .filter(acc => acc.take_rate < 3 && acc.take_rate > 0)
                 .sort((a, b) => a.take_rate - b.take_rate);
-            
-            // Update the bar chart
-            const barsContainer = document.getElementById('take-rate-bars');
-            if (barsContainer) {
-                if (lowTakeRate.length === 0) {
-                    barsContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No accounts with GMV take rate below 3% 🎉</p>';
-                } else {
-                    barsContainer.innerHTML = lowTakeRate.slice(0, 10).map(acc => {
-                        const barClass = acc.take_rate < 1 ? 'low' : acc.take_rate < 3 ? 'low' : acc.take_rate < 5 ? 'medium' : 'high';
-                        const barWidth = Math.min(acc.take_rate * 10, 100);
-                        return `
-                            <div class="bar-row">
-                                <span class="bar-label">${acc.name.substring(0, 20)}</span>
-                                <div class="bar-container"><div class="bar ${barClass}" style="width: ${barWidth}%"><span class="bar-value">${acc.take_rate.toFixed(2)}%</span></div></div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            }
             
             // Update the table with all new columns
             const tbody = document.getElementById('low-take-rate-tbody');
