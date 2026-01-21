@@ -1708,7 +1708,7 @@
                         shop_id,
                         SUM(processing_revenue_usd) AS l12m_sp_revenue,
                         SUM(fx_fee_revenue_usd) AS l12m_fx_revenue,
-                        SUM(chargeback_fee_revenue_usd) AS l12m_chargeback_revenue
+                        SUM(chargeback_revenue_usd) AS l12m_chargeback_revenue
                     FROM \`shopify-dw.finance.payments_revenue_and_costs_v1\`
                     WHERE shop_id IN (${shopIds.join(',')})
                     AND DATE(date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
