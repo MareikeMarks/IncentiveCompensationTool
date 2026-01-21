@@ -1385,6 +1385,7 @@
                                 <tr>
                                     <th>Account</th>
                                     <th>Country</th>
+                                    <th>Shops</th>
                                     <th>Current Take Rate</th>
                                     <th>L12M GMV</th>
                                     <th>L12M Revenue</th>
@@ -1703,6 +1704,7 @@
                         name: account.name,
                         sfdc_url: account.sfdc_url,
                         service_model: account.service_model,
+                        shop_count: account.shop_ids.length,
                         l12m_gmv: accGmv,
                         l12m_revenue: accRevenue,
                         take_rate: takeRate,
@@ -2095,7 +2097,7 @@
             const tbody = document.getElementById('low-take-rate-tbody');
             if (tbody) {
                 if (lowTakeRate.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No accounts with take rate below 3% 🎉</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No accounts with take rate below 3% 🎉</td></tr>';
                 } else {
                     tbody.innerHTML = lowTakeRate.map(acc => {
                         const countryFlag = getCountryFlag(acc.country);
@@ -2103,6 +2105,7 @@
                             <tr>
                                 <td><a class="account-link" href="${acc.sfdc_url}" target="_blank">${acc.name}</a></td>
                                 <td>${countryFlag} ${acc.country || 'Unknown'}</td>
+                                <td class="number">${acc.shop_count || 0}</td>
                                 <td class="number pacing-low">${acc.take_rate.toFixed(2)}%</td>
                                 <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
                                 <td class="number">${formatCurrency(acc.l12m_revenue, true)}</td>
