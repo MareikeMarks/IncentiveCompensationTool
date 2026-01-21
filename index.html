@@ -1047,20 +1047,18 @@
             opacity: 0.7;
             margin-left: 4px;
             position: relative;
+            display: inline-block;
         }
         .info-tooltip:hover {
             opacity: 1;
         }
-        .info-tooltip[title] {
-            position: relative;
-        }
-        .info-tooltip[title]:hover::after {
-            content: attr(title);
+        .info-tooltip::after {
+            content: attr(data-tip);
             position: absolute;
             bottom: 120%;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--bg-primary);
+            background: #1a1a2e;
             border: 1px solid var(--border);
             padding: 0.5rem 0.75rem;
             border-radius: 6px;
@@ -1070,19 +1068,29 @@
             width: max-content;
             max-width: 250px;
             z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             font-weight: 400;
             line-height: 1.4;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
         }
-        .info-tooltip[title]:hover::before {
+        .info-tooltip::before {
             content: '';
             position: absolute;
-            bottom: 110%;
+            bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
             border-top-color: var(--border);
             z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+        }
+        .info-tooltip:hover::after,
+        .info-tooltip:hover::before {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Footer */
@@ -1474,11 +1482,11 @@
                                     <th>Account</th>
                                     <th>Country</th>
                                     <th>Shops</th>
-                                    <th>GMV Take Rate <span class="info-tooltip" title="Revenue ÷ GMV: Overall revenue as % of total sales">ⓘ</span></th>
-                                    <th>SP Take Rate <span class="info-tooltip" title="Revenue ÷ GPV: Revenue earned per Shopify Payments dollar">ⓘ</span></th>
-                                    <th>SP Penetration <span class="info-tooltip" title="GPV ÷ GMV: % of total sales processed through Shopify Payments">ⓘ</span></th>
-                                    <th>L12M GMV <span class="info-tooltip" title="Gross Merchandise Volume: Total sales value (all payment methods) over last 12 months">ⓘ</span></th>
-                                    <th>L12M GPV <span class="info-tooltip" title="Gross Payments Volume: Total dollar value of transactions processed specifically through Shopify Payments over last 12 months">ⓘ</span></th>
+                                    <th>GMV Take Rate <span class="info-tooltip" data-tip="Revenue ÷ GMV: Overall revenue as % of total sales">ⓘ</span></th>
+                                    <th>SP Take Rate <span class="info-tooltip" data-tip="Revenue ÷ GPV: Revenue earned per Shopify Payments dollar">ⓘ</span></th>
+                                    <th>SP Penetration <span class="info-tooltip" data-tip="GPV ÷ GMV: % of total sales processed through Shopify Payments">ⓘ</span></th>
+                                    <th>L12M GMV <span class="info-tooltip" data-tip="Gross Merchandise Volume: Total sales value (all payment methods) over last 12 months">ⓘ</span></th>
+                                    <th>L12M GPV <span class="info-tooltip" data-tip="Gross Payments Volume: Total value of transactions processed through Shopify Payments (L12M)">ⓘ</span></th>
                                     <th>L12M Revenue</th>
                                     <th>Opportunity</th>
                                 </tr>
