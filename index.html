@@ -1039,58 +1039,6 @@
         .sortable.asc .sort-icon::after { content: '↑'; }
         .sortable.desc .sort-icon::after { content: '↓'; }
 
-        /* Info Tooltips */
-        .info-tooltip {
-            cursor: help;
-            font-size: 0.7rem;
-            color: #60a5fa;
-            margin-left: 4px;
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: rgba(96, 165, 250, 0.15);
-            vertical-align: middle;
-        }
-        .info-tooltip:hover {
-            background: rgba(96, 165, 250, 0.3);
-        }
-        .info-tooltip .tooltip-text {
-            display: none;
-            position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: #0f0f1a;
-            border: 1px solid #3b3b5c;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            color: #e2e8f0;
-            white-space: normal;
-            width: 220px;
-            z-index: 9999;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            font-weight: 400;
-            line-height: 1.5;
-            text-align: left;
-        }
-        .info-tooltip .tooltip-text::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: #3b3b5c;
-        }
-        .info-tooltip:hover .tooltip-text {
-            display: block;
-        }
-
         /* Footer */
         footer {
             text-align: center;
@@ -1443,7 +1391,7 @@
                         </div>
                         <div class="summary-card" style="padding: 1rem; text-align: center;">
                             <div class="summary-value" id="portfolio-sp-take-rate" style="font-size: 1.5rem; color: #10b981;">-</div>
-                            <div class="summary-label" style="font-size: 0.8rem;">Pure SP Take Rate <span class="info-tooltip" style="font-size: 0.65rem;">ⓘ<span class="tooltip-text">SP Revenue ÷ GPV: Uses only Shopify Payments fees (processing + FX + chargeback)</span></span></div>
+                            <div class="summary-label" style="font-size: 0.8rem;">Pure SP Take Rate</div>
                         </div>
                         <div class="summary-card" style="padding: 1rem; text-align: center;">
                             <div class="summary-value" id="portfolio-sp-penetration" style="font-size: 1.5rem; color: #6366f1;">-</div>
@@ -1472,7 +1420,17 @@
 
                 <div class="opportunities-table">
                     <h3>🎯 Low GMV Take Rate Accounts (< 3%)</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Compare SP Take Rate vs GMV Take Rate to identify if low rate is due to external PSP or low SP product adoption.</p>
+                    <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 0.75rem 0;"><strong>📊 Key Metrics Explained:</strong></p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">
+                            <div><strong>GMV Take Rate</strong> = Total Revenue ÷ GMV (all Shopify revenue as % of sales)</div>
+                            <div><strong>Pure SP Take Rate</strong> = SP Revenue ÷ GPV (SP processing fees only)</div>
+                            <div><strong>SP Penetration</strong> = GPV ÷ GMV (% of sales through Shopify Payments)</div>
+                            <div><strong>GMV</strong> = Gross Merchandise Volume (all sales, any payment method)</div>
+                            <div><strong>GPV</strong> = Gross Payments Volume (sales through SP only)</div>
+                            <div><strong>SP Revenue</strong> = Processing + FX + Chargeback fees from SP</div>
+                        </div>
+                    </div>
                     <div class="table-container">
                         <table id="low-take-rate-table">
                             <thead>
@@ -1480,12 +1438,12 @@
                                     <th>Account</th>
                                     <th>Country</th>
                                     <th>Shops</th>
-                                    <th>GMV Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">Total Revenue ÷ GMV: Overall Shopify revenue as % of total sales</span></span></th>
-                                    <th>Pure SP Take Rate <span class="info-tooltip">ⓘ<span class="tooltip-text">SP Revenue ÷ GPV: Processing fees from SP transactions only. True SP efficiency metric.</span></span></th>
-                                    <th>SP Penetration <span class="info-tooltip">ⓘ<span class="tooltip-text">GPV ÷ GMV: % of total sales processed through Shopify Payments. Low = using external PSP.</span></span></th>
-                                    <th>L12M GMV <span class="info-tooltip">ⓘ<span class="tooltip-text">Gross Merchandise Volume: Total sales value (all payment methods) over last 12 months</span></span></th>
-                                    <th>L12M GPV <span class="info-tooltip">ⓘ<span class="tooltip-text">Gross Payments Volume: Total value of transactions processed through Shopify Payments (L12M)</span></span></th>
-                                    <th>L12M SP Revenue <span class="info-tooltip">ⓘ<span class="tooltip-text">Revenue from Shopify Payments only: Processing fees + FX fees + Chargeback fees</span></span></th>
+                                    <th>GMV Take Rate</th>
+                                    <th>Pure SP Take Rate</th>
+                                    <th>SP Penetration</th>
+                                    <th>L12M GMV</th>
+                                    <th>L12M GPV</th>
+                                    <th>L12M SP Revenue</th>
                                     <th>Opportunity</th>
                                 </tr>
                             </thead>
