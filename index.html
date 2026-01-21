@@ -1711,7 +1711,7 @@
                         SUM(chargeback_fee_revenue_usd) AS l12m_chargeback_revenue
                     FROM \`shopify-dw.finance.payments_revenue_and_costs_v1\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+                    AND DATE(date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
                     GROUP BY shop_id
                 `;
                 
