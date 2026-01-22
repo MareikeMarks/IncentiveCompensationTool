@@ -2077,21 +2077,21 @@
                     <td>${account.name}</td>
                     <td><a class="account-link" href="${account.sfdc_url}" target="_blank">🔗</a></td>
                     <td style="font-size: 0.8em; color: var(--text-secondary);">${segmentShort}</td>
-                    <td class="number">${formatCurrency(account.l12m_gmv)}</td>
-                    <td class="number">${formatCurrency(account.l12m_revenue)}</td>
+                    <td class="number">${formatCurrency(account.l12m_gmv, true)}</td>
+                    <td class="number">${formatCurrency(account.l12m_revenue, true)}</td>
                     <td class="number">${(account.take_rate || 0).toFixed(2)}%</td>
-                    <td class="number">${formatCurrency((account.q1_2025 || 0) + (account.q2_2025 || 0) + (account.q3_2025 || 0) + (account.q4_2025 || 0))}</td>
-                    <td class="number">${formatCurrency(account.q1_2025)}</td>
-                    <td class="number">${formatCurrency(account.q1_2026)}</td>
+                    <td class="number">${formatCurrency((account.q1_2025 || 0) + (account.q2_2025 || 0) + (account.q3_2025 || 0) + (account.q4_2025 || 0), true)}</td>
+                    <td class="number">${formatCurrency(account.q1_2025, true)}</td>
+                    <td class="number">${formatCurrency(account.q1_2026, true)}</td>
                     <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
-                    <td class="number">${formatCurrency(account.q2_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(account.q2_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
-                    <td class="number">${formatCurrency(account.q3_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(account.q3_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
-                    <td class="number">${formatCurrency(account.q4_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(account.q4_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
                 `;
                 tbody.appendChild(row);
@@ -2452,21 +2452,21 @@
                 row.innerHTML = `
                     <td>${account.name}</td>
                     <td><a class="account-link" href="${account.sfdc_url}" target="_blank">🔗</a></td>
-                    <td class="number">${formatCurrency(account.l12m_gmv)}</td>
-                    <td class="number">${formatCurrency(account.l12m_revenue)}</td>
+                    <td class="number">${formatCurrency(account.l12m_gmv, true)}</td>
+                    <td class="number">${formatCurrency(account.l12m_revenue, true)}</td>
                     <td class="number">${account.take_rate.toFixed(2)}%</td>
-                    <td class="number">${formatCurrency(account.q1_2025 + account.q2_2025 + account.q3_2025 + account.q4_2025)}</td>
-                    <td class="number">${formatCurrency(account.q1_2025)}</td>
-                    <td class="number">${formatCurrency(account.q1_2026)}</td>
+                    <td class="number">${formatCurrency(account.q1_2025 + account.q2_2025 + account.q3_2025 + account.q4_2025, true)}</td>
+                    <td class="number">${formatCurrency(account.q1_2025, true)}</td>
+                    <td class="number">${formatCurrency(account.q1_2026, true)}</td>
                     <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
-                    <td class="number">${formatCurrency(account.q2_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(account.q2_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
-                    <td class="number">${formatCurrency(account.q3_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(account.q3_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
-                    <td class="number">${formatCurrency(account.q4_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(account.q4_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
                 `;
                 tbody.appendChild(row);
