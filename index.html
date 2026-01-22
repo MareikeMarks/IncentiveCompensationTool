@@ -2507,8 +2507,9 @@
         function formatCurrency(value, short = false) {
             if (short) {
                 if (value >= 1000000000) return '$' + (value / 1000000000).toFixed(2) + 'B';
-                if (value >= 1000000) return '$' + (value / 1000000).toFixed(2) + 'M';
-                if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
+                if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                if (value >= 1000) return '$' + (value / 1000).toFixed(1) + 'K';
+                return '$' + value.toFixed(0);
             }
             return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         }
@@ -2588,18 +2589,18 @@
                     <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
                     <td class="number">${formatCurrency(acc.l12m_revenue, true)}</td>
                     <td class="number">${acc.take_rate.toFixed(2)}%</td>
-                    <td class="number">${formatCurrency(acc.total_2025)}</td>
-                    <td class="number">${formatCurrency(acc.q1_2025)}</td>
-                    <td class="number">${formatCurrency(acc.q1_2026)}</td>
+                    <td class="number">${formatCurrency(acc.total_2025, true)}</td>
+                    <td class="number">${formatCurrency(acc.q1_2025, true)}</td>
+                    <td class="number">${formatCurrency(acc.q1_2026, true)}</td>
                     <td class="${getPacingClass(acc.q1_yoy_pacing)}">${formatPercent(acc.q1_yoy_pacing)}</td>
-                    <td class="number">${formatCurrency(acc.q2_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(acc.q2_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
-                    <td class="number">${formatCurrency(acc.q3_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(acc.q3_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
-                    <td class="number">${formatCurrency(acc.q4_2025)}</td>
-                    <td class="number">$0</td>
+                    <td class="number">${formatCurrency(acc.q4_2025, true)}</td>
+                    <td class="number">-</td>
                     <td>-</td>
                 </tr>
             `}).join('');
