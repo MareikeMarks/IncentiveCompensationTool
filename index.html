@@ -1289,34 +1289,52 @@
                     <button class="clear-filters-btn" onclick="clearFilters()">Clear Filters</button>
                     <span class="filter-count" id="filter-count">Showing 37 accounts</span>
                 </div>
-                <p class="sort-hint">💡 Click any column header to sort</p>
+                <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <p class="sort-hint" style="margin: 0;">💡 Click any column header to sort</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+                        <span id="excluded-count" style="color: var(--accent-orange); font-size: 0.85rem;"></span>
+                        <button id="recalc-btn" onclick="recalculateNRR()" 
+                            style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--accent-blue); 
+                            background: rgba(0, 212, 255, 0.2); color: var(--accent-blue); cursor: pointer; 
+                            font-weight: 600; font-size: 0.85rem; transition: all 0.2s;">
+                            🔄 Recalculate NRR
+                        </button>
+                        <button onclick="clearExclusions()" 
+                            style="padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); 
+                            background: transparent; color: var(--text-secondary); cursor: pointer; 
+                            font-size: 0.8rem;">
+                            Clear
+                        </button>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table id="book-table">
                         <thead>
                             <tr>
-                                <th class="sortable" data-col="0" onclick="sortTable(0, 'string')">Account <span class="sort-icon">⇅</span></th>
+                                <th style="width: 50px; text-align: center;">Excl</th>
+                                <th class="sortable" data-col="1" onclick="sortTable(1, 'string')">Account <span class="sort-icon">⇅</span></th>
                                 <th>SFDC</th>
-                                <th class="sortable" data-col="2" onclick="sortTable(2, 'string')">Segment <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="3" onclick="sortTable(3, 'currency')">L12M GMV <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="4" onclick="sortTable(4, 'currency')">L12M Rev <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="5" onclick="sortTable(5, 'percent')">Take Rate <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="6" onclick="sortTable(6, 'currency')">2025 Total Rev <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="7" onclick="sortTable(7, 'currency')">Q1 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="8" onclick="sortTable(8, 'currency')">Q1 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="9" onclick="sortTable(9, 'percent')">Q1 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="10" onclick="sortTable(10, 'currency')">Q2 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="11" onclick="sortTable(11, 'currency')">Q2 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="12" onclick="sortTable(12, 'percent')">Q2 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="13" onclick="sortTable(13, 'currency')">Q3 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="14" onclick="sortTable(14, 'currency')">Q3 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="15" onclick="sortTable(15, 'percent')">Q3 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="16" onclick="sortTable(16, 'currency')">Q4 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="17" onclick="sortTable(17, 'currency')">Q4 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="18" onclick="sortTable(18, 'percent')">Q4 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="3" onclick="sortTable(3, 'string')">Segment <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="4" onclick="sortTable(4, 'currency')">L12M GMV <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="5" onclick="sortTable(5, 'currency')">L12M Rev <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="6" onclick="sortTable(6, 'percent')">Take Rate <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="7" onclick="sortTable(7, 'currency')">2025 Total Rev <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="8" onclick="sortTable(8, 'currency')">Q1 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="9" onclick="sortTable(9, 'currency')">Q1 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="10" onclick="sortTable(10, 'percent')">Q1 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="11" onclick="sortTable(11, 'currency')">Q2 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="12" onclick="sortTable(12, 'currency')">Q2 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="13" onclick="sortTable(13, 'percent')">Q2 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="14" onclick="sortTable(14, 'currency')">Q3 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="15" onclick="sortTable(15, 'currency')">Q3 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="16" onclick="sortTable(16, 'percent')">Q3 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="17" onclick="sortTable(17, 'currency')">Q4 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="18" onclick="sortTable(18, 'currency')">Q4 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="19" onclick="sortTable(19, 'percent')">Q4 YoY <span class="sort-icon">⇅</span></th>
                             </tr>
                         </thead>
                         <tbody id="full-book">
-                            <tr><td colspan="19" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load My Data" to see your accounts</td></tr>
+                            <tr><td colspan="20" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load My Data" to see your accounts</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1448,6 +1466,120 @@
         // === LIVE BIGQUERY DATA FUNCTIONS ===
         
         let hasAuth = false;
+        
+        // Global storage for accounts data (for recalculation)
+        let globalAccountsData = null;
+        let globalPortfolioMetrics = null;
+        
+        // Get excluded accounts from localStorage
+        function getExcludedAccounts() {
+            const saved = localStorage.getItem('excluded_accounts');
+            return saved ? JSON.parse(saved) : [];
+        }
+        
+        // Save excluded accounts to localStorage
+        function saveExcludedAccounts(excluded) {
+            localStorage.setItem('excluded_accounts', JSON.stringify(excluded));
+        }
+        
+        // Toggle account exclusion
+        function toggleExclude(accountId, checkbox) {
+            let excluded = getExcludedAccounts();
+            if (checkbox.checked) {
+                if (!excluded.includes(accountId)) {
+                    excluded.push(accountId);
+                }
+                // Dim the row
+                checkbox.closest('tr').style.opacity = '0.5';
+                checkbox.closest('tr').style.background = 'rgba(255, 71, 87, 0.1)';
+            } else {
+                excluded = excluded.filter(id => id !== accountId);
+                // Restore the row
+                checkbox.closest('tr').style.opacity = '1';
+                checkbox.closest('tr').style.background = '';
+            }
+            saveExcludedAccounts(excluded);
+            updateExcludedCount();
+        }
+        
+        // Update excluded count display
+        function updateExcludedCount() {
+            const excluded = getExcludedAccounts();
+            const countEl = document.getElementById('excluded-count');
+            if (countEl) {
+                countEl.textContent = excluded.length > 0 ? `(${excluded.length} excluded)` : '';
+            }
+        }
+        
+        // Recalculate NRR excluding checked accounts
+        function recalculateNRR() {
+            if (!globalAccountsData) {
+                alert('Please load your data first!');
+                return;
+            }
+            
+            const excluded = getExcludedAccounts();
+            const includedAccounts = globalAccountsData.filter(acc => !excluded.includes(acc.account_id));
+            
+            // Recalculate totals
+            let totalQ1_2026 = 0;
+            let totalQ1_2025 = 0;
+            let total2025 = 0;
+            let totalGmv = 0;
+            let totalRevenue = 0;
+            
+            includedAccounts.forEach(acc => {
+                totalQ1_2026 += acc.q1_2026 || 0;
+                totalQ1_2025 += acc.q1_2025 || 0;
+                total2025 += acc.total_2025 || 0;
+                totalGmv += acc.l12m_gmv || 0;
+                totalRevenue += acc.l12m_revenue || 0;
+            });
+            
+            // Update the Q1 2026 YTD display
+            const q1YtdEl = document.getElementById('q1-2026-ytd');
+            if (q1YtdEl) {
+                q1YtdEl.textContent = formatCurrency(totalQ1_2026, true);
+            }
+            
+            // Update metrics
+            document.getElementById('metric-accounts').textContent = includedAccounts.length;
+            document.getElementById('metric-2025-rev').textContent = formatCurrency(total2025, true);
+            document.getElementById('metric-gmv').textContent = formatCurrency(totalGmv, true);
+            
+            const avgTakeRate = totalGmv > 0 ? (totalRevenue / totalGmv * 100) : 0;
+            document.getElementById('metric-take-rate').textContent = avgTakeRate.toFixed(2) + '%';
+            
+            // Update YoY pacing
+            const q1YoyPacing = totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025 * 100) : 0;
+            const pacingEl = document.getElementById('q1-yoy-pacing');
+            if (pacingEl) {
+                pacingEl.textContent = formatPercent(q1YoyPacing);
+            }
+            
+            // Flash the button to confirm
+            const btn = document.getElementById('recalc-btn');
+            btn.textContent = '✅ Updated!';
+            btn.style.background = 'rgba(0, 255, 136, 0.3)';
+            setTimeout(() => {
+                btn.textContent = '🔄 Recalculate NRR';
+                btn.style.background = 'rgba(0, 212, 255, 0.2)';
+            }, 1500);
+            
+            console.log(`📊 Recalculated: ${excluded.length} accounts excluded, ${includedAccounts.length} included`);
+            console.log(`📊 New Q1 2026 Total: ${formatCurrency(totalQ1_2026, true)}`);
+        }
+        
+        // Clear all exclusions
+        function clearExclusions() {
+            if (confirm('Clear all excluded accounts?')) {
+                localStorage.removeItem('excluded_accounts');
+                // Uncheck all checkboxes
+                document.querySelectorAll('.exclude-checkbox').forEach(cb => cb.checked = false);
+                updateExcludedCount();
+                recalculateNRR();
+            }
+        }
         
         // Initialize and check BigQuery auth on page load
         async function initAuth() {
@@ -2546,10 +2678,24 @@
             const tbody = document.getElementById('full-book');
             if (!tbody) return;
             
+            // Store globally for recalculation
+            globalAccountsData = accounts;
+            
+            // Get excluded accounts
+            const excluded = getExcludedAccounts();
+            
             tbody.innerHTML = accounts.map(acc => {
                 const segment = getSegmentAbbrev(acc.service_model);
+                const isExcluded = excluded.includes(acc.account_id);
                 return `
-                <tr>
+                <tr style="${isExcluded ? 'opacity: 0.5; background: rgba(255, 71, 87, 0.1);' : ''}">
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="exclude-checkbox" 
+                            data-account-id="${acc.account_id}"
+                            ${isExcluded ? 'checked' : ''} 
+                            onchange="toggleExclude('${acc.account_id}', this)"
+                            style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-orange);">
+                    </td>
                     <td>${acc.account_name}</td>
                     <td><a class="account-link" href="${acc.salesforce_url}" target="_blank">🔗</a></td>
                     <td>${segment}</td>
@@ -2572,8 +2718,9 @@
                 </tr>
             `}).join('');
             
-            // Update filter count
+            // Update filter count and excluded count
             document.getElementById('filter-count').textContent = `Showing ${accounts.length} accounts`;
+            updateExcludedCount();
         }
         
         function getSegmentAbbrev(serviceModel) {
@@ -2606,12 +2753,12 @@
                     continue;
                 }
                 
-                const accountName = cells[0].textContent.toLowerCase();
-                // Column indices after adding Segment column:
-                // 0=Account, 1=SFDC, 2=Segment, 3=GMV, 4=Rev, 5=TakeRate, 6=2025Total, 7=Q1'25, 8=Q1'26, 9=Q1YoY
-                const revenue2025Text = cells[6].textContent.replace(/[$,]/g, '');
+                const accountName = cells[1].textContent.toLowerCase();
+                // Column indices after adding Exclude checkbox and Segment column:
+                // 0=Excl, 1=Account, 2=SFDC, 3=Segment, 4=GMV, 5=Rev, 6=TakeRate, 7=2025Total, 8=Q1'25, 9=Q1'26, 10=Q1YoY
+                const revenue2025Text = cells[7].textContent.replace(/[$,]/g, '');
                 const revenue2025 = parseFloat(revenue2025Text) || 0;
-                const yoyPacingCell = cells[9].textContent;
+                const yoyPacingCell = cells[10].textContent;
                 
                 // Parse YoY pacing
                 let pacingValue = 0;
