@@ -1520,20 +1520,28 @@
         // Toggle account exclusion
         function toggleExclude(accountId, checkbox) {
             let excluded = getExcludedAccounts();
+            console.log('Before toggle:', excluded, 'Account:', accountId, 'Checked:', checkbox.checked);
+            
             if (checkbox.checked) {
                 if (!excluded.includes(accountId)) {
                     excluded.push(accountId);
                 }
+                // Update checkbox visual
+                checkbox.style.background = '#ff9f43';
                 // Dim the row
                 checkbox.closest('tr').style.opacity = '0.5';
                 checkbox.closest('tr').style.background = 'rgba(255, 71, 87, 0.1)';
             } else {
                 excluded = excluded.filter(id => id !== accountId);
+                // Update checkbox visual
+                checkbox.style.background = 'transparent';
                 // Restore the row
                 checkbox.closest('tr').style.opacity = '1';
                 checkbox.closest('tr').style.background = '';
             }
+            
             saveExcludedAccounts(excluded);
+            console.log('After toggle:', excluded);
             updateExcludedCount();
         }
         
