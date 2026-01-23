@@ -2178,6 +2178,12 @@
             const tbody = document.getElementById('full-book');
             tbody.innerHTML = '';
             
+            // Store globally for recalculation
+            globalAccountsData = data.accounts;
+            
+            // Get excluded accounts
+            const excluded = getExcludedAccounts();
+            
             // Calculate totals
             let totals = {
                 l12m_gmv: 0, l12m_revenue: 0, total_2025: 0,
@@ -2206,8 +2212,19 @@
                     'Mid-Market Scaled': 'MM-S'
                 }[account.service_model] || account.service_model;
                 
+                // Check if excluded
+                const isExcluded = excluded.includes(account.account_id);
+                
                 const row = document.createElement('tr');
+                row.style.cssText = isExcluded ? 'opacity: 0.5; background: rgba(255, 71, 87, 0.1);' : '';
                 row.innerHTML = `
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="exclude-checkbox" 
+                            data-account-id="${account.account_id}"
+                            ${isExcluded ? 'checked' : ''} 
+                            onchange="toggleExclude('${account.account_id}', this)"
+                            style="appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid #ff9f43; border-radius: 4px; background: ${isExcluded ? '#ff9f43' : 'transparent'}; cursor: pointer;">
+                    </td>
                     <td>${account.name}</td>
                     <td><a class="account-link" href="${account.sfdc_url}" target="_blank">🔗</a></td>
                     <td style="font-size: 0.8em; color: var(--text-secondary);">${segmentShort}</td>
@@ -2231,12 +2248,16 @@
                 tbody.appendChild(row);
             });
             
+            // Update excluded count
+            updateExcludedCount();
+            
             // Add total row
             const totalQ1Yoy = totals.q1_2025 > 0 ? ((totals.q1_2026 / totals.q1_2025) * 100).toFixed(1) : 'N/A';
             const totalTakeRate = totals.l12m_gmv > 0 ? (totals.l12m_revenue / totals.l12m_gmv) * 100 : 0;
             const totalRow = document.createElement('tr');
             totalRow.style.cssText = 'background: var(--accent-blue); font-weight: 700; position: sticky; bottom: 0;';
             totalRow.innerHTML = `
+                <td></td>
                 <td style="color: white;">📊 TOTAL (${data.accounts.length} accounts)</td>
                 <td></td>
                 <td></td>
