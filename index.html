@@ -2320,8 +2320,9 @@
                 tbody.appendChild(row);
             });
             
-            // Update excluded count
+            // Update excluded count and filter count
             updateExcludedCount();
+            document.getElementById('filter-count').textContent = `Showing ${data.accounts.length} accounts`;
             
             // Add total row
             const totalQ1Yoy = totals.q1_2025 > 0 ? ((totals.q1_2026 / totals.q1_2025) * 100).toFixed(1) : 'N/A';
@@ -2876,8 +2877,13 @@
                 const row = rows[i];
                 const cells = row.getElementsByTagName('td');
                 
-                // Skip summary rows
+                // Skip summary rows and TOTAL row
                 if (cells.length < 5) {
+                    continue;
+                }
+                
+                // Skip the TOTAL row (it contains "📊 TOTAL")
+                if (row.textContent.includes('TOTAL')) {
                     continue;
                 }
                 
