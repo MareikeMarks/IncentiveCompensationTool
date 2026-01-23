@@ -1569,16 +1569,16 @@
         // Recalculate NRR excluding checked accounts
         function recalculateNRR() {
             if (!globalAccountsData) {
-                alert('Please load your data first!');
+                console.log('No data loaded yet, skipping recalculation');
                 return;
             }
             
             const excluded = getExcludedAccounts();
             const includedAccounts = globalAccountsData.filter(acc => !excluded.includes(acc.account_id));
             
-            // Recalculate totals
-            let totalQ1_2026 = 0;
-            let totalQ1_2025 = 0;
+            // Recalculate all totals
+            let totalQ1_2026 = 0, totalQ1_2025 = 0;
+            let totalQ2_2025 = 0, totalQ3_2025 = 0, totalQ4_2025 = 0;
             let total2025 = 0;
             let totalGmv = 0;
             let totalRevenue = 0;
@@ -1586,7 +1586,10 @@
             includedAccounts.forEach(acc => {
                 totalQ1_2026 += acc.q1_2026 || 0;
                 totalQ1_2025 += acc.q1_2025 || 0;
-                total2025 += acc.total_2025 || 0;
+                totalQ2_2025 += acc.q2_2025 || 0;
+                totalQ3_2025 += acc.q3_2025 || 0;
+                totalQ4_2025 += acc.q4_2025 || 0;
+                total2025 += (acc.q1_2025 || 0) + (acc.q2_2025 || 0) + (acc.q3_2025 || 0) + (acc.q4_2025 || 0);
                 totalGmv += acc.l12m_gmv || 0;
                 totalRevenue += acc.l12m_revenue || 0;
             });
@@ -1598,12 +1601,17 @@
             }
             
             // Update metrics
-            document.getElementById('metric-accounts').textContent = includedAccounts.length;
-            document.getElementById('metric-2025-rev').textContent = formatCurrency(total2025, true);
-            document.getElementById('metric-gmv').textContent = formatCurrency(totalGmv, true);
+            const accountsEl = document.getElementById('metric-accounts');
+            const revEl = document.getElementById('metric-2025-rev');
+            const gmvEl = document.getElementById('metric-gmv');
+            const takeRateEl = document.getElementById('metric-take-rate');
+            
+            if (accountsEl) accountsEl.textContent = includedAccounts.length;
+            if (revEl) revEl.textContent = formatCurrency(total2025, true);
+            if (gmvEl) gmvEl.textContent = formatCurrency(totalGmv, true);
             
             const avgTakeRate = totalGmv > 0 ? (totalRevenue / totalGmv * 100) : 0;
-            document.getElementById('metric-take-rate').textContent = avgTakeRate.toFixed(2) + '%';
+            if (takeRateEl) takeRateEl.textContent = avgTakeRate.toFixed(2) + '%';
             
             // Update YoY pacing
             const q1YoyPacing = totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025 * 100) : 0;
@@ -1612,14 +1620,49 @@
                 pacingEl.textContent = formatPercent(q1YoyPacing);
             }
             
-            // Flash the button to confirm
+            // Update the TOTAL row in the BOB table
+            const tbody = document.getElementById('full-book');
+            if (tbody) {
+                const rows = tbody.querySelectorAll('tr');
+                const totalRow = rows[rows.length - 1]; // Last row is the total
+                if (totalRow && totalRow.style.background && totalRow.style.background.includes('accent-blue')) {
+                    // Found total row, update it
+                    const totalQ1Yoy = totalQ1_2025 > 0 ? ((totalQ1_2026 / totalQ1_2025) * 100).toFixed(1) : 'N/A';
+                    totalRow.innerHTML = `
+                        <td></td>
+                        <td style="color: white;">📊 TOTAL (${includedAccounts.length} accounts)</td>
+                        <td></td>
+                        <td></td>
+                        <td class="number" style="color: white;">${formatCurrency(totalGmv, true)}</td>
+                        <td class="number" style="color: white;">${formatCurrency(totalRevenue, true)}</td>
+                        <td class="number" style="color: white;">${avgTakeRate.toFixed(2)}%</td>
+                        <td class="number" style="color: white;">${formatCurrency(total2025, true)}</td>
+                        <td class="number" style="color: white;">${formatCurrency(totalQ1_2025, true)}</td>
+                        <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totalQ1_2026, true)}</td>
+                        <td style="color: white;">${totalQ1Yoy}%</td>
+                        <td class="number" style="color: white;">${formatCurrency(totalQ2_2025, true)}</td>
+                        <td class="number" style="color: white;">-</td>
+                        <td style="color: white;">-</td>
+                        <td class="number" style="color: white;">${formatCurrency(totalQ3_2025, true)}</td>
+                        <td class="number" style="color: white;">-</td>
+                        <td style="color: white;">-</td>
+                        <td class="number" style="color: white;">${formatCurrency(totalQ4_2025, true)}</td>
+                        <td class="number" style="color: white;">-</td>
+                        <td style="color: white;">-</td>
+                    `;
+                }
+            }
+            
+            // Flash the button to confirm (only if button exists and we're not auto-updating)
             const btn = document.getElementById('recalc-btn');
-            btn.textContent = '✅ Updated!';
-            btn.style.background = 'rgba(0, 255, 136, 0.3)';
-            setTimeout(() => {
-                btn.textContent = '🔄 Recalculate NRR';
-                btn.style.background = 'rgba(0, 212, 255, 0.2)';
-            }, 1500);
+            if (btn && excluded.length > 0) {
+                btn.textContent = '✅ Updated!';
+                btn.style.background = 'rgba(0, 255, 136, 0.3)';
+                setTimeout(() => {
+                    btn.textContent = '🔄 Recalculate NRR';
+                    btn.style.background = 'rgba(0, 212, 255, 0.2)';
+                }, 1000);
+            }
             
             console.log(`📊 Recalculated: ${excluded.length} accounts excluded, ${includedAccounts.length} included`);
             console.log(`📊 New Q1 2026 Total: ${formatCurrency(totalQ1_2026, true)}`);
