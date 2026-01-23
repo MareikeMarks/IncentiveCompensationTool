@@ -2728,7 +2728,8 @@
                         <input type="checkbox" class="exclude-checkbox" 
                             data-account-id="${acc.account_id}"
                             ${isExcluded ? 'checked' : ''} 
-                            onchange="toggleExclude('${acc.account_id}', this)">
+                            onchange="toggleExclude('${acc.account_id}', this)"
+                            style="appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid #ff9f43; border-radius: 4px; background: ${isExcluded ? '#ff9f43' : 'transparent'}; cursor: pointer;">
                     </td>
                     <td>${acc.account_name}</td>
                     <td><a class="account-link" href="${acc.salesforce_url}" target="_blank">🔗</a></td>
