@@ -1039,6 +1039,41 @@
         .sortable.asc .sort-icon::after { content: '↑'; }
         .sortable.desc .sort-icon::after { content: '↓'; }
 
+        /* Exclude Checkbox Styling */
+        .exclude-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px !important;
+            height: 20px !important;
+            border: 2px solid var(--accent-orange);
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .exclude-checkbox:checked {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange);
+        }
+        
+        .exclude-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .exclude-checkbox:hover {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 8px rgba(255, 159, 67, 0.4);
+        }
+
         /* Footer */
         footer {
             text-align: center;
@@ -2693,8 +2728,7 @@
                         <input type="checkbox" class="exclude-checkbox" 
                             data-account-id="${acc.account_id}"
                             ${isExcluded ? 'checked' : ''} 
-                            onchange="toggleExclude('${acc.account_id}', this)"
-                            style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-orange);">
+                            onchange="toggleExclude('${acc.account_id}', this)">
                     </td>
                     <td>${acc.account_name}</td>
                     <td><a class="account-link" href="${acc.salesforce_url}" target="_blank">🔗</a></td>
