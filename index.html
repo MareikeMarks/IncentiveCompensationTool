@@ -1394,7 +1394,7 @@
                             <div style="font-weight: 600; color: #10b981; margin-bottom: 0.25rem;">Pure SP Take Rate = SP Revenue ÷ GPV</div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary);">SP fees as % of SP volume only. Shows true SP efficiency.</div>
                             <div style="font-size: 0.8rem; color: #10b981; margin-top: 0.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.4rem 0.6rem; border-radius: 4px;">📌 Example: $1.2M ÷ $60M = <strong>2.0%</strong></div>
-                        </div>
+                    </div>
                         <div style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px;">
                             <div style="font-weight: 600; color: #6366f1; margin-bottom: 0.25rem;">SP Penetration = GPV ÷ GMV</div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary);">% of sales through SP. Low = uses external PSP.</div>
@@ -1410,8 +1410,8 @@
                             <div style="font-size: 0.85rem; color: var(--text-secondary);">Revenue from SP transactions only (not subs or gateway fees).</div>
                             <div style="font-size: 0.8rem; color: #a78bfa; margin-top: 0.5rem; background: rgba(167, 139, 250, 0.1); padding: 0.4rem 0.6rem; border-radius: 4px;">📌 Example: <strong>$1.2M</strong> from the $60M GPV</div>
                         </div>
-                    </div>
-                </div>
+                        </div>
+                        </div>
             </section>
 
             <!-- Low GMV Take Rate Accounts -->
@@ -1457,8 +1457,8 @@
                                 <div style="margin-bottom: 0.25rem;">✅ Tax filing fees</div>
                                 <div style="margin-bottom: 0.25rem;">✅ POS subscription fees</div>
                                 <div>✅ App/theme revenue share</div>
-                            </div>
                         </div>
+                    </div>
                         <!-- SP Revenue Column -->
                         <div>
                             <div style="font-weight: 600; color: #10b981; margin-bottom: 0.5rem; font-size: 0.9rem;">💳 SP Revenue (Pure SP Take Rate)</div>
@@ -1470,8 +1470,8 @@
                                     <div style="color: #ef4444;">❌ Subscription fees</div>
                                     <div style="color: #ef4444;">❌ Non-SP transaction fees</div>
                                     <div style="color: #ef4444;">❌ Capital, Shipping, Tax, etc.</div>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
                         </div>
                         <!-- Products That Boost Take Rate -->
                         <div>
@@ -1519,7 +1519,16 @@
         
         // Toggle account exclusion
         function toggleExclude(accountId, checkbox) {
+            // Skip if accountId is undefined (old corrupted data)
+            if (!accountId || accountId === 'undefined') {
+                console.warn('Skipping invalid accountId:', accountId);
+                return;
+            }
+            
             let excluded = getExcludedAccounts();
+            // Clean any undefined entries from old data
+            excluded = excluded.filter(id => id && id !== 'undefined');
+            
             console.log('Before toggle:', excluded, 'Account:', accountId, 'Checked:', checkbox.checked);
             
             if (checkbox.checked) {
@@ -1543,6 +1552,9 @@
             saveExcludedAccounts(excluded);
             console.log('After toggle:', excluded);
             updateExcludedCount();
+            
+            // Auto-recalculate NRR when checkbox is toggled
+            recalculateNRR();
         }
         
         // Update excluded count display
@@ -1617,8 +1629,16 @@
         function clearExclusions() {
             if (confirm('Clear all excluded accounts?')) {
                 localStorage.removeItem('excluded_accounts');
-                // Uncheck all checkboxes
-                document.querySelectorAll('.exclude-checkbox').forEach(cb => cb.checked = false);
+                // Uncheck all checkboxes and reset row styling
+                document.querySelectorAll('.exclude-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    cb.style.background = 'transparent';
+                    const row = cb.closest('tr');
+                    if (row) {
+                        row.style.opacity = '1';
+                        row.style.background = '';
+                    }
+                });
                 updateExcludedCount();
                 recalculateNRR();
             }
@@ -1674,7 +1694,7 @@
                 nameInput.focus();
                 return;
             }
-            
+
             hideError();
             
             // Request BigQuery auth if not already granted
@@ -1685,7 +1705,7 @@
                     ]);
                     if (!authResult.hasRequiredScopes) {
                         showError('BigQuery access required. Please grant permission when prompted.');
-                        return;
+                return;
                     }
                     hasAuth = true;
                 } catch (e) {
@@ -1947,7 +1967,7 @@
                         if (spStatus) {
                             if (spStatus.sp_enabled_current) {
                                 spEnabledShops++;
-                            } else {
+                } else {
                                 spDisabledShops++;
                             }
                         }
@@ -2380,7 +2400,7 @@
             if (tbody) {
                 if (lowTakeRate.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-secondary);">No accounts with GMV take rate below 3% 🎉</td></tr>';
-                } else {
+            } else {
                     tbody.innerHTML = lowTakeRate.map(acc => {
                         const countryFlag = getCountryFlag(acc.country);
                         const spPen = acc.sp_penetration || 0;
@@ -2515,9 +2535,9 @@
                 document.getElementById('nrr-pacing').textContent = '-';
                 document.getElementById('nrr-status').innerHTML = '';
                 document.getElementById('nrr-progress-container').style.display = 'none';
-                return;
-            }
-            
+                    return;
+                }
+
             // Show progress bar
             document.getElementById('nrr-progress-container').style.display = 'block';
             
