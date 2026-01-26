@@ -1841,21 +1841,13 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 3: Get GMV data
-                const today = new Date();
-                const q1Start2026 = new Date('2026-01-01');
-                const dayOfQuarter = Math.floor((today - q1Start2026) / (1000 * 60 * 60 * 24)) + 1;
-                const q1End2025Comparable = new Date('2025-01-01');
-                q1End2025Comparable.setDate(q1End2025Comparable.getDate() + dayOfQuarter - 1);
-                const q1End2025Str = q1End2025Comparable.toISOString().split('T')[0];
-                console.log('📅 GMV YTD comparison: Q1 2025 (Jan 1 - ' + q1End2025Str + ') vs Q1 2026 (Jan 1 - today)');
-                
+                // Query 3: Get GMV data (using FULL quarters to match revenue query)
                 const gmvQuery = `
                     SELECT 
                         shop_id,
                         SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS l12m_gmv,
-                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '${q1End2025Str}' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
-                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
+                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
                     FROM \`shopify-dw.finance.shop_gmv_daily_summary_v1\`
                     WHERE shop_id IN (${shopIds.join(',')})
                     AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
