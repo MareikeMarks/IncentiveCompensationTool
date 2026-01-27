@@ -1732,6 +1732,12 @@
                 updateDailyRunRateChart(updatedData);
             }
             
+            // Update global variable for NRR tracker
+            currentQuarterRevenue = totalQ1_2026;
+            
+            // Update the NRR projection/tracker
+            updateNRRTracker();
+            
             // Flash the button to confirm (only if button exists and we're not auto-updating)
             const btn = document.getElementById('recalc-btn');
             if (btn && excluded.length > 0) {
