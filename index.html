@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Quick.js for BigQuery access -->
     <script src="/client/quick.js"></script>
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -1238,6 +1240,35 @@
                 </div>
             </div>
 
+            <!-- Daily Run Rate Chart -->
+            <section>
+                <h2><span class="emoji">📊</span> Daily Run Rate vs Target</h2>
+                <p class="section-description">Track daily revenue performance against your Q1 2026 target. Green = on track, Red = behind pace.</p>
+                <div style="background: var(--bg-card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Daily Target Needed</div>
+                            <div id="daily-target-needed" style="color: var(--accent-blue); font-size: 1.5rem; font-weight: 600;">$0</div>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Actual Daily Average</div>
+                            <div id="daily-actual-avg" style="font-size: 1.5rem; font-weight: 600;">$0</div>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Pace Status</div>
+                            <div id="pace-status" style="font-size: 1.5rem; font-weight: 600;">-</div>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Days Remaining in Q1</div>
+                            <div id="days-remaining" style="color: var(--accent-yellow); font-size: 1.5rem; font-weight: 600;">-</div>
+                        </div>
+                    </div>
+                    <div style="position: relative; height: 400px;">
+                        <canvas id="daily-run-rate-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
             <!-- Quarterly Performance -->
             <section>
                 <h2><span class="emoji">📈</span> Quarterly Performance</h2>
@@ -1885,13 +1916,27 @@
                     GROUP BY shop_id
                 `;
                 
-                // Run all 5 queries in parallel for speed
-                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult] = await Promise.all([
+                // Query 7: Get daily revenue data for Q1 2026 run rate chart
+                const dailyRevenueQuery = `
+                    SELECT 
+                        date,
+                        SUM(estimated_profit_usd) AS daily_revenue
+                    FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                    AND account_type = 'Income'
+                    AND date BETWEEN '2026-01-01' AND CURRENT_DATE()
+                    GROUP BY date
+                    ORDER BY date ASC
+                `;
+                
+                // Run all 6 queries in parallel for speed
+                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult] = await Promise.all([
                     quick.dw.querySync(revenueQuery),
                     quick.dw.querySync(gmvQuery),
                     quick.dw.querySync(spQuery),
                     quick.dw.querySync(gpvQuery),
-                    quick.dw.querySync(spRevenueQuery)
+                    quick.dw.querySync(spRevenueQuery),
+                    quick.dw.querySync(dailyRevenueQuery)
                 ]);
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
@@ -2071,6 +2116,13 @@
                 console.log('📊 After aggregation - Total Q1 2026:', totalQ1_2026);
                 console.log('📊 Number of accounts:', accounts.length);
                 
+                // Process daily revenue data for run rate chart
+                const dailyRevenue = (dailyRevenueResult.results || []).map(r => ({
+                    date: r.date,
+                    revenue: parseFloat(r.daily_revenue) || 0
+                }));
+                console.log('📊 Daily revenue data points:', dailyRevenue.length);
+                
                 // Get selected quarter's revenue
                 const quarterTotals = {
                     'Q1-2026': totalQ1_2026,
@@ -2111,11 +2163,15 @@
                     quarter_totals: quarterTotals,
                     selected_quarter: selectedQuarter,
                     selected_quarter_ytd: selectedQuarterRevenue,
+                    daily_revenue: dailyRevenue,
                     accounts: accounts
                 };
                 
                 // Update dashboard
                 updateDashboardFromGitHub(data);
+                
+                // Update daily run rate chart
+                updateDailyRunRateChart(data);
                 
                 // Show live data indicator
                 document.getElementById('current-csm-badge').style.display = 'flex';
@@ -2130,6 +2186,200 @@
                 loadBtn.textContent = '⚡ Load Live Data';
                 loadBtn.disabled = false;
             }
+        }
+        
+        // Daily Run Rate Chart
+        let dailyRunRateChartInstance = null;
+        
+        function updateDailyRunRateChart(data) {
+            const canvas = document.getElementById('daily-run-rate-chart');
+            if (!canvas) {
+                console.error('❌ daily-run-rate-chart canvas not found');
+                return;
+            }
+            
+            const dailyData = data.daily_revenue || [];
+            if (dailyData.length === 0) {
+                console.log('⚠️ No daily revenue data available');
+                return;
+            }
+            
+            // Calculate metrics
+            // Target: Match Q1 2025 at minimum (can adjust multiplier for growth target)
+            const q1_2025_baseline = data.q1_comparison.q1_2025;
+            const q1_2026_ytd = data.q1_comparison.q1_2026_ytd;
+            const daysInQ1 = 90;
+            
+            // Use Q1 2025 as the target (to maintain 100% YoY)
+            const q1Target = q1_2025_baseline;
+            const dailyTargetNeeded = q1Target / daysInQ1;
+            
+            const today = new Date();
+            const q1Start = new Date('2026-01-01');
+            const q1End = new Date('2026-03-31');
+            const daysPassed = Math.floor((today - q1Start) / (1000 * 60 * 60 * 24)) + 1;
+            const daysRemaining = Math.max(0, Math.floor((q1End - today) / (1000 * 60 * 60 * 24)));
+            
+            const totalRevenueYTD = dailyData.reduce((sum, d) => sum + d.revenue, 0);
+            const actualDailyAvg = daysPassed > 0 ? totalRevenueYTD / daysPassed : 0;
+            
+            // Calculate 7-day moving average
+            const movingAvg = [];
+            for (let i = 0; i < dailyData.length; i++) {
+                const start = Math.max(0, i - 6);
+                const slice = dailyData.slice(start, i + 1);
+                const avg = slice.reduce((sum, d) => sum + d.revenue, 0) / slice.length;
+                movingAvg.push(avg);
+            }
+            
+            // Determine status
+            const percentOfTarget = (actualDailyAvg / dailyTargetNeeded) * 100;
+            const isOnTrack = percentOfTarget >= 100;
+            const statusColor = isOnTrack ? 'var(--accent-green)' : 'var(--accent-red)';
+            const statusText = isOnTrack ? 
+                `✅ ${percentOfTarget.toFixed(0)}% of target` : 
+                `⚠️ ${percentOfTarget.toFixed(0)}% of target`;
+            
+            // Update metrics
+            document.getElementById('daily-target-needed').textContent = formatCurrency(dailyTargetNeeded, true);
+            const avgEl = document.getElementById('daily-actual-avg');
+            avgEl.textContent = formatCurrency(actualDailyAvg, true);
+            avgEl.style.color = statusColor;
+            
+            const statusEl = document.getElementById('pace-status');
+            statusEl.textContent = statusText;
+            statusEl.style.color = statusColor;
+            
+            document.getElementById('days-remaining').textContent = daysRemaining;
+            
+            // Prepare chart data
+            const labels = dailyData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            
+            const targetLine = Array(dailyData.length).fill(dailyTargetNeeded);
+            
+            // Destroy existing chart if it exists
+            if (dailyRunRateChartInstance) {
+                dailyRunRateChartInstance.destroy();
+            }
+            
+            // Create new chart
+            const ctx = canvas.getContext('2d');
+            dailyRunRateChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Daily Target Needed',
+                            data: targetLine,
+                            borderColor: 'rgba(0, 212, 255, 0.8)',
+                            backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: 'Actual Daily Revenue',
+                            data: dailyData.map(d => d.revenue),
+                            borderColor: isOnTrack ? 'rgba(0, 255, 136, 0.8)' : 'rgba(255, 71, 87, 0.8)',
+                            backgroundColor: isOnTrack ? 'rgba(0, 255, 136, 0.1)' : 'rgba(255, 71, 87, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointBackgroundColor: isOnTrack ? '#00ff88' : '#ff4757',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 1,
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: '7-Day Moving Average',
+                            data: movingAvg,
+                            borderColor: 'rgba(168, 85, 247, 0.8)',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#a0a0b0',
+                                font: {
+                                    family: 'Space Grotesk',
+                                    size: 12
+                                },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 36, 0.95)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#a0a0b0',
+                            borderColor: '#2a2a3a',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y, true);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#a0a0b0',
+                                font: {
+                                    family: 'JetBrains Mono',
+                                    size: 11
+                                },
+                                callback: function(value) {
+                                    return formatCurrency(value, true);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(42, 42, 58, 0.5)',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#a0a0b0',
+                                font: {
+                                    family: 'Space Grotesk',
+                                    size: 10
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                color: 'rgba(42, 42, 58, 0.3)',
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            console.log('✅ Daily run rate chart updated');
         }
         
         // Initialize auth on page load
