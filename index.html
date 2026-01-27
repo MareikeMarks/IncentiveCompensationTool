@@ -1536,6 +1536,7 @@
         // Global storage for accounts data (for recalculation)
         let globalAccountsData = null;
         let globalPortfolioMetrics = null;
+        let globalFullData = null; // Store full data object for recalculations
         
         // Get excluded accounts from localStorage
         function getExcludedAccounts() {
@@ -1599,13 +1600,16 @@
         
         // Recalculate NRR excluding checked accounts
         function recalculateNRR() {
-            if (!globalAccountsData) {
+            if (!globalAccountsData || !globalFullData) {
                 console.log('No data loaded yet, skipping recalculation');
                 return;
             }
             
             const excluded = getExcludedAccounts();
             const includedAccounts = globalAccountsData.filter(acc => !excluded.includes(acc.account_id));
+            
+            // Get shop_ids from included accounts (need to rebuild from account mapping)
+            // We'll filter daily revenue based on accounts, not shops, since we aggregate at account level
             
             // Recalculate all totals
             let totalQ1_2026 = 0, totalQ1_2025 = 0;
@@ -1682,6 +1686,50 @@
                         <td style="color: white;">-</td>
                     `;
                 }
+            }
+            
+            // Update daily run rate chart with filtered data
+            if (globalFullData && globalFullData.daily_revenue_raw) {
+                // Get shop_ids from included accounts
+                const includedShopIds = new Set();
+                includedAccounts.forEach(acc => {
+                    if (acc.shop_ids && Array.isArray(acc.shop_ids)) {
+                        acc.shop_ids.forEach(shopId => includedShopIds.add(shopId));
+                    }
+                });
+                
+                // Filter daily revenue to only included shops
+                const filteredDailyRevenueRaw = globalFullData.daily_revenue_raw.filter(
+                    r => includedShopIds.has(r.shop_id)
+                );
+                
+                // Aggregate by date
+                const dailyRevenueMap = {};
+                filteredDailyRevenueRaw.forEach(r => {
+                    if (!dailyRevenueMap[r.date]) {
+                        dailyRevenueMap[r.date] = 0;
+                    }
+                    dailyRevenueMap[r.date] += r.revenue;
+                });
+                
+                const filteredDailyRevenue = Object.keys(dailyRevenueMap).sort().map(date => ({
+                    date: date,
+                    revenue: dailyRevenueMap[date]
+                }));
+                
+                // Create updated data object for chart
+                const updatedData = {
+                    ...globalFullData,
+                    q1_comparison: {
+                        q1_2025: totalQ1_2025,
+                        q1_2026_ytd: totalQ1_2026,
+                        pacing_rate: totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025) * 100 : 0
+                    },
+                    daily_revenue: filteredDailyRevenue
+                };
+                
+                // Update the chart
+                updateDailyRunRateChart(updatedData);
             }
             
             // Flash the button to confirm (only if button exists and we're not auto-updating)
@@ -1916,16 +1964,17 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 7: Get daily revenue data for Q1 2026 run rate chart
+                // Query 7: Get daily revenue data for Q1 2026 run rate chart (shop-level for filtering)
                 const dailyRevenueQuery = `
                     SELECT 
+                        shop_id,
                         date,
                         SUM(estimated_profit_usd) AS daily_revenue
                     FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
                     WHERE shop_id IN (${shopIds.join(',')})
                     AND account_type = 'Income'
                     AND date BETWEEN '2026-01-01' AND CURRENT_DATE()
-                    GROUP BY date
+                    GROUP BY shop_id, date
                     ORDER BY date ASC
                 `;
                 
@@ -2073,6 +2122,7 @@
                         sfdc_url: account.sfdc_url,
                         service_model: account.service_model,
                         shop_count: account.shop_ids.length,
+                        shop_ids: account.shop_ids, // Store for filtering daily revenue
                         l12m_gmv: accGmv,
                         l12m_gpv: accGpv,
                         l12m_revenue: accRevenue,
@@ -2116,18 +2166,34 @@
                 console.log('📊 After aggregation - Total Q1 2026:', totalQ1_2026);
                 console.log('📊 Number of accounts:', accounts.length);
                 
-                // Process daily revenue data for run rate chart
-                const dailyRevenue = (dailyRevenueResult.results || []).map(r => {
+                // Process daily revenue data for run rate chart (shop-level)
+                const dailyRevenueRaw = (dailyRevenueResult.results || []).map(r => {
                     // BigQuery DATE type comes back as an object with value property
                     let dateValue = r.date;
                     if (typeof r.date === 'object' && r.date !== null) {
                         dateValue = r.date.value || r.date;
                     }
                     return {
+                        shop_id: r.shop_id,
                         date: dateValue,
                         revenue: parseFloat(r.daily_revenue) || 0
                     };
                 });
+                
+                // Aggregate by date (sum across all shops)
+                const dailyRevenueMap = {};
+                dailyRevenueRaw.forEach(r => {
+                    if (!dailyRevenueMap[r.date]) {
+                        dailyRevenueMap[r.date] = 0;
+                    }
+                    dailyRevenueMap[r.date] += r.revenue;
+                });
+                
+                const dailyRevenue = Object.keys(dailyRevenueMap).sort().map(date => ({
+                    date: date,
+                    revenue: dailyRevenueMap[date]
+                }));
+                
                 console.log('📊 Daily revenue data points:', dailyRevenue.length);
                 if (dailyRevenue.length > 0) {
                     console.log('📊 Sample date format:', dailyRevenue[0].date);
@@ -2174,8 +2240,12 @@
                     selected_quarter: selectedQuarter,
                     selected_quarter_ytd: selectedQuarterRevenue,
                     daily_revenue: dailyRevenue,
+                    daily_revenue_raw: dailyRevenueRaw, // Store raw shop-level data for filtering
                     accounts: accounts
                 };
+                
+                // Store globally for recalculations
+                globalFullData = data;
                 
                 // Update dashboard
                 updateDashboardFromGitHub(data);
