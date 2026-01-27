@@ -2117,11 +2117,21 @@
                 console.log('📊 Number of accounts:', accounts.length);
                 
                 // Process daily revenue data for run rate chart
-                const dailyRevenue = (dailyRevenueResult.results || []).map(r => ({
-                    date: r.date,
-                    revenue: parseFloat(r.daily_revenue) || 0
-                }));
+                const dailyRevenue = (dailyRevenueResult.results || []).map(r => {
+                    // BigQuery DATE type comes back as an object with value property
+                    let dateValue = r.date;
+                    if (typeof r.date === 'object' && r.date !== null) {
+                        dateValue = r.date.value || r.date;
+                    }
+                    return {
+                        date: dateValue,
+                        revenue: parseFloat(r.daily_revenue) || 0
+                    };
+                });
                 console.log('📊 Daily revenue data points:', dailyRevenue.length);
+                if (dailyRevenue.length > 0) {
+                    console.log('📊 Sample date format:', dailyRevenue[0].date);
+                }
                 
                 // Get selected quarter's revenue
                 const quarterTotals = {
@@ -2254,8 +2264,18 @@
             
             // Prepare chart data
             const labels = dailyData.map(d => {
-                const date = new Date(d.date);
-                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                // Parse date - handle string format 'YYYY-MM-DD'
+                const dateStr = String(d.date);
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1; // JS months are 0-indexed
+                    const day = parseInt(parts[2]);
+                    const date = new Date(year, month, day);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+                console.error('Invalid date format:', d.date);
+                return dateStr;
             });
             
             const targetLine = Array(dailyData.length).fill(dailyTargetNeeded);
