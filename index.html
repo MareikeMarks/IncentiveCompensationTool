@@ -1240,6 +1240,87 @@
                 </div>
             </div>
 
+            <!-- Full Book of Business -->
+            <section>
+                <h2><span class="emoji">📋</span> Complete Book of Business</h2>
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label for="account-search">🔍 Search</label>
+                        <input type="text" id="account-search" class="filter-input" placeholder="Filter by account name..." onkeyup="filterTable()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="pacing-filter">📈 Q1 Pacing</label>
+                        <select id="pacing-filter" class="filter-select" onchange="filterTable()">
+                            <option value="all">All Accounts</option>
+                            <option value="high">High (> 40%)</option>
+                            <option value="medium">Medium (25-40%)</option>
+                            <option value="low">Needs Attention (< 25%)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="revenue-filter">💰 2025 Revenue</label>
+                        <select id="revenue-filter" class="filter-select" onchange="filterTable()">
+                            <option value="all">All</option>
+                            <option value="1m">$1M+</option>
+                            <option value="500k">$500K - $1M</option>
+                            <option value="100k">$100K - $500K</option>
+                            <option value="under100k">Under $100K</option>
+                        </select>
+                    </div>
+                    <button class="clear-filters-btn" onclick="clearFilters()">Clear Filters</button>
+                    <span class="filter-count" id="filter-count">Showing 37 accounts</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <p class="sort-hint" style="margin: 0;">💡 Click any column header to sort</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+                        <span id="excluded-count" style="color: var(--accent-orange); font-size: 0.85rem;"></span>
+                        <button id="recalc-btn" onclick="recalculateNRR()" 
+                            style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--accent-blue); 
+                            background: rgba(0, 212, 255, 0.2); color: var(--accent-blue); cursor: pointer; 
+                            font-weight: 600; font-size: 0.85rem; transition: all 0.2s;">
+                            🔄 Recalculate NRR
+                        </button>
+                        <button onclick="clearExclusions()" 
+                            style="padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); 
+                            background: transparent; color: var(--text-secondary); cursor: pointer; 
+                            font-size: 0.8rem;">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="book-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">Excl</th>
+                                <th class="sortable" data-col="1" onclick="sortTable(1, 'string')">Account <span class="sort-icon">⇅</span></th>
+                                <th>SFDC</th>
+                                <th class="sortable" data-col="3" onclick="sortTable(3, 'string')">Segment <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="4" onclick="sortTable(4, 'currency')">L12M GMV <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="5" onclick="sortTable(5, 'currency')">L12M Rev <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="6" onclick="sortTable(6, 'percent')">Take Rate <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="7" onclick="sortTable(7, 'currency')">2025 Total Rev <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="8" onclick="sortTable(8, 'currency')">Q1 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="9" onclick="sortTable(9, 'currency')">Q1 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="10" onclick="sortTable(10, 'percent')">Q1 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="11" onclick="sortTable(11, 'currency')">Q2 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="12" onclick="sortTable(12, 'currency')">Q2 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="13" onclick="sortTable(13, 'percent')">Q2 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="14" onclick="sortTable(14, 'currency')">Q3 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="15" onclick="sortTable(15, 'currency')">Q3 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="16" onclick="sortTable(16, 'percent')">Q3 YoY <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="17" onclick="sortTable(17, 'currency')">Q4 '25 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="18" onclick="sortTable(18, 'currency')">Q4 '26 <span class="sort-icon">⇅</span></th>
+                                <th class="sortable" data-col="19" onclick="sortTable(19, 'percent')">Q4 YoY <span class="sort-icon">⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-book">
+                            <tr><td colspan="20" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load My Data" to see your accounts</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- Daily Run Rate Chart -->
             <section>
                 <h2><span class="emoji">📊</span> Daily Run Rate vs Target</h2>
@@ -1375,87 +1456,6 @@
                         </thead>
                         <tbody id="product-adoption-body">
                             <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Load your data to see product adoption gaps</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Full Book of Business -->
-            <section>
-                <h2><span class="emoji">📋</span> Complete Book of Business</h2>
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <label for="account-search">🔍 Search</label>
-                        <input type="text" id="account-search" class="filter-input" placeholder="Filter by account name..." onkeyup="filterTable()">
-                    </div>
-                    <div class="filter-group">
-                        <label for="pacing-filter">📈 Q1 Pacing</label>
-                        <select id="pacing-filter" class="filter-select" onchange="filterTable()">
-                            <option value="all">All Accounts</option>
-                            <option value="high">High (> 40%)</option>
-                            <option value="medium">Medium (25-40%)</option>
-                            <option value="low">Needs Attention (< 25%)</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="revenue-filter">💰 2025 Revenue</label>
-                        <select id="revenue-filter" class="filter-select" onchange="filterTable()">
-                            <option value="all">All</option>
-                            <option value="1m">$1M+</option>
-                            <option value="500k">$500K - $1M</option>
-                            <option value="100k">$100K - $500K</option>
-                            <option value="under100k">Under $100K</option>
-                        </select>
-                    </div>
-                    <button class="clear-filters-btn" onclick="clearFilters()">Clear Filters</button>
-                    <span class="filter-count" id="filter-count">Showing 37 accounts</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
-                    <p class="sort-hint" style="margin: 0;">💡 Click any column header to sort</p>
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
-                        <span id="excluded-count" style="color: var(--accent-orange); font-size: 0.85rem;"></span>
-                        <button id="recalc-btn" onclick="recalculateNRR()" 
-                            style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--accent-blue); 
-                            background: rgba(0, 212, 255, 0.2); color: var(--accent-blue); cursor: pointer; 
-                            font-weight: 600; font-size: 0.85rem; transition: all 0.2s;">
-                            🔄 Recalculate NRR
-                        </button>
-                        <button onclick="clearExclusions()" 
-                            style="padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); 
-                            background: transparent; color: var(--text-secondary); cursor: pointer; 
-                            font-size: 0.8rem;">
-                            Clear
-                        </button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="book-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 50px; text-align: center;">Excl</th>
-                                <th class="sortable" data-col="1" onclick="sortTable(1, 'string')">Account <span class="sort-icon">⇅</span></th>
-                                <th>SFDC</th>
-                                <th class="sortable" data-col="3" onclick="sortTable(3, 'string')">Segment <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="4" onclick="sortTable(4, 'currency')">L12M GMV <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="5" onclick="sortTable(5, 'currency')">L12M Rev <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="6" onclick="sortTable(6, 'percent')">Take Rate <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="7" onclick="sortTable(7, 'currency')">2025 Total Rev <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="8" onclick="sortTable(8, 'currency')">Q1 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="9" onclick="sortTable(9, 'currency')">Q1 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="10" onclick="sortTable(10, 'percent')">Q1 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="11" onclick="sortTable(11, 'currency')">Q2 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="12" onclick="sortTable(12, 'currency')">Q2 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="13" onclick="sortTable(13, 'percent')">Q2 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="14" onclick="sortTable(14, 'currency')">Q3 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="15" onclick="sortTable(15, 'currency')">Q3 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="16" onclick="sortTable(16, 'percent')">Q3 YoY <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="17" onclick="sortTable(17, 'currency')">Q4 '25 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="18" onclick="sortTable(18, 'currency')">Q4 '26 <span class="sort-icon">⇅</span></th>
-                                <th class="sortable" data-col="19" onclick="sortTable(19, 'percent')">Q4 YoY <span class="sort-icon">⇅</span></th>
-                            </tr>
-                        </thead>
-                        <tbody id="full-book">
-                            <tr><td colspan="20" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load My Data" to see your accounts</td></tr>
                         </tbody>
                     </table>
                 </div>
