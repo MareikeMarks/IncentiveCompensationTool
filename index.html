@@ -2086,9 +2086,9 @@
                 const productEnablementsQuery = `
                     SELECT 
                         CAST(NULL AS INT64) AS shop_id,
-                        'None' AS product_name,
-                        CURRENT_DATE() AS enabled_date
-                    WHERE FALSE
+                        CAST(NULL AS STRING) AS product_name,
+                        CAST(NULL AS DATE) AS enabled_date
+                    FROM (SELECT 1) WHERE FALSE
                 `;
                 
                 // Run all queries in parallel for speed
