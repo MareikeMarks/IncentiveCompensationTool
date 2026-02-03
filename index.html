@@ -1361,9 +1361,6 @@
                                 <th style="text-align: right;">L12M GMV</th>
                                 <th style="text-align: center;">SP</th>
                                 <th style="text-align: center;">POS</th>
-                                <th style="text-align: center;">Markets</th>
-                                <th style="text-align: center;">B2B</th>
-                                <th style="text-align: center;">Capital</th>
                                 <th style="text-align: center;">Gap Count</th>
                             </tr>
                         </thead>
@@ -2063,16 +2060,16 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 9: Product Adoption Status (check what revenue products are enabled)
+                // Query 9: Product Adoption Status (simplified - only checking SP and POS)
                 const productAdoptionQuery = `
                     WITH adoption_data AS (
                         SELECT 
                             s.shop_id,
                             sp.is_enabled AS has_shopify_payments,
                             CASE WHEN pos.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_pos,
-                            FALSE AS has_markets,  -- Markets data temporarily disabled
-                            CASE WHEN b2b.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_b2b,
-                            capital.has_active_loan AS has_capital
+                            FALSE AS has_markets,
+                            FALSE AS has_b2b,
+                            FALSE AS has_capital
                         FROM (SELECT DISTINCT shop_id FROM UNNEST([${shopIds.join(',')}]) AS shop_id) s
                         LEFT JOIN \`shopify-dw.money_products.shopify_payments_adoption_current\` sp 
                             ON s.shop_id = sp.shop_id
@@ -2081,47 +2078,17 @@
                             FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\` 
                             WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\`)
                         ) pos ON s.shop_id = pos.shop_id
-                        -- Markets data temporarily disabled (table not found)
-                        -- LEFT JOIN markets table here
-                        LEFT JOIN (
-                            SELECT DISTINCT shop_id 
-                            FROM \`shopify-dw.b2b.b2b_company_locations\`
-                        ) b2b ON s.shop_id = b2b.shop_id
-                        LEFT JOIN (
-                            SELECT shop_id, TRUE AS has_active_loan
-                            FROM \`shopify-dw.capital.capital_advances\`
-                            WHERE status IN ('Active', 'Partially_Repaid')
-                            GROUP BY shop_id
-                        ) capital ON s.shop_id = capital.shop_id
                     )
                     SELECT * FROM adoption_data
                 `;
                 
-                // Query 10: Recent Product Enablements (last 6 months)
+                // Query 10: Recent Product Enablements (temporarily disabled - tables not found)
                 const productEnablementsQuery = `
-                    WITH sp_enablements AS (
-                        SELECT 
-                            shop_id,
-                            'Shopify Payments' AS product_name,
-                            first_enabled_at AS enabled_date
-                        FROM \`shopify-dw.money_products.shopify_payments_adoption_history\`
-                        WHERE shop_id IN (${shopIds.join(',')})
-                        AND first_enabled_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-                    ),
-                    pos_enablements AS (
-                        SELECT 
-                            shop_id,
-                            'POS' AS product_name,
-                            MIN(created_at) AS enabled_date
-                        FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\`
-                        WHERE shop_id IN (${shopIds.join(',')})
-                        AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-                        GROUP BY shop_id
-                    )
-                    SELECT * FROM sp_enablements
-                    UNION ALL
-                    SELECT * FROM pos_enablements
-                    ORDER BY enabled_date DESC
+                    SELECT 
+                        CAST(NULL AS INT64) AS shop_id,
+                        'None' AS product_name,
+                        CURRENT_DATE() AS enabled_date
+                    WHERE FALSE
                 `;
                 
                 // Run all queries in parallel for speed
@@ -3547,14 +3514,12 @@
             if (!tbody) return;
             
             // Calculate gap count and sort by opportunity (high GMV + most gaps = top priority)
+            // Only checking SP and POS for now
             const accountsWithGaps = accounts
                 .map(acc => {
                     const gapCount = [
                         !acc.has_shopify_payments,
-                        !acc.has_pos,
-                        !acc.has_markets,
-                        !acc.has_b2b,
-                        !acc.has_capital
+                        !acc.has_pos
                     ].filter(Boolean).length;
                     return { ...acc, gap_count: gapCount };
                 })
@@ -3566,7 +3531,7 @@
                 });
             
             if (accountsWithGaps.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">🎉 All accounts have full product adoption!</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">🎉 All accounts have SP and POS enabled!</td></tr>';
                 return;
             }
             
@@ -3581,9 +3546,6 @@
                     <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
                     <td style="text-align: center;">${acc.has_shopify_payments ? checkmark : xmark}</td>
                     <td style="text-align: center;">${acc.has_pos ? checkmark : xmark}</td>
-                    <td style="text-align: center;">${acc.has_markets ? checkmark : xmark}</td>
-                    <td style="text-align: center;">${acc.has_b2b ? checkmark : xmark}</td>
-                    <td style="text-align: center;">${acc.has_capital ? checkmark : xmark}</td>
                     <td style="text-align: center; font-weight: 600; color: #f59e0b;">${acc.gap_count}</td>
                 </tr>
                 `;
