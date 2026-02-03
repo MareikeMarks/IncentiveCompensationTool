@@ -1361,7 +1361,7 @@
             <!-- Product Adoption Matrix -->
             <section class="product-adoption-section">
                 <h2><span class="emoji">🎯</span> Shopify Payments Opportunities</h2>
-                <p class="section-description">Accounts without SP enabled. Biggest revenue opportunity = highest GMV without SP.</p>
+                <p class="section-description">Accounts not using SP or with <5% SP Penetration (routing most traffic through other PSPs like Adyen/Stripe).</p>
                 <div class="card" style="overflow-x: auto;">
                     <table class="data-table" id="product-adoption-table">
                         <thead>
@@ -1369,11 +1369,12 @@
                                 <th style="text-align: left;">Account</th>
                                 <th style="text-align: left;">Segment</th>
                                 <th style="text-align: right;">L12M GMV</th>
-                                <th style="text-align: center;">Shopify Payments</th>
+                                <th style="text-align: right;">SP Penetration</th>
+                                <th style="text-align: center;">Status</th>
                             </tr>
                         </thead>
                         <tbody id="product-adoption-body">
-                            <tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">Load your data to see product adoption gaps</td></tr>
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Load your data to see product adoption gaps</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -3608,25 +3609,29 @@
             const tbody = document.getElementById('product-adoption-body');
             if (!tbody) return;
             
-            // Show accounts WITHOUT Shopify Payments (biggest revenue opportunity)
+            // Show accounts WITHOUT Shopify Payments OR with <5% SP Penetration (effectively not using SP)
+            // This catches merchants using Adyen/Stripe even if SP is technically "enabled"
             const accountsWithoutSP = accounts
-                .filter(acc => !acc.has_shopify_payments)
+                .filter(acc => !acc.has_shopify_payments || acc.sp_penetration < 5)
                 .sort((a, b) => b.l12m_gmv - a.l12m_gmv); // Sort by GMV DESC
             
             if (accountsWithoutSP.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">🎉 All accounts have Shopify Payments enabled!</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">🎉 All accounts actively using Shopify Payments!</td></tr>';
                 return;
             }
             
             tbody.innerHTML = accountsWithoutSP.map(acc => {
                 const segment = getSegmentAbbrev(acc.service_model);
-                const xmark = '❌';
+                const spPenDisplay = acc.sp_penetration > 0 ? `${acc.sp_penetration.toFixed(1)}%` : '0%';
+                const statusIcon = acc.sp_penetration > 0 ? '⚠️' : '❌';
+                const statusText = acc.sp_penetration > 0 ? 'Low SP Use' : 'No SP';
                 return `
                 <tr>
                     <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
                     <td>${segment}</td>
                     <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
-                    <td style="text-align: center;">${xmark}</td>
+                    <td class="number">${spPenDisplay}</td>
+                    <td style="text-align: center;">${statusIcon} ${statusText}</td>
                 </tr>
                 `;
             }).join('');
