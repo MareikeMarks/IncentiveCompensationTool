@@ -292,7 +292,58 @@ GROUP BY shop_id
 
 ---
 
-#### Query 9: Product Adoption Status
+#### Query 9: SP Penetration Trends
+Track if merchants are routing MORE or LESS volume through Shopify Payments over time.
+
+**Tables:** 
+- `shopify-dw.finance.shop_gpv_daily_summary_v1`
+- `shopify-dw.finance.shop_gmv_daily_summary_v1`
+
+```sql
+WITH gpv_trends AS (
+    SELECT 
+        shop_id,
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS gpv_l12m,
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY) 
+                 AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS gpv_prev12m
+    FROM `shopify-dw.finance.shop_gpv_daily_summary_v1`
+    WHERE shop_id IN (${shopIds})
+    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY)
+    GROUP BY shop_id
+),
+gmv_trends AS (
+    SELECT 
+        shop_id,
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS gmv_l12m,
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY) 
+                 AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS gmv_prev12m
+    FROM `shopify-dw.finance.shop_gmv_daily_summary_v1`
+    WHERE shop_id IN (${shopIds})
+    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY)
+    GROUP BY shop_id
+)
+SELECT 
+    gpv.shop_id,
+    gpv.gpv_l12m,
+    gpv.gpv_prev12m,
+    gmv.gmv_l12m,
+    gmv.gmv_prev12m,
+    CASE WHEN gmv.gmv_l12m > 0 THEN (gpv.gpv_l12m / gmv.gmv_l12m) * 100 ELSE 0 END AS sp_pen_l12m,
+    CASE WHEN gmv.gmv_prev12m > 0 THEN (gpv.gpv_prev12m / gmv.gmv_prev12m) * 100 ELSE 0 END AS sp_pen_prev12m
+FROM gpv_trends gpv
+JOIN gmv_trends gmv ON gpv.shop_id = gmv.shop_id
+```
+
+**Returns:** Current SP Penetration (L12M), Previous SP Penetration (12-24 months ago), Change
+
+**Use Case:** 
+- **Increasing Penetration (+):** Winning back volume from other PSPs → Revenue opportunity realized
+- **Decreasing Penetration (-):** Losing volume to other PSPs → Risk/churn indicator, needs attention
+- **Stable Penetration (~0%):** Consistent merchant behavior
+
+---
+
+#### Query 10: Product Adoption Status
 Identify which revenue-driving products each merchant has enabled.
 
 **Tables:** Multiple adoption tables
