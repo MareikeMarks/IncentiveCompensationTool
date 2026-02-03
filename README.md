@@ -293,7 +293,7 @@ GROUP BY shop_id
 ---
 
 #### Query 9: SP Penetration Trends
-Track if merchants are routing MORE or LESS volume through Shopify Payments over time.
+Track if merchants are routing MORE or LESS volume through Shopify Payments over time. Compares last 3 months vs previous 3 months (6 months total lookback).
 
 **Tables:** 
 - `shopify-dw.finance.shop_gpv_daily_summary_v1`
@@ -303,38 +303,38 @@ Track if merchants are routing MORE or LESS volume through Shopify Payments over
 WITH gpv_trends AS (
     SELECT 
         shop_id,
-        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS gpv_l12m,
-        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY) 
-                 AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS gpv_prev12m
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gpv_usd ELSE 0 END) AS gpv_l3m,
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY) 
+                 AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gpv_usd ELSE 0 END) AS gpv_prev3m
     FROM `shopify-dw.finance.shop_gpv_daily_summary_v1`
     WHERE shop_id IN (${shopIds})
-    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY)
+    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)
     GROUP BY shop_id
 ),
 gmv_trends AS (
     SELECT 
         shop_id,
-        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS gmv_l12m,
-        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY) 
-                 AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS gmv_prev12m
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gmv_usd ELSE 0 END) AS gmv_l3m,
+        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY) 
+                 AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gmv_usd ELSE 0 END) AS gmv_prev3m
     FROM `shopify-dw.finance.shop_gmv_daily_summary_v1`
     WHERE shop_id IN (${shopIds})
-    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY)
+    AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)
     GROUP BY shop_id
 )
 SELECT 
     gpv.shop_id,
-    gpv.gpv_l12m,
-    gpv.gpv_prev12m,
-    gmv.gmv_l12m,
-    gmv.gmv_prev12m,
-    CASE WHEN gmv.gmv_l12m > 0 THEN (gpv.gpv_l12m / gmv.gmv_l12m) * 100 ELSE 0 END AS sp_pen_l12m,
-    CASE WHEN gmv.gmv_prev12m > 0 THEN (gpv.gpv_prev12m / gmv.gmv_prev12m) * 100 ELSE 0 END AS sp_pen_prev12m
+    gpv.gpv_l3m,
+    gpv.gpv_prev3m,
+    gmv.gmv_l3m,
+    gmv.gmv_prev3m,
+    CASE WHEN gmv.gmv_l3m > 0 THEN (gpv.gpv_l3m / gmv.gmv_l3m) * 100 ELSE 0 END AS sp_pen_l3m,
+    CASE WHEN gmv.gmv_prev3m > 0 THEN (gpv.gpv_prev3m / gmv.gmv_prev3m) * 100 ELSE 0 END AS sp_pen_prev3m
 FROM gpv_trends gpv
 JOIN gmv_trends gmv ON gpv.shop_id = gmv.shop_id
 ```
 
-**Returns:** Current SP Penetration (L12M), Previous SP Penetration (12-24 months ago), Change
+**Returns:** Current SP Penetration (Last 3M), Previous SP Penetration (Prev 3M), Change
 
 **Use Case:** 
 - **Increasing Penetration (+):** Winning back volume from other PSPs → Revenue opportunity realized

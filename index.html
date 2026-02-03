@@ -1586,8 +1586,8 @@
                                 <th style="text-align: left;">Account</th>
                                 <th style="text-align: left;">Segment</th>
                                 <th style="text-align: right;">L12M GMV</th>
-                                <th style="text-align: right;">Current SP Pen %</th>
-                                <th style="text-align: right;">Previous SP Pen %</th>
+                                <th style="text-align: right;">Last 3M SP %</th>
+                                <th style="text-align: right;">Prev 3M SP %</th>
                                 <th style="text-align: right;">Change</th>
                                 <th style="text-align: center;">Trend</th>
                             </tr>
@@ -1603,7 +1603,7 @@
                     <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--accent);">📈 Understanding SP Penetration Trends</h3>
                     <div style="background: rgba(99, 102, 241, 0.05); padding: 1rem; border-radius: 8px; margin-top: 0.75rem;">
                         <p style="margin: 0 0 0.75rem 0; line-height: 1.6;">
-                            <strong>What It Shows:</strong> Compares the last 12 months (L12M) of SP Penetration vs the previous 12 months (12-24 months ago).
+                            <strong>What It Shows:</strong> Compares the last 3 months of SP Penetration vs the previous 3 months (3-6 months ago). Total lookback: 6 months.
                         </p>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 0.75rem;">
                             <div style="background: rgba(16, 185, 129, 0.1); padding: 0.75rem; border-radius: 6px; border-left: 3px solid #10b981;">
@@ -2106,39 +2106,40 @@
                 `;
                 
                 // Query 9: SP Penetration Trends (track if merchants route more/less through SP over time)
+                // Compare Last 3 months vs Previous 3 months (6 months total lookback)
                 const spPenetrationTrendsQuery = `
                     WITH gpv_trends AS (
                         SELECT 
                             shop_id,
-                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS gpv_l12m,
-                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY) 
-                                     AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS gpv_prev12m
+                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gpv_usd ELSE 0 END) AS gpv_l3m,
+                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY) 
+                                     AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gpv_usd ELSE 0 END) AS gpv_prev3m
                         FROM \`shopify-dw.finance.shop_gpv_daily_summary_v1\`
                         WHERE shop_id IN (${shopIds.join(',')})
-                        AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY)
+                        AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)
                         GROUP BY shop_id
                     ),
                     gmv_trends AS (
                         SELECT 
                             shop_id,
-                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS gmv_l12m,
-                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY) 
-                                     AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS gmv_prev12m
+                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gmv_usd ELSE 0 END) AS gmv_l3m,
+                            SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY) 
+                                     AND date < DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) THEN gmv_usd ELSE 0 END) AS gmv_prev3m
                         FROM \`shopify-dw.finance.shop_gmv_daily_summary_v1\`
                         WHERE shop_id IN (${shopIds.join(',')})
-                        AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 730 DAY)
+                        AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 180 DAY)
                         GROUP BY shop_id
                     )
                     SELECT 
                         gpv.shop_id,
-                        gpv.gpv_l12m,
-                        gpv.gpv_prev12m,
-                        gmv.gmv_l12m,
-                        gmv.gmv_prev12m,
-                        -- Current SP Penetration (L12M)
-                        CASE WHEN gmv.gmv_l12m > 0 THEN (gpv.gpv_l12m / gmv.gmv_l12m) * 100 ELSE 0 END AS sp_pen_l12m,
-                        -- Previous SP Penetration (12-24 months ago)
-                        CASE WHEN gmv.gmv_prev12m > 0 THEN (gpv.gpv_prev12m / gmv.gmv_prev12m) * 100 ELSE 0 END AS sp_pen_prev12m
+                        gpv.gpv_l3m,
+                        gpv.gpv_prev3m,
+                        gmv.gmv_l3m,
+                        gmv.gmv_prev3m,
+                        -- Current SP Penetration (Last 3 months)
+                        CASE WHEN gmv.gmv_l3m > 0 THEN (gpv.gpv_l3m / gmv.gmv_l3m) * 100 ELSE 0 END AS sp_pen_l3m,
+                        -- Previous SP Penetration (3-6 months ago)
+                        CASE WHEN gmv.gmv_prev3m > 0 THEN (gpv.gpv_prev3m / gmv.gmv_prev3m) * 100 ELSE 0 END AS sp_pen_prev3m
                     FROM gpv_trends gpv
                     JOIN gmv_trends gmv ON gpv.shop_id = gmv.shop_id
                 `;
@@ -2248,9 +2249,9 @@
                 const spPenetrationTrendsMap = {};
                 (spPenetrationTrendsResult.results || []).forEach(r => {
                     spPenetrationTrendsMap[r.shop_id] = {
-                        sp_pen_l12m: parseFloat(r.sp_pen_l12m) || 0,
-                        sp_pen_prev12m: parseFloat(r.sp_pen_prev12m) || 0,
-                        sp_pen_change: (parseFloat(r.sp_pen_l12m) || 0) - (parseFloat(r.sp_pen_prev12m) || 0)
+                        sp_pen_l3m: parseFloat(r.sp_pen_l3m) || 0,
+                        sp_pen_prev3m: parseFloat(r.sp_pen_prev3m) || 0,
+                        sp_pen_change: (parseFloat(r.sp_pen_l3m) || 0) - (parseFloat(r.sp_pen_prev3m) || 0)
                     };
                 });
                 
@@ -2282,7 +2283,7 @@
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
                     let spEnabledShops = 0, spDisabledShops = 0;
                     let accQ4_2025_gmv = 0, accQ1_2026_gmv_projected = 0;
-                    let accSpPenL12m = 0, accSpPenPrev12m = 0, spPenShopCount = 0;
+                    let accSpPenL3m = 0, accSpPenPrev3m = 0, spPenShopCount = 0;
                     let adoptionData = {
                         has_shopify_payments: false,
                         has_pos: false,
@@ -2341,8 +2342,8 @@
                         // Collect SP penetration trends data
                         const spPenTrend = spPenetrationTrendsMap[shopId];
                         if (spPenTrend) {
-                            accSpPenL12m += spPenTrend.sp_pen_l12m || 0;
-                            accSpPenPrev12m += spPenTrend.sp_pen_prev12m || 0;
+                            accSpPenL3m += spPenTrend.sp_pen_l3m || 0;
+                            accSpPenPrev3m += spPenTrend.sp_pen_prev3m || 0;
                             spPenShopCount++;
                         }
                         
@@ -2376,9 +2377,9 @@
                         ((accQ1_2026_gmv_projected - accQ4_2025_gmv) / accQ4_2025_gmv) * 100 : 0;
                     
                     // Calculate average SP penetration trends across all shops in the account
-                    const avgSpPenL12m = spPenShopCount > 0 ? accSpPenL12m / spPenShopCount : 0;
-                    const avgSpPenPrev12m = spPenShopCount > 0 ? accSpPenPrev12m / spPenShopCount : 0;
-                    const spPenChange = avgSpPenL12m - avgSpPenPrev12m;
+                    const avgSpPenL3m = spPenShopCount > 0 ? accSpPenL3m / spPenShopCount : 0;
+                    const avgSpPenPrev3m = spPenShopCount > 0 ? accSpPenPrev3m / spPenShopCount : 0;
+                    const spPenChange = avgSpPenL3m - avgSpPenPrev3m;
                     
                     accounts.push({
                         account_id: accountId,
@@ -2417,9 +2418,9 @@
                         has_markets: adoptionData.has_markets,
                         has_b2b: adoptionData.has_b2b,
                         has_capital: adoptionData.has_capital,
-                        // New: SP penetration trends
-                        sp_pen_l12m: avgSpPenL12m,
-                        sp_pen_prev12m: avgSpPenPrev12m,
+                        // New: SP penetration trends (Last 3 months vs Previous 3 months)
+                        sp_pen_l3m: avgSpPenL3m,
+                        sp_pen_prev3m: avgSpPenPrev3m,
                         sp_pen_change: spPenChange
                     });
                     
@@ -3644,7 +3645,7 @@
             
             // Filter accounts with SP (need SP to have penetration data) and sort by absolute change DESC
             const accountsWithTrends = accounts
-                .filter(acc => acc.has_shopify_payments && acc.sp_pen_l12m > 0)
+                .filter(acc => acc.has_shopify_payments && acc.sp_pen_l3m > 0)
                 .map(acc => ({
                     ...acc,
                     abs_change: Math.abs(acc.sp_pen_change || 0)
@@ -3682,8 +3683,8 @@
                     <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
                     <td>${segment}</td>
                     <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
-                    <td class="number">${acc.sp_pen_l12m.toFixed(1)}%</td>
-                    <td class="number">${acc.sp_pen_prev12m.toFixed(1)}%</td>
+                    <td class="number">${acc.sp_pen_l3m.toFixed(1)}%</td>
+                    <td class="number">${acc.sp_pen_prev3m.toFixed(1)}%</td>
                     <td class="number" style="color: ${trendColor}; font-weight: 600;">${changeText}</td>
                     <td style="text-align: center; font-size: 1.5rem;">${trendEmoji}</td>
                 </tr>
