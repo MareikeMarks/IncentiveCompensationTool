@@ -1366,11 +1366,11 @@
                     <table class="data-table" id="product-adoption-table">
                         <thead>
                             <tr style="background: rgba(99, 102, 241, 0.1);">
-                                <th style="text-align: left;">Account</th>
-                                <th style="text-align: left;">Segment</th>
-                                <th style="text-align: right;">L12M GMV</th>
-                                <th style="text-align: right;">SP Penetration</th>
-                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: left; width: 30%;">Account</th>
+                                <th style="text-align: left; width: 10%;">Segment</th>
+                                <th style="text-align: right; width: 20%;">L12M GMV</th>
+                                <th style="text-align: right; width: 20%;">SP Penetration</th>
+                                <th style="text-align: center; width: 20%;">Status</th>
                             </tr>
                         </thead>
                         <tbody id="product-adoption-body">
@@ -3631,11 +3631,11 @@
                 const statusText = acc.sp_penetration > 0 ? 'Low SP Use' : 'No SP';
                 return `
                 <tr>
-                    <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
-                    <td>${segment}</td>
-                    <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
-                    <td class="number">${spPenDisplay}</td>
-                    <td style="text-align: center;">${statusIcon} ${statusText}</td>
+                    <td style="text-align: left; width: 30%;"><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
+                    <td style="text-align: left; width: 10%;">${segment}</td>
+                    <td class="number" style="text-align: right; width: 20%;">${formatCurrency(acc.l12m_gmv, true)}</td>
+                    <td class="number" style="text-align: right; width: 20%;">${spPenDisplay}</td>
+                    <td style="text-align: center; width: 20%;">${statusIcon} ${statusText}</td>
                 </tr>
                 `;
             }).join('');
