@@ -1325,6 +1325,66 @@
                 </div>
             </section>
 
+            <!-- GMV Growth Tracker -->
+            <section class="gmv-growth-section">
+                <h2><span class="emoji">📈</span> GMV Growth Tracker</h2>
+                <p class="section-description">Monitor quarter-over-quarter GMV growth. High GMV growth = opportunity to increase revenue via product adoption.</p>
+                <div class="card" style="overflow-x: auto;">
+                    <table class="data-table" id="gmv-growth-table">
+                        <thead>
+                            <tr style="background: rgba(99, 102, 241, 0.1);">
+                                <th style="text-align: left;">Account</th>
+                                <th style="text-align: left;">Segment</th>
+                                <th style="text-align: right;">Q4 2025 GMV</th>
+                                <th style="text-align: right;">Q1 2026 Projected</th>
+                                <th style="text-align: right;">QoQ Growth</th>
+                                <th style="text-align: center;">Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gmv-growth-body">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">Load your data to see GMV growth trends</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Product Adoption Matrix -->
+            <section class="product-adoption-section">
+                <h2><span class="emoji">🎯</span> Product Adoption Opportunities</h2>
+                <p class="section-description">Identify upsell gaps. Missing products = revenue opportunity.</p>
+                <div class="card" style="overflow-x: auto;">
+                    <table class="data-table" id="product-adoption-table">
+                        <thead>
+                            <tr style="background: rgba(99, 102, 241, 0.1);">
+                                <th style="text-align: left;">Account</th>
+                                <th style="text-align: left;">Segment</th>
+                                <th style="text-align: right;">L12M GMV</th>
+                                <th style="text-align: center;">SP</th>
+                                <th style="text-align: center;">POS</th>
+                                <th style="text-align: center;">Markets</th>
+                                <th style="text-align: center;">B2B</th>
+                                <th style="text-align: center;">Capital</th>
+                                <th style="text-align: center;">Gap Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-adoption-body">
+                            <tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">Load your data to see product adoption gaps</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Recent Product Launches -->
+            <section class="product-launches-section">
+                <h2><span class="emoji">🚀</span> Recent Product Launches (Last 6 Months)</h2>
+                <p class="section-description">Track recent product enablements across your book.</p>
+                <div class="card">
+                    <div id="product-launches-timeline" style="padding: 1rem;">
+                        <p style="text-align: center; color: var(--text-secondary);">Load your data to see recent product launches</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Full Book of Business -->
             <section>
                 <h2><span class="emoji">📋</span> Complete Book of Business</h2>
@@ -1984,14 +2044,112 @@
                     ORDER BY date ASC
                 `;
                 
-                // Run all 6 queries in parallel for speed
-                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult] = await Promise.all([
+                // Query 8: GMV Growth (QoQ comparison with projections)
+                const gmvGrowthQuery = `
+                    SELECT 
+                        shop_id,
+                        SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN gmv_usd ELSE 0 END) AS q4_2025_gmv,
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_2026_gmv_ytd,
+                        -- Project Q1 based on current pace
+                        CASE 
+                            WHEN DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) > 0 THEN
+                                SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) 
+                                / DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) * 90
+                            ELSE 0
+                        END AS q1_2026_gmv_projected
+                    FROM \`shopify-dw.finance.shop_gmv_daily_summary_v1\`
+                    WHERE shop_id IN (${shopIds.join(',')})
+                    AND date >= '2025-10-01'
+                    GROUP BY shop_id
+                `;
+                
+                // Query 9: Product Adoption Status (check what revenue products are enabled)
+                const productAdoptionQuery = `
+                    WITH adoption_data AS (
+                        SELECT 
+                            s.shop_id,
+                            sp.is_enabled AS has_shopify_payments,
+                            CASE WHEN pos.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_pos,
+                            CASE WHEN markets.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_markets,
+                            CASE WHEN b2b.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_b2b,
+                            capital.has_active_loan AS has_capital
+                        FROM (SELECT DISTINCT shop_id FROM UNNEST([${shopIds.join(',')}]) AS shop_id) s
+                        LEFT JOIN \`shopify-dw.money_products.shopify_payments_adoption_current\` sp 
+                            ON s.shop_id = sp.shop_id
+                        LEFT JOIN (
+                            SELECT DISTINCT shop_id 
+                            FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\` 
+                            WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\`)
+                        ) pos ON s.shop_id = pos.shop_id
+                        LEFT JOIN (
+                            SELECT DISTINCT shop_id 
+                            FROM \`shopify-dw.international.markets_shops\`
+                            WHERE is_active = TRUE
+                        ) markets ON s.shop_id = markets.shop_id
+                        LEFT JOIN (
+                            SELECT DISTINCT shop_id 
+                            FROM \`shopify-dw.b2b.b2b_company_locations\`
+                        ) b2b ON s.shop_id = b2b.shop_id
+                        LEFT JOIN (
+                            SELECT shop_id, TRUE AS has_active_loan
+                            FROM \`shopify-dw.capital.capital_advances\`
+                            WHERE status IN ('Active', 'Partially_Repaid')
+                            GROUP BY shop_id
+                        ) capital ON s.shop_id = capital.shop_id
+                    )
+                    SELECT * FROM adoption_data
+                `;
+                
+                // Query 10: Recent Product Enablements (last 6 months)
+                const productEnablementsQuery = `
+                    WITH sp_enablements AS (
+                        SELECT 
+                            shop_id,
+                            'Shopify Payments' AS product_name,
+                            first_enabled_at AS enabled_date
+                        FROM \`shopify-dw.money_products.shopify_payments_adoption_history\`
+                        WHERE shop_id IN (${shopIds.join(',')})
+                        AND first_enabled_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+                    ),
+                    pos_enablements AS (
+                        SELECT 
+                            shop_id,
+                            'POS' AS product_name,
+                            MIN(created_at) AS enabled_date
+                        FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\`
+                        WHERE shop_id IN (${shopIds.join(',')})
+                        AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+                        GROUP BY shop_id
+                    ),
+                    markets_enablements AS (
+                        SELECT 
+                            shop_id,
+                            'Markets' AS product_name,
+                            created_at AS enabled_date
+                        FROM \`shopify-dw.international.markets_shops\`
+                        WHERE shop_id IN (${shopIds.join(',')})
+                        AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+                    )
+                    SELECT * FROM sp_enablements
+                    UNION ALL
+                    SELECT * FROM pos_enablements
+                    UNION ALL
+                    SELECT * FROM markets_enablements
+                    ORDER BY enabled_date DESC
+                `;
+                
+                // Run all queries in parallel for speed
+                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult, 
+                       gmvGrowthResult, productAdoptionResult, productEnablementsResult] = await Promise.all([
                     quick.dw.querySync(revenueQuery),
                     quick.dw.querySync(gmvQuery),
                     quick.dw.querySync(spQuery),
                     quick.dw.querySync(gpvQuery),
                     quick.dw.querySync(spRevenueQuery),
-                    quick.dw.querySync(dailyRevenueQuery)
+                    quick.dw.querySync(dailyRevenueQuery),
+                    quick.dw.querySync(gmvGrowthQuery),
+                    quick.dw.querySync(productAdoptionQuery),
+                    quick.dw.querySync(productEnablementsQuery)
                 ]);
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
@@ -1999,6 +2157,9 @@
                 console.log('📊 SP query returned', spResult.results?.length || 0, 'shops');
                 console.log('📊 GPV query returned', gpvResult.results?.length || 0, 'shops');
                 console.log('📊 SP Revenue query returned', spRevenueResult.results?.length || 0, 'shops');
+                console.log('📊 GMV Growth query returned', gmvGrowthResult.results?.length || 0, 'shops');
+                console.log('📊 Product Adoption query returned', productAdoptionResult.results?.length || 0, 'shops');
+                console.log('📊 Product Enablements query returned', productEnablementsResult.results?.length || 0, 'recent launches');
                 
                 // Build maps from results
                 const revenueMap = {};
@@ -2051,6 +2212,35 @@
                     };
                 });
                 
+                // Build GMV growth map
+                const gmvGrowthMap = {};
+                (gmvGrowthResult.results || []).forEach(r => {
+                    gmvGrowthMap[r.shop_id] = {
+                        q4_2025_gmv: parseFloat(r.q4_2025_gmv) || 0,
+                        q1_2026_gmv_ytd: parseFloat(r.q1_2026_gmv_ytd) || 0,
+                        q1_2026_gmv_projected: parseFloat(r.q1_2026_gmv_projected) || 0
+                    };
+                });
+                
+                // Build product adoption map
+                const productAdoptionMap = {};
+                (productAdoptionResult.results || []).forEach(r => {
+                    productAdoptionMap[r.shop_id] = {
+                        has_shopify_payments: r.has_shopify_payments === true,
+                        has_pos: r.has_pos === true,
+                        has_markets: r.has_markets === true,
+                        has_b2b: r.has_b2b === true,
+                        has_capital: r.has_capital === true
+                    };
+                });
+                
+                // Build product enablements list (recent launches)
+                const productEnablements = (productEnablementsResult.results || []).map(r => ({
+                    shop_id: r.shop_id,
+                    product_name: r.product_name,
+                    enabled_date: r.enabled_date?.value || r.enabled_date
+                }));
+                
                 console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
                 
                 // Aggregate data by account
@@ -2066,6 +2256,14 @@
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
                     let spEnabledShops = 0, spDisabledShops = 0;
+                    let accQ4_2025_gmv = 0, accQ1_2026_gmv_projected = 0;
+                    let adoptionData = {
+                        has_shopify_payments: false,
+                        has_pos: false,
+                        has_markets: false,
+                        has_b2b: false,
+                        has_capital: false
+                    };
                     
                     account.shop_ids.forEach(shopId => {
                         const gmvData = gmvMap[shopId];
@@ -2106,6 +2304,23 @@
                                 spDisabledShops++;
                             }
                         }
+                        
+                        // Collect GMV growth data
+                        const gmvGrowthData = gmvGrowthMap[shopId];
+                        if (gmvGrowthData) {
+                            accQ4_2025_gmv += gmvGrowthData.q4_2025_gmv || 0;
+                            accQ1_2026_gmv_projected += gmvGrowthData.q1_2026_gmv_projected || 0;
+                        }
+                        
+                        // Collect product adoption (if ANY shop has product, mark as enabled for account)
+                        const adoption = productAdoptionMap[shopId];
+                        if (adoption) {
+                            adoptionData.has_shopify_payments = adoptionData.has_shopify_payments || adoption.has_shopify_payments;
+                            adoptionData.has_pos = adoptionData.has_pos || adoption.has_pos;
+                            adoptionData.has_markets = adoptionData.has_markets || adoption.has_markets;
+                            adoptionData.has_b2b = adoptionData.has_b2b || adoption.has_b2b;
+                            adoptionData.has_capital = adoptionData.has_capital || adoption.has_capital;
+                        }
                     });
                     
                     // SP is disabled for account if NO shops have SP enabled
@@ -2121,6 +2336,10 @@
                     const pureSpTakeRate = accGpv > 0 ? (accSpRevenue / accGpv) * 100 : 0;
                     const spPenetration = accGmv > 0 ? (accGpv / accGmv) * 100 : 0;
                     const acc2025 = accQ1_25 + accQ2_25 + accQ3_25 + accQ4_25;
+                    
+                    // Calculate GMV growth rate (QoQ)
+                    const gmvGrowthRate = accQ4_2025_gmv > 0 ? 
+                        ((accQ1_2026_gmv_projected - accQ4_2025_gmv) / accQ4_2025_gmv) * 100 : 0;
                     
                     accounts.push({
                         account_id: accountId,
@@ -2148,7 +2367,17 @@
                         q1_gmv_2025: accQ1Gmv25,
                         q1_gmv_2026: accQ1Gmv26,
                         country: account.country,
-                        sp_currently_disabled: spCurrentlyDisabled
+                        sp_currently_disabled: spCurrentlyDisabled,
+                        // New: GMV Growth tracking
+                        q4_2025_gmv: accQ4_2025_gmv,
+                        q1_2026_gmv_projected: accQ1_2026_gmv_projected,
+                        gmv_growth_rate: gmvGrowthRate,
+                        // New: Product adoption flags
+                        has_shopify_payments: adoptionData.has_shopify_payments,
+                        has_pos: adoptionData.has_pos,
+                        has_markets: adoptionData.has_markets,
+                        has_b2b: adoptionData.has_b2b,
+                        has_capital: adoptionData.has_capital
                     });
                     
                     totalGmv += accGmv;
@@ -2247,7 +2476,8 @@
                     selected_quarter_ytd: selectedQuarterRevenue,
                     daily_revenue: dailyRevenue,
                     daily_revenue_raw: dailyRevenueRaw, // Store raw shop-level data for filtering
-                    accounts: accounts
+                    accounts: accounts,
+                    product_enablements: productEnablements // Recent product launches
                 };
                 
                 // Store globally for recalculations
@@ -2767,6 +2997,11 @@
             // Update Take Rate Opportunities
             updateTakeRateSection(data.accounts);
             
+            // Update new opportunity tracking sections
+            updateGmvGrowthSection(data.accounts);
+            updateProductAdoptionSection(data.accounts);
+            updateProductLaunchesSection(data.product_enablements || [], data.accounts);
+            
             document.getElementById('report-content').scrollIntoView({ behavior: 'smooth' });
         }
         
@@ -3282,6 +3517,150 @@
             document.getElementById('pacing-filter').value = 'all';
             document.getElementById('revenue-filter').value = 'all';
             filterTable();
+        }
+
+        // Update GMV Growth Tracker
+        function updateGmvGrowthSection(accounts) {
+            const tbody = document.getElementById('gmv-growth-body');
+            if (!tbody) return;
+            
+            // Filter accounts with GMV data and sort by growth rate
+            const accountsWithGrowth = accounts
+                .filter(acc => acc.q4_2025_gmv > 0 && acc.q1_2026_gmv_projected > 0)
+                .sort((a, b) => b.gmv_growth_rate - a.gmv_growth_rate);
+            
+            if (accountsWithGrowth.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No GMV growth data available</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = accountsWithGrowth.map(acc => {
+                const segment = getSegmentAbbrev(acc.service_model);
+                const trendEmoji = acc.gmv_growth_rate > 10 ? '🚀' : 
+                                  acc.gmv_growth_rate > 0 ? '📈' : 
+                                  acc.gmv_growth_rate > -10 ? '📊' : '📉';
+                const trendColor = acc.gmv_growth_rate > 10 ? '#10b981' : 
+                                  acc.gmv_growth_rate > 0 ? '#3b82f6' : 
+                                  acc.gmv_growth_rate > -10 ? '#f59e0b' : '#ef4444';
+                return `
+                <tr>
+                    <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
+                    <td>${segment}</td>
+                    <td class="number">${formatCurrency(acc.q4_2025_gmv, true)}</td>
+                    <td class="number">${formatCurrency(acc.q1_2026_gmv_projected, true)}</td>
+                    <td class="number" style="color: ${trendColor}; font-weight: 600;">${acc.gmv_growth_rate.toFixed(1)}%</td>
+                    <td style="text-align: center; font-size: 1.5rem;">${trendEmoji}</td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // Update Product Adoption Matrix
+        function updateProductAdoptionSection(accounts) {
+            const tbody = document.getElementById('product-adoption-body');
+            if (!tbody) return;
+            
+            // Calculate gap count and sort by opportunity (high GMV + most gaps = top priority)
+            const accountsWithGaps = accounts
+                .map(acc => {
+                    const gapCount = [
+                        !acc.has_shopify_payments,
+                        !acc.has_pos,
+                        !acc.has_markets,
+                        !acc.has_b2b,
+                        !acc.has_capital
+                    ].filter(Boolean).length;
+                    return { ...acc, gap_count: gapCount };
+                })
+                .filter(acc => acc.gap_count > 0) // Only show accounts with missing products
+                .sort((a, b) => {
+                    // Sort by gap count DESC, then by GMV DESC
+                    if (b.gap_count !== a.gap_count) return b.gap_count - a.gap_count;
+                    return b.l12m_gmv - a.l12m_gmv;
+                });
+            
+            if (accountsWithGaps.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-secondary);">🎉 All accounts have full product adoption!</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = accountsWithGaps.map(acc => {
+                const segment = getSegmentAbbrev(acc.service_model);
+                const checkmark = '✅';
+                const xmark = '❌';
+                return `
+                <tr>
+                    <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
+                    <td>${segment}</td>
+                    <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
+                    <td style="text-align: center;">${acc.has_shopify_payments ? checkmark : xmark}</td>
+                    <td style="text-align: center;">${acc.has_pos ? checkmark : xmark}</td>
+                    <td style="text-align: center;">${acc.has_markets ? checkmark : xmark}</td>
+                    <td style="text-align: center;">${acc.has_b2b ? checkmark : xmark}</td>
+                    <td style="text-align: center;">${acc.has_capital ? checkmark : xmark}</td>
+                    <td style="text-align: center; font-weight: 600; color: #f59e0b;">${acc.gap_count}</td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // Update Recent Product Launches
+        function updateProductLaunchesSection(productEnablements, accounts) {
+            const container = document.getElementById('product-launches-timeline');
+            if (!container) return;
+            
+            if (!productEnablements || productEnablements.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recent product launches in the last 6 months</p>';
+                return;
+            }
+            
+            // Create account lookup map
+            const accountLookup = {};
+            accounts.forEach(acc => {
+                acc.shop_ids.forEach(shopId => {
+                    accountLookup[shopId] = acc;
+                });
+            });
+            
+            // Group by product and sort by date
+            const launches = productEnablements
+                .map(launch => ({
+                    ...launch,
+                    account: accountLookup[launch.shop_id]
+                }))
+                .filter(launch => launch.account) // Only show launches for accounts in book
+                .sort((a, b) => new Date(b.enabled_date) - new Date(a.enabled_date));
+            
+            if (launches.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recent product launches for your book</p>';
+                return;
+            }
+            
+            // Build timeline HTML
+            const timelineHTML = launches.map(launch => {
+                const date = new Date(launch.enabled_date);
+                const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const productEmoji = {
+                    'Shopify Payments': '💳',
+                    'POS': '🏪',
+                    'Markets': '🌍'
+                }[launch.product_name] || '📦';
+                
+                return `
+                <div style="display: flex; align-items: center; padding: 0.75rem; background: rgba(99, 102, 241, 0.1); border-left: 3px solid #6366f1; margin-bottom: 0.75rem; border-radius: 6px;">
+                    <div style="font-size: 1.5rem; margin-right: 1rem;">${productEmoji}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: var(--text-primary);">
+                            <a href="${launch.account.sfdc_url}" target="_blank" style="color: #6366f1; text-decoration: none;">${launch.account.name}</a> 
+                            enabled ${launch.product_name}
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">${formattedDate}</div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = timelineHTML;
         }
 
         // Sorting functionality
