@@ -2070,7 +2070,7 @@
                             s.shop_id,
                             sp.is_enabled AS has_shopify_payments,
                             CASE WHEN pos.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_pos,
-                            CASE WHEN markets.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_markets,
+                            FALSE AS has_markets,  -- Markets data temporarily disabled
                             CASE WHEN b2b.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_b2b,
                             capital.has_active_loan AS has_capital
                         FROM (SELECT DISTINCT shop_id FROM UNNEST([${shopIds.join(',')}]) AS shop_id) s
@@ -2081,11 +2081,8 @@
                             FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\` 
                             WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\`)
                         ) pos ON s.shop_id = pos.shop_id
-                        LEFT JOIN (
-                            SELECT DISTINCT shop_id 
-                            FROM \`shopify-dw.international.markets_shops\`
-                            WHERE is_active = TRUE
-                        ) markets ON s.shop_id = markets.shop_id
+                        -- Markets data temporarily disabled (table not found)
+                        -- LEFT JOIN markets table here
                         LEFT JOIN (
                             SELECT DISTINCT shop_id 
                             FROM \`shopify-dw.b2b.b2b_company_locations\`
@@ -2120,21 +2117,10 @@
                         WHERE shop_id IN (${shopIds.join(',')})
                         AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
                         GROUP BY shop_id
-                    ),
-                    markets_enablements AS (
-                        SELECT 
-                            shop_id,
-                            'Markets' AS product_name,
-                            created_at AS enabled_date
-                        FROM \`shopify-dw.international.markets_shops\`
-                        WHERE shop_id IN (${shopIds.join(',')})
-                        AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
                     )
                     SELECT * FROM sp_enablements
                     UNION ALL
                     SELECT * FROM pos_enablements
-                    UNION ALL
-                    SELECT * FROM markets_enablements
                     ORDER BY enabled_date DESC
                 `;
                 
