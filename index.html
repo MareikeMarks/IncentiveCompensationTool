@@ -1328,7 +1328,7 @@
             <!-- GMV Growth Tracker -->
             <section class="gmv-growth-section">
                 <h2><span class="emoji">📈</span> GMV Growth Tracker</h2>
-                <p class="section-description">Monitor quarter-over-quarter GMV growth. High GMV growth = opportunity to increase revenue via product adoption.</p>
+                <p class="section-description">Q1 2026 Projected = (Current daily GMV rate × 90 days). Compares projected Q1 vs actual Q4. High growth = opportunity for product adoption.</p>
                 <div class="card" style="overflow-x: auto;">
                     <table class="data-table" id="gmv-growth-table">
                         <thead>
@@ -3470,9 +3470,9 @@
             const tbody = document.getElementById('gmv-growth-body');
             if (!tbody) return;
             
-            // Filter accounts with GMV data and sort by growth rate
+            // Filter accounts with meaningful GMV data (> $10K in Q4 2025 to avoid noise)
             const accountsWithGrowth = accounts
-                .filter(acc => acc.q4_2025_gmv > 0 && acc.q1_2026_gmv_projected > 0)
+                .filter(acc => acc.q4_2025_gmv > 10000 && acc.q1_2026_gmv_projected > 0)
                 .sort((a, b) => b.gmv_growth_rate - a.gmv_growth_rate);
             
             if (accountsWithGrowth.length === 0) {
@@ -3488,13 +3488,20 @@
                 const trendColor = acc.gmv_growth_rate > 10 ? '#10b981' : 
                                   acc.gmv_growth_rate > 0 ? '#3b82f6' : 
                                   acc.gmv_growth_rate > -10 ? '#f59e0b' : '#ef4444';
+                
+                // Cap growth display at +/-999% for readability
+                const displayGrowth = Math.max(-999, Math.min(999, acc.gmv_growth_rate));
+                const growthText = acc.gmv_growth_rate > 999 ? '>999%' : 
+                                  acc.gmv_growth_rate < -999 ? '<-999%' : 
+                                  `${displayGrowth.toFixed(1)}%`;
+                
                 return `
                 <tr>
                     <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
                     <td>${segment}</td>
                     <td class="number">${formatCurrency(acc.q4_2025_gmv, true)}</td>
                     <td class="number">${formatCurrency(acc.q1_2026_gmv_projected, true)}</td>
-                    <td class="number" style="color: ${trendColor}; font-weight: 600;">${acc.gmv_growth_rate.toFixed(1)}%</td>
+                    <td class="number" style="color: ${trendColor}; font-weight: 600;">${growthText}</td>
                     <td style="text-align: center; font-size: 1.5rem;">${trendEmoji}</td>
                 </tr>
                 `;
