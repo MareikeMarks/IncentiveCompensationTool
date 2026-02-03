@@ -2251,7 +2251,8 @@
                     spPenetrationTrendsMap[r.shop_id] = {
                         sp_pen_l3m: parseFloat(r.sp_pen_l3m) || 0,
                         sp_pen_prev3m: parseFloat(r.sp_pen_prev3m) || 0,
-                        sp_pen_change: (parseFloat(r.sp_pen_l3m) || 0) - (parseFloat(r.sp_pen_prev3m) || 0)
+                        sp_pen_change: (parseFloat(r.sp_pen_l3m) || 0) - (parseFloat(r.sp_pen_prev3m) || 0),
+                        gmv_prev3m: parseFloat(r.gmv_prev3m) || 0
                     };
                 });
                 
@@ -2283,7 +2284,7 @@
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
                     let spEnabledShops = 0, spDisabledShops = 0;
                     let accQ4_2025_gmv = 0, accQ1_2026_gmv_projected = 0;
-                    let accSpPenL3m = 0, accSpPenPrev3m = 0, spPenShopCount = 0;
+                    let accSpPenL3m = 0, accSpPenPrev3m = 0, accGmvPrev3m = 0, spPenShopCount = 0;
                     let adoptionData = {
                         has_shopify_payments: false,
                         has_pos: false,
@@ -2344,6 +2345,7 @@
                         if (spPenTrend) {
                             accSpPenL3m += spPenTrend.sp_pen_l3m || 0;
                             accSpPenPrev3m += spPenTrend.sp_pen_prev3m || 0;
+                            accGmvPrev3m += spPenTrend.gmv_prev3m || 0;
                             spPenShopCount++;
                         }
                         
@@ -2421,7 +2423,8 @@
                         // New: SP penetration trends (Last 3 months vs Previous 3 months)
                         sp_pen_l3m: avgSpPenL3m,
                         sp_pen_prev3m: avgSpPenPrev3m,
-                        sp_pen_change: spPenChange
+                        sp_pen_change: spPenChange,
+                        gmv_prev3m: accGmvPrev3m
                     });
                     
                     totalGmv += accGmv;
@@ -3643,9 +3646,10 @@
             const tbody = document.getElementById('sp-pen-trends-body');
             if (!tbody) return;
             
-            // Filter accounts with SP (need SP to have penetration data) and sort by absolute change DESC
+            // Filter accounts with SP, meaningful prev 3M GMV (>$10K), and sort by absolute change DESC
+            // This excludes new launches like Rebike that have 0% prev SP pen because they weren't live yet
             const accountsWithTrends = accounts
-                .filter(acc => acc.has_shopify_payments && acc.sp_pen_l3m > 0)
+                .filter(acc => acc.has_shopify_payments && acc.sp_pen_l3m > 0 && acc.gmv_prev3m > 10000)
                 .map(acc => ({
                     ...acc,
                     abs_change: Math.abs(acc.sp_pen_change || 0)
