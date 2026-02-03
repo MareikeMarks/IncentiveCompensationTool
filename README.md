@@ -107,34 +107,296 @@ quick.id.fullName
 quick.id.email
 ```
 
-### Key Queries
+### BigQuery Queries
 
-**1. Get CSM's Accounts:**
+The dashboard runs **10 queries** in parallel to build your complete book of business view.
+
+---
+
+#### Query 1: Account Information
+Get all accounts assigned to the MSM with their basic info and shop mappings.
+
+**Table:** `shopify-dw.sales.sales_accounts`
+
 ```sql
-SELECT account_id, name, account_url, country_code, shop_id
+SELECT DISTINCT
+    sa.account_id,
+    sa.name AS account_name,
+    sa.account_url,
+    sa.merchant_success_manager,
+    sa.account_country_code,
+    sa.account_type,
+    COALESCE(sa.service_model, 'SMB') AS service_model,
+    m.shop_id
 FROM `shopify-dw.sales.sales_accounts` sa
-JOIN `shopify-dw.sales.sales_unified_entity_mapping` m
-  ON sa.account_id = m.salesforce_account_id
-WHERE LOWER(sa.merchant_success_manager) LIKE '%name%'
+LEFT JOIN `shopify-dw.sales.sales_unified_entity_mapping` m
+    ON sa.account_id = m.salesforce_account_id
+WHERE LOWER(sa.merchant_success_manager) LIKE '%maya%marks%'
+    AND sa.account_type = 'Customer'
+    AND sa.service_model IN ('Mid-Market', 'Large', 'Enterprise')
 ```
 
-**2. Get Quarterly Revenue:**
+**Returns:** Account ID, name, SFDC URL, country, service model (segment), shop IDs
+
+---
+
+#### Query 2: Revenue by Quarter
+Get historical and current revenue by quarter for NRR calculations.
+
+**Table:** `shopify-dw.finance.shop_netsuite_account_daily_profit_summary`
+
 ```sql
-SELECT shop_id,
-  SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' 
-      THEN estimated_profit_usd ELSE 0 END) AS q1_2025
+SELECT 
+    shop_id,
+    SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN estimated_profit_usd ELSE 0 END) AS l12m_revenue,
+    SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2025,
+    SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
+    SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
+    SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
+    SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026
 FROM `shopify-dw.finance.shop_netsuite_account_daily_profit_summary`
-WHERE shop_id IN (...)
+WHERE shop_id IN (${shopIds})
+    AND account_type = 'Income'
 GROUP BY shop_id
 ```
 
-**3. Get GMV:**
+**Returns:** L12M revenue + revenue by quarter (Q1-Q4 for 2025 and 2026)
+
+**Note:** `estimated_profit_usd` includes ALL revenue sources (SP fees, subscriptions, transaction fees, apps, shipping, tax, capital, POS, etc.)
+
+---
+
+#### Query 3: GMV (Gross Merchandise Volume)
+Get GMV for take rate calculations.
+
+**Table:** `shopify-dw.finance.shop_gmv_daily_summary_v1`
+
 ```sql
-SELECT shop_id, SUM(gmv_usd) AS l12m_gmv
-FROM `shopify-dw.finance.gmv`
-WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+SELECT 
+    shop_id,
+    SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS l12m_gmv,
+    SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
+    SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
+FROM `shopify-dw.finance.shop_gmv_daily_summary_v1`
+WHERE shop_id IN (${shopIds})
 GROUP BY shop_id
 ```
+
+**Returns:** L12M GMV, Q1 2025 GMV (for YoY comparison), Q1 2026 GMV
+
+**Note:** GMV = Total order value across ALL payment methods (SP, Adyen, PayPal, Klarna, etc.)
+
+---
+
+#### Query 4: Shopify Payments Adoption
+Check if SP is enabled on each shop.
+
+**Table:** `shopify-dw.money_products.shopify_payments_adoption_current`
+
+```sql
+SELECT shop_id, is_enabled AS sp_enabled
+FROM `shopify-dw.money_products.shopify_payments_adoption_current`
+WHERE shop_id IN (${shopIds})
+```
+
+---
+
+#### Query 5: GPV (Gross Payments Volume)
+Get volume processed ONLY through Shopify Payments.
+
+**Table:** `shopify-dw.finance.shop_gpv_daily_summary_v1`
+
+```sql
+SELECT 
+    shop_id,
+    SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gpv_usd ELSE 0 END) AS l12m_gpv
+FROM `shopify-dw.finance.shop_gpv_daily_summary_v1`
+WHERE shop_id IN (${shopIds})
+GROUP BY shop_id
+```
+
+**Returns:** L12M GPV (Shopify Payments volume only)
+
+**Note:** GPV ≠ GMV. GPV only includes orders processed through Shopify Payments, not third-party gateways.
+
+---
+
+#### Query 6: SP Revenue (Shopify Payments Specific)
+Get revenue ONLY from Shopify Payments processing fees.
+
+**Table:** `shopify-dw.finance.payments_revenue_and_costs_v1`
+
+```sql
+SELECT 
+    shop_id,
+    SUM(processing_revenue_usd) AS l12m_sp_revenue,
+    SUM(fx_fee_revenue_usd) AS l12m_fx_revenue,
+    SUM(chargeback_revenue_usd) AS l12m_chargeback_revenue
+FROM `shopify-dw.finance.payments_revenue_and_costs_v1`
+WHERE shop_id IN (${shopIds})
+    AND DATE(date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+GROUP BY shop_id
+```
+
+**Returns:** SP processing revenue, FX fees, chargeback fees
+
+**Note:** This is ONLY Shopify Payments revenue (not subscriptions, transaction fees, or other revenue)
+
+---
+
+#### Query 7: Daily Revenue (for Run Rate Chart)
+Get daily revenue for Q1 2026 to track pacing against target.
+
+**Table:** `shopify-dw.finance.shop_netsuite_account_daily_profit_summary`
+
+```sql
+SELECT 
+    shop_id,
+    date,
+    SUM(estimated_profit_usd) AS daily_revenue
+FROM `shopify-dw.finance.shop_netsuite_account_daily_profit_summary`
+WHERE shop_id IN (${shopIds})
+    AND account_type = 'Income'
+    AND date BETWEEN '2026-01-01' AND CURRENT_DATE()
+GROUP BY shop_id, date
+```
+
+**Returns:** Daily revenue by shop for current quarter (used for 7-day moving average and projections)
+
+---
+
+#### Query 8: GMV Growth Rate (QoQ Comparison)
+Track quarter-over-quarter GMV growth to identify scaling merchants.
+
+**Table:** `shopify-dw.finance.shop_gmv_daily_summary_v1`
+
+```sql
+SELECT 
+    shop_id,
+    SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN gmv_usd ELSE 0 END) AS q4_2025_gmv,
+    SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_2026_gmv_ytd,
+    CASE 
+        WHEN DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) > 0 THEN
+            SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) 
+            / DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) * 90
+        ELSE 0
+    END AS q1_2026_gmv_projected
+FROM `shopify-dw.finance.shop_gmv_daily_summary_v1`
+WHERE shop_id IN (${shopIds})
+GROUP BY shop_id
+```
+
+**Returns:** Q4 2025 GMV, Q1 2026 GMV YTD, Q1 2026 GMV projected
+
+**Use Case:** GMV growth = leading indicator for future revenue opportunity. High GMV growth + missing products = upsell target.
+
+---
+
+#### Query 9: Product Adoption Status
+Identify which revenue-driving products each merchant has enabled.
+
+**Tables:** Multiple adoption tables
+
+```sql
+WITH adoption_data AS (
+    SELECT 
+        s.shop_id,
+        sp.is_enabled AS has_shopify_payments,
+        CASE WHEN pos.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_pos,
+        CASE WHEN markets.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_markets,
+        CASE WHEN b2b.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_b2b,
+        capital.has_active_loan AS has_capital
+    FROM (SELECT DISTINCT shop_id FROM UNNEST([${shopIds}]) AS shop_id) s
+    LEFT JOIN `shopify-dw.money_products.shopify_payments_adoption_current` sp ON s.shop_id = sp.shop_id
+    LEFT JOIN (
+        SELECT DISTINCT shop_id FROM `shopify-dw.pos.pos_locations_and_devices_snapshot` 
+        WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM `shopify-dw.pos.pos_locations_and_devices_snapshot`)
+    ) pos ON s.shop_id = pos.shop_id
+    LEFT JOIN (
+        SELECT DISTINCT shop_id FROM `shopify-dw.international.markets_shops` WHERE is_active = TRUE
+    ) markets ON s.shop_id = markets.shop_id
+    LEFT JOIN (
+        SELECT DISTINCT shop_id FROM `shopify-dw.b2b.b2b_company_locations`
+    ) b2b ON s.shop_id = b2b.shop_id
+    LEFT JOIN (
+        SELECT shop_id, TRUE AS has_active_loan FROM `shopify-dw.capital.capital_advances`
+        WHERE status IN ('Active', 'Partially_Repaid') GROUP BY shop_id
+    ) capital ON s.shop_id = capital.shop_id
+)
+SELECT * FROM adoption_data
+```
+
+**Returns:** Boolean flags for: SP, POS, Markets, B2B, Capital
+
+**Use Case:** Missing products = upsell opportunities. Prioritize high-GMV accounts with multiple gaps.
+
+---
+
+#### Query 10: Recent Product Enablements
+Track recent product launches to measure impact and share success stories.
+
+**Tables:** Multiple adoption history tables
+
+```sql
+WITH sp_enablements AS (
+    SELECT shop_id, 'Shopify Payments' AS product_name, first_enabled_at AS enabled_date
+    FROM `shopify-dw.money_products.shopify_payments_adoption_history`
+    WHERE shop_id IN (${shopIds}) AND first_enabled_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+),
+pos_enablements AS (
+    SELECT shop_id, 'POS' AS product_name, MIN(created_at) AS enabled_date
+    FROM `shopify-dw.pos.pos_locations_and_devices_snapshot`
+    WHERE shop_id IN (${shopIds}) AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+    GROUP BY shop_id
+),
+markets_enablements AS (
+    SELECT shop_id, 'Markets' AS product_name, created_at AS enabled_date
+    FROM `shopify-dw.international.markets_shops`
+    WHERE shop_id IN (${shopIds}) AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+)
+SELECT * FROM sp_enablements
+UNION ALL SELECT * FROM pos_enablements
+UNION ALL SELECT * FROM markets_enablements
+ORDER BY enabled_date DESC
+```
+
+**Returns:** Shop ID, product name, enablement date for recent launches (last 6 months)
+
+**Use Case:** Timeline of your recent wins, measure pre/post revenue impact
+
+---
+
+### Key Metrics Calculated
+
+#### GMV Take Rate
+```
+GMV Take Rate = Total Revenue / GMV * 100
+```
+All Shopify revenue as % of total merchant sales. Lower if merchant uses third-party gateways.
+
+#### Pure SP Take Rate
+```
+Pure SP Take Rate = SP Revenue / GPV * 100
+```
+SP fees as % of SP volume only. Shows true SP efficiency. Typically 1.5-3% depending on merchant's SP rate.
+
+#### SP Penetration
+```
+SP Penetration = GPV / GMV * 100
+```
+What % of orders go through Shopify Payments vs third-party gateways. Higher penetration = more revenue from processing fees.
+
+#### NRR (Net Revenue Retention)
+```
+NRR = Q1 2026 Revenue / Q1 2025 Revenue * 100
+```
+Year-over-year growth. Target: Match or exceed prior year's quarter revenue.
+
+#### GMV Growth Rate
+```
+GMV Growth Rate = (Q1 Projected - Q4 Actual) / Q4 Actual * 100
+```
+Quarter-over-quarter merchant growth. Leading indicator for future revenue opportunity.
 
 ---
 
