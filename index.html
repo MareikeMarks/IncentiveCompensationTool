@@ -1350,8 +1350,8 @@
 
             <!-- Product Adoption Matrix -->
             <section class="product-adoption-section">
-                <h2><span class="emoji">🎯</span> Product Adoption Opportunities</h2>
-                <p class="section-description">Identify upsell gaps. Missing products = revenue opportunity.</p>
+                <h2><span class="emoji">🎯</span> Shopify Payments Opportunities</h2>
+                <p class="section-description">Accounts without SP enabled. Biggest revenue opportunity = highest GMV without SP.</p>
                 <div class="card" style="overflow-x: auto;">
                     <table class="data-table" id="product-adoption-table">
                         <thead>
@@ -1359,9 +1359,7 @@
                                 <th style="text-align: left;">Account</th>
                                 <th style="text-align: left;">Segment</th>
                                 <th style="text-align: right;">L12M GMV</th>
-                                <th style="text-align: center;">SP</th>
-                                <th style="text-align: center;">POS</th>
-                                <th style="text-align: center;">Gap Count</th>
+                                <th style="text-align: center;">Shopify Payments</th>
                             </tr>
                         </thead>
                         <tbody id="product-adoption-body">
@@ -2060,24 +2058,19 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 9: Product Adoption Status (simplified - only checking SP and POS)
+                // Query 9: Product Adoption Status (simplified - only checking SP)
                 const productAdoptionQuery = `
                     WITH adoption_data AS (
                         SELECT 
                             s.shop_id,
                             sp.is_enabled AS has_shopify_payments,
-                            CASE WHEN pos.shop_id IS NOT NULL THEN TRUE ELSE FALSE END AS has_pos,
+                            FALSE AS has_pos,
                             FALSE AS has_markets,
                             FALSE AS has_b2b,
                             FALSE AS has_capital
                         FROM (SELECT DISTINCT shop_id FROM UNNEST([${shopIds.join(',')}]) AS shop_id) s
                         LEFT JOIN \`shopify-dw.money_products.shopify_payments_adoption_current\` sp 
                             ON s.shop_id = sp.shop_id
-                        LEFT JOIN (
-                            SELECT DISTINCT shop_id 
-                            FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\` 
-                            WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM \`shopify-dw.pos.pos_locations_and_devices_snapshot\`)
-                        ) pos ON s.shop_id = pos.shop_id
                     )
                     SELECT * FROM adoption_data
                 `;
@@ -3513,40 +3506,25 @@
             const tbody = document.getElementById('product-adoption-body');
             if (!tbody) return;
             
-            // Calculate gap count and sort by opportunity (high GMV + most gaps = top priority)
-            // Only checking SP and POS for now
-            const accountsWithGaps = accounts
-                .map(acc => {
-                    const gapCount = [
-                        !acc.has_shopify_payments,
-                        !acc.has_pos
-                    ].filter(Boolean).length;
-                    return { ...acc, gap_count: gapCount };
-                })
-                .filter(acc => acc.gap_count > 0) // Only show accounts with missing products
-                .sort((a, b) => {
-                    // Sort by gap count DESC, then by GMV DESC
-                    if (b.gap_count !== a.gap_count) return b.gap_count - a.gap_count;
-                    return b.l12m_gmv - a.l12m_gmv;
-                });
+            // Show accounts WITHOUT Shopify Payments (biggest revenue opportunity)
+            const accountsWithoutSP = accounts
+                .filter(acc => !acc.has_shopify_payments)
+                .sort((a, b) => b.l12m_gmv - a.l12m_gmv); // Sort by GMV DESC
             
-            if (accountsWithGaps.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">🎉 All accounts have SP and POS enabled!</td></tr>';
+            if (accountsWithoutSP.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">🎉 All accounts have Shopify Payments enabled!</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = accountsWithGaps.map(acc => {
+            tbody.innerHTML = accountsWithoutSP.map(acc => {
                 const segment = getSegmentAbbrev(acc.service_model);
-                const checkmark = '✅';
                 const xmark = '❌';
                 return `
                 <tr>
                     <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
                     <td>${segment}</td>
                     <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
-                    <td style="text-align: center;">${acc.has_shopify_payments ? checkmark : xmark}</td>
-                    <td style="text-align: center;">${acc.has_pos ? checkmark : xmark}</td>
-                    <td style="text-align: center; font-weight: 600; color: #f59e0b;">${acc.gap_count}</td>
+                    <td style="text-align: center;">${xmark}</td>
                 </tr>
                 `;
             }).join('');
