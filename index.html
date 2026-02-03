@@ -1333,12 +1333,12 @@
                     <table class="data-table" id="gmv-growth-table">
                         <thead>
                             <tr style="background: rgba(99, 102, 241, 0.1);">
-                                <th style="text-align: left;">Account</th>
-                                <th style="text-align: left;">Segment</th>
-                                <th style="text-align: right;">Q4 2025 GMV</th>
-                                <th style="text-align: right;">Q1 2026 Projected</th>
-                                <th style="text-align: right;">QoQ Growth</th>
-                                <th style="text-align: center;">Trend</th>
+                                <th style="text-align: left; width: 25%;">Account</th>
+                                <th style="text-align: left; width: 10%;">Segment</th>
+                                <th style="text-align: right; width: 18%;">Q4 2025 GMV</th>
+                                <th style="text-align: right; width: 18%;">Q1 2026 Projected</th>
+                                <th style="text-align: right; width: 15%;">QoQ Growth</th>
+                                <th style="text-align: center; width: 10%;">Trend</th>
                             </tr>
                         </thead>
                         <tbody id="gmv-growth-body">
@@ -3599,12 +3599,12 @@
                 
                 return `
                 <tr>
-                    <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
-                    <td>${segment}</td>
-                    <td class="number">${formatCurrency(acc.q4_2025_gmv, true)}</td>
-                    <td class="number">${formatCurrency(acc.q1_2026_gmv_projected, true)}</td>
-                    <td class="number" style="color: ${trendColor}; font-weight: 600;">${growthText}</td>
-                    <td style="text-align: center; font-size: 1.5rem;">${trendEmoji}</td>
+                    <td style="text-align: left; width: 25%;"><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
+                    <td style="text-align: left; width: 10%;">${segment}</td>
+                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q4_2025_gmv, true)}</td>
+                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q1_2026_gmv_projected, true)}</td>
+                    <td class="number" style="text-align: right; width: 15%; color: ${trendColor}; font-weight: 600;">${growthText}</td>
+                    <td style="text-align: center; width: 10%; font-size: 1.5rem;">${trendEmoji}</td>
                 </tr>
                 `;
             }).join('');
