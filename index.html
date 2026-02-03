@@ -1578,22 +1578,23 @@
             <!-- SP Penetration Trends -->
             <section class="sp-penetration-trends-section" style="margin-top: 3rem;">
                 <h2><span class="emoji">📊</span> SP Penetration Trends</h2>
-                <p class="section-description">Track if merchants are routing MORE or LESS volume through Shopify Payments. Increasing penetration = winning back volume from other PSPs.</p>
+                <p class="section-description">Track if merchants are routing MORE or LESS volume through Shopify Payments. <strong>Volume Impact</strong> shows the $ value of volume gained/lost when SP penetration changes. Increasing penetration = winning back volume from other PSPs.</p>
                 <div class="card" style="overflow-x: auto;">
                     <table class="data-table" id="sp-penetration-trends-table">
                         <thead>
                             <tr style="background: rgba(99, 102, 241, 0.1);">
-                                <th style="text-align: left; width: 25%;">Account</th>
-                                <th style="text-align: left; width: 10%;">Segment</th>
-                                <th style="text-align: right; width: 15%;">L12M GMV</th>
-                                <th style="text-align: right; width: 15%;">Last 3M SP %</th>
-                                <th style="text-align: right; width: 15%;">Prev 3M SP %</th>
-                                <th style="text-align: right; width: 10%;">Change</th>
-                                <th style="text-align: center; width: 10%;">Trend</th>
+                                <th style="text-align: left; width: 22%;">Account</th>
+                                <th style="text-align: left; width: 8%;">Segment</th>
+                                <th style="text-align: right; width: 13%;">L12M GMV</th>
+                                <th style="text-align: right; width: 13%;">Last 3M SP %</th>
+                                <th style="text-align: right; width: 13%;">Prev 3M SP %</th>
+                                <th style="text-align: right; width: 9%;">Change</th>
+                                <th style="text-align: right; width: 14%;">Volume Impact</th>
+                                <th style="text-align: center; width: 8%;">Trend</th>
                             </tr>
                         </thead>
                         <tbody id="sp-pen-trends-body">
-                            <tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Load your data to see SP penetration trends</td></tr>
+                            <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Load your data to see SP penetration trends</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -3670,7 +3671,7 @@
                 .sort((a, b) => b.abs_change - a.abs_change); // Show biggest movers first
             
             if (accountsWithTrends.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">No SP penetration trend data available</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">No SP penetration trend data available</td></tr>';
                 return;
             }
             
@@ -3678,6 +3679,12 @@
                 const segment = getSegmentAbbrev(acc.service_model);
                 const change = acc.sp_pen_change || 0;
                 const absChange = Math.abs(change);
+                
+                // Calculate volume impact: change in SP % applied to quarterly GMV
+                // Using L12M GMV / 4 as proxy for quarterly volume
+                const volumeImpact = (change / 100) * (acc.l12m_gmv / 4);
+                const volumeImpactText = volumeImpact >= 0 ? `+${formatCurrency(volumeImpact, true)}` : formatCurrency(volumeImpact, true);
+                const volumeColor = volumeImpact >= 0 ? '#10b981' : '#ef4444';
                 
                 // Determine trend emoji and color
                 let trendEmoji, trendColor, changeText;
@@ -3697,13 +3704,14 @@
                 
                 return `
                 <tr>
-                    <td style="text-align: left; width: 25%;"><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
-                    <td style="text-align: left; width: 10%;">${segment}</td>
-                    <td class="number" style="text-align: right; width: 15%;">${formatCurrency(acc.l12m_gmv, true)}</td>
-                    <td class="number" style="text-align: right; width: 15%;">${acc.sp_pen_l3m.toFixed(1)}%</td>
-                    <td class="number" style="text-align: right; width: 15%;">${acc.sp_pen_prev3m.toFixed(1)}%</td>
-                    <td class="number" style="text-align: right; width: 10%; color: ${trendColor}; font-weight: 600;">${changeText}</td>
-                    <td style="text-align: center; width: 10%; font-size: 1.5rem;">${trendEmoji}</td>
+                    <td style="text-align: left; width: 22%;"><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
+                    <td style="text-align: left; width: 8%;">${segment}</td>
+                    <td class="number" style="text-align: right; width: 13%;">${formatCurrency(acc.l12m_gmv, true)}</td>
+                    <td class="number" style="text-align: right; width: 13%;">${acc.sp_pen_l3m.toFixed(1)}%</td>
+                    <td class="number" style="text-align: right; width: 13%;">${acc.sp_pen_prev3m.toFixed(1)}%</td>
+                    <td class="number" style="text-align: right; width: 9%; color: ${trendColor}; font-weight: 600;">${changeText}</td>
+                    <td class="number" style="text-align: right; width: 14%; color: ${volumeColor}; font-weight: 600;">${volumeImpactText}</td>
+                    <td style="text-align: center; width: 8%; font-size: 1.5rem;">${trendEmoji}</td>
                 </tr>
                 `;
             }).join('');
