@@ -2159,23 +2159,11 @@
                             ON s.shop_id = sp.shop_id
                     )
                     SELECT * FROM adoption_data
-                `;
-                
-                // Query 11: Payment Gateway Data (get alternative PSPs like Adyen, Stripe, etc.)
-                const paymentGatewayQuery = `
-                    SELECT 
-                        shop_id,
-                        STRING_AGG(DISTINCT gateway_name, ', ' ORDER BY gateway_name) AS payment_gateways
-                    FROM \`shopify-dw.money_products.payment_gateway_accounts\`
-                    WHERE shop_id IN (${shopIds.join(',')})
-                    AND status = 'active'
-                    AND gateway_name NOT IN ('shopify_payments', 'bogus')
-                    GROUP BY shop_id
-                `;
-                
-                // Run all queries in parallel for speed
+                  `;
+                  
+                  // Run all queries in parallel for speed
                 const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult, 
-                       gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult, paymentGatewayResult] = await Promise.all([
+                       gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = await Promise.all([
                     quick.dw.querySync(revenueQuery),
                     quick.dw.querySync(gmvQuery),
                     quick.dw.querySync(spQuery),
@@ -2184,8 +2172,7 @@
                     quick.dw.querySync(dailyRevenueQuery),
                     quick.dw.querySync(gmvGrowthQuery),
                     quick.dw.querySync(spPenetrationTrendsQuery),
-                    quick.dw.querySync(productAdoptionQuery),
-                    quick.dw.querySync(paymentGatewayQuery)
+                    quick.dw.querySync(productAdoptionQuery)
                 ]);
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
@@ -2196,7 +2183,6 @@
                 console.log('📊 GMV Growth query returned', gmvGrowthResult.results?.length || 0, 'shops');
                 console.log('📊 SP Penetration Trends query returned', spPenetrationTrendsResult.results?.length || 0, 'shops');
                 console.log('📊 Product Adoption query returned', productAdoptionResult.results?.length || 0, 'shops');
-                console.log('📊 Payment Gateway query returned', paymentGatewayResult.results?.length || 0, 'shops with alt gateways');
                 
                 // Build maps from results
                 const revenueMap = {};
@@ -2280,12 +2266,6 @@
                         has_b2b: r.has_b2b === true,
                         has_capital: r.has_capital === true
                     };
-                });
-                
-                // Build payment gateway map (for alternative PSPs like Adyen, Stripe)
-                const paymentGatewayMap = {};
-                (paymentGatewayResult.results || []).forEach(r => {
-                    paymentGatewayMap[r.shop_id] = r.payment_gateways || '';
                 });
                 
                 console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
@@ -2378,13 +2358,6 @@
                             adoptionData.has_markets = adoptionData.has_markets || adoption.has_markets;
                             adoptionData.has_b2b = adoptionData.has_b2b || adoption.has_b2b;
                             adoptionData.has_capital = adoptionData.has_capital || adoption.has_capital;
-                        }
-                        
-                        // Collect payment gateways (for showing Adyen, Stripe, etc.)
-                        const gateways = paymentGatewayMap[shopId];
-                        if (gateways) {
-                            // Split by comma if multiple gateways, add each to the set
-                            gateways.split(',').forEach(gw => paymentGatewaysSet.add(gw.trim().toUpperCase()));
                         }
                     });
                     
