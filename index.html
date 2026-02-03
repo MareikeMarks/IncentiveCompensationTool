@@ -1583,13 +1583,13 @@
                     <table class="data-table" id="sp-penetration-trends-table">
                         <thead>
                             <tr style="background: rgba(99, 102, 241, 0.1);">
-                                <th style="text-align: left;">Account</th>
-                                <th style="text-align: left;">Segment</th>
-                                <th style="text-align: right;">L12M GMV</th>
-                                <th style="text-align: right;">Last 3M SP %</th>
-                                <th style="text-align: right;">Prev 3M SP %</th>
-                                <th style="text-align: right;">Change</th>
-                                <th style="text-align: center;">Trend</th>
+                                <th style="text-align: left; width: 25%;">Account</th>
+                                <th style="text-align: left; width: 10%;">Segment</th>
+                                <th style="text-align: right; width: 15%;">L12M GMV</th>
+                                <th style="text-align: right; width: 15%;">Last 3M SP %</th>
+                                <th style="text-align: right; width: 15%;">Prev 3M SP %</th>
+                                <th style="text-align: right; width: 10%;">Change</th>
+                                <th style="text-align: center; width: 10%;">Trend</th>
                             </tr>
                         </thead>
                         <tbody id="sp-pen-trends-body">
@@ -3724,13 +3724,13 @@
                 
                 return `
                 <tr>
-                    <td><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
-                    <td>${segment}</td>
-                    <td class="number">${formatCurrency(acc.l12m_gmv, true)}</td>
-                    <td class="number">${acc.sp_pen_l3m.toFixed(1)}%</td>
-                    <td class="number">${acc.sp_pen_prev3m.toFixed(1)}%</td>
-                    <td class="number" style="color: ${trendColor}; font-weight: 600;">${changeText}</td>
-                    <td style="text-align: center; font-size: 1.5rem;">${trendEmoji}</td>
+                    <td style="text-align: left; width: 25%;"><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
+                    <td style="text-align: left; width: 10%;">${segment}</td>
+                    <td class="number" style="text-align: right; width: 15%;">${formatCurrency(acc.l12m_gmv, true)}</td>
+                    <td class="number" style="text-align: right; width: 15%;">${acc.sp_pen_l3m.toFixed(1)}%</td>
+                    <td class="number" style="text-align: right; width: 15%;">${acc.sp_pen_prev3m.toFixed(1)}%</td>
+                    <td class="number" style="text-align: right; width: 10%; color: ${trendColor}; font-weight: 600;">${changeText}</td>
+                    <td style="text-align: center; width: 10%; font-size: 1.5rem;">${trendEmoji}</td>
                 </tr>
                 `;
             }).join('');
