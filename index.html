@@ -1130,7 +1130,7 @@
                 <input 
                     type="text" 
                     id="csm-name-input" 
-                    placeholder="Enter your name (e.g., Maya Marks)"
+                    placeholder="Enter name(s), comma-separated (e.g., Maya Marks, John Doe)"
                     value=""
                     style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; min-width: 280px;"
                     onkeypress="if(event.key === 'Enter') loadLiveData()"
@@ -1140,9 +1140,9 @@
                 </button>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: center; margin-bottom: 1rem;">
-                <input type="checkbox" id="include-midmarket-scaled" style="width: 18px; height: 18px; cursor: pointer;">
+                <input type="checkbox" id="include-midmarket-scaled" checked style="width: 18px; height: 18px; cursor: pointer;">
                 <label for="include-midmarket-scaled" style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">
-                    Include Mid-Market Scaled accounts <span style="color: var(--accent-purple);">(check if you're a Mid-Market Scaled CSM)</span>
+                    Include Mid-Market Scaled accounts <span style="color: var(--accent-purple);">(uncheck to exclude)</span>
                 </label>
             </div>
             
@@ -1315,7 +1315,7 @@
                             </tr>
                         </thead>
                         <tbody id="full-book">
-                            <tr><td colspan="20" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load My Data" to see your accounts</td></tr>
+                            <tr><td colspan="20" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load Live Data" to see your accounts</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1918,10 +1918,12 @@
         // Main function to load live data from BigQuery
         async function loadLiveData() {
             const nameInput = document.getElementById('csm-name-input');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                showError('Please enter your name');
+            const rawInput = nameInput.value.trim();
+            const names = rawInput.split(',').map(s => s.trim()).filter(Boolean);
+            const name = names.join(', ');
+
+            if (!names.length) {
+                showError('Please enter at least one name');
                 nameInput.focus();
                 return;
             }
@@ -1952,15 +1954,18 @@
             loadBtn.disabled = true;
             
             try {
-                // Debug: Log the name being searched
-                console.log('🔍 Searching for CSM:', name);
+                // Debug: Log the name(s) being searched
+                console.log('🔍 Searching for CSM(s):', name);
                 showAuthStatus(`🔍 Searching for: "${name}"`, 'success');
                 
-                // Query 1: Get accounts for this CSM from sales data
+                // Query 1: Get accounts for this CSM (or multiple CSMs) from sales data
                 // Filters: account_type = 'Customer' to exclude churned/prospects
                 //          Optionally exclude Mid-Market Scaled unless checkbox is checked
                 const includeMidMarketScaled = document.getElementById('include-midmarket-scaled').checked;
                 const midMarketFilter = includeMidMarketScaled ? '' : "AND sa.service_model != 'Mid-Market Scaled'";
+                const nameConditions = names.map(n =>
+                    `LOWER(sa.merchant_success_manager) LIKE '%${n.toLowerCase().split(' ').join('%')}%'`
+                ).join(' OR ');
                 
                 const accountsQuery = `
                     SELECT DISTINCT
@@ -1975,7 +1980,7 @@
                     FROM \`shopify-dw.sales.sales_accounts\` sa
                     LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
                         ON sa.account_id = m.salesforce_account_id
-                    WHERE LOWER(sa.merchant_success_manager) LIKE '%${name.toLowerCase().split(' ').join('%')}%'
+                    WHERE (${nameConditions})
                     AND sa.account_type = 'Customer'
                     ${midMarketFilter}
                     AND m.shop_id IS NOT NULL
@@ -1984,7 +1989,10 @@
                 const accountsResult = await quick.dw.querySync(accountsQuery);
                 
                 if (!accountsResult.results || accountsResult.results.length === 0) {
-                    throw new Error(`No accounts found for "${name}". Make sure your name matches how it appears in Salesforce.`);
+                    throw new Error(
+                        'No accounts found for "' + name + '". ' +
+                        'Check: (1) Name matches Salesforce exactly. (2) Try checking "Include Mid-Market Scaled accounts" if you\'re a Mid-Market Scaled CSM.'
+                    );
                 }
                 
                 // Debug: Show account stats (note: results.length includes shop duplicates)
@@ -2008,7 +2016,7 @@
                     }
                     if (r.shop_id) accountMap[r.account_id].shop_ids.push(r.shop_id);
                 });
-                
+
                 // Query 2: Get revenue data
                 const revenueQuery = `
                     SELECT 
@@ -2073,7 +2081,7 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 7: Get daily revenue data for Q1 2026 run rate chart (shop-level for filtering)
+                // Query 7: Get daily revenue data for Q1 2026 run rate chart
                 const dailyRevenueQuery = `
                     SELECT 
                         shop_id,
@@ -2162,7 +2170,6 @@
                     SELECT * FROM adoption_data
                   `;
                   
-                  // Run all queries in parallel for speed
                 const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult, 
                        gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = await Promise.all([
                     quick.dw.querySync(revenueQuery),
