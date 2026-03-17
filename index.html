@@ -2072,7 +2072,7 @@
                     FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
                     WHERE shop_id IN (${shopIds.join(',')})
                     AND account_type = 'Income'
-                    AND date >= '2024-01-15'
+                    AND date >= '2025-01-01'
                     GROUP BY shop_id
                 `;
                 
