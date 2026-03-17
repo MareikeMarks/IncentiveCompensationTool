@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incentive Compensation Tool | Book of Business</title>
+    <!-- Set content to your Data Portal / Revenue query API URL to use JSON instead of Quick (avoids "Unexpected token '<'" when Quick returns HTML). -->
+    <meta name="data-portal-query-url" content="">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Quick.js for BigQuery access -->
     <script src="/client/quick.js"></script>
@@ -1930,8 +1932,30 @@
 
             hideError();
             
-            // Request BigQuery auth if not already granted
-            if (!hasAuth) {
+            // Use Data Portal / Revenue query API when URL is set (returns JSON); otherwise use Quick (which may return HTML and cause "Unexpected token '<'").
+            const dataPortalUrl = (document.querySelector('meta[name="data-portal-query-url"]')?.getAttribute('content') || window.DATA_PORTAL_QUERY_URL || '').trim();
+            const runQuery = async (sql) => {
+                if (dataPortalUrl) {
+                    const res = await fetch(dataPortalUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: sql })
+                    });
+                    const text = await res.text();
+                    if (!res.ok) throw new Error(text || res.statusText);
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('Data Portal API returned non-JSON: ' + text.slice(0, 200));
+                    }
+                    return data.results !== undefined ? data : { results: data.rows || data.data || [] };
+                }
+                return await quick.dw.querySync(sql);
+            };
+            
+            // Request BigQuery auth if not already granted (only when using Quick, not Data Portal URL)
+            if (!dataPortalUrl && !hasAuth) {
                 try {
                     const authResult = await quick.auth.requestScopes([
                         "https://www.googleapis.com/auth/bigquery",
@@ -1986,7 +2010,7 @@
                     AND m.shop_id IS NOT NULL
                 `;
                 
-                const accountsResult = await quick.dw.querySync(accountsQuery);
+                const accountsResult = await runQuery(accountsQuery);
                 
                 if (!accountsResult.results || accountsResult.results.length === 0) {
                     throw new Error(
@@ -2170,17 +2194,26 @@
                     SELECT * FROM adoption_data
                   `;
                   
-                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult, 
+                const safeQuery = async (sql, label) => {
+                    try {
+                        return await runQuery(sql);
+                    } catch (e) {
+                        console.warn(`⚠️ Query failed (${label}), returning empty results:`, e.message);
+                        return { results: [] };
+                    }
+                };
+
+                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult,
                        gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = await Promise.all([
-                    quick.dw.querySync(revenueQuery),
-                    quick.dw.querySync(gmvQuery),
-                    quick.dw.querySync(spQuery),
-                    quick.dw.querySync(gpvQuery),
-                    quick.dw.querySync(spRevenueQuery),
-                    quick.dw.querySync(dailyRevenueQuery),
-                    quick.dw.querySync(gmvGrowthQuery),
-                    quick.dw.querySync(spPenetrationTrendsQuery),
-                    quick.dw.querySync(productAdoptionQuery)
+                    runQuery(revenueQuery),
+                    runQuery(gmvQuery),
+                    safeQuery(spQuery, 'SP status'),
+                    safeQuery(gpvQuery, 'GPV'),
+                    safeQuery(spRevenueQuery, 'SP Revenue'),
+                    safeQuery(dailyRevenueQuery, 'Daily Revenue'),
+                    safeQuery(gmvGrowthQuery, 'GMV Growth'),
+                    safeQuery(spPenetrationTrendsQuery, 'SP Penetration Trends'),
+                    safeQuery(productAdoptionQuery, 'Product Adoption')
                 ]);
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
