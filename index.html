@@ -1152,6 +1152,10 @@
             <div id="error-message" style="display: none; background: rgba(255, 71, 87, 0.1); border: 1px solid var(--accent-red); border-radius: 8px; padding: 1rem; margin-top: 1rem; max-width: 600px; text-align: left;">
                 <p style="color: var(--accent-red); margin: 0; font-size: 0.875rem;" id="error-text"></p>
             </div>
+            <!-- Warning Message (partial data) -->
+            <div id="warning-message" style="display: none; background: rgba(251, 191, 36, 0.1); border: 1px solid #fbbf24; border-radius: 8px; padding: 1rem; margin-top: 1rem; max-width: 600px; text-align: left;">
+                <p style="color: #fbbf24; margin: 0; font-size: 0.875rem;" id="warning-text"></p>
+            </div>
             
             <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem;">
                 ⚡ Live data from BigQuery • <span id="data-source-label">shopify-dw.finance + shopify-dw.sales</span>
@@ -1916,6 +1920,16 @@
         function hideError() {
             document.getElementById('error-message').style.display = 'none';
         }
+
+        function showWarning(message) {
+            const el = document.getElementById('warning-message');
+            document.getElementById('warning-text').textContent = message;
+            el.style.display = 'block';
+        }
+
+        function hideWarning() {
+            document.getElementById('warning-message').style.display = 'none';
+        }
         
         // Main function to load live data from BigQuery
         async function loadLiveData() {
@@ -1931,6 +1945,7 @@
             }
 
             hideError();
+            hideWarning();
             
             // Use Data Portal / Revenue query API when URL is set (returns JSON); otherwise use Quick (which may return HTML and cause "Unexpected token '<'").
             const dataPortalUrl = (document.querySelector('meta[name="data-portal-query-url"]')?.getAttribute('content') || window.DATA_PORTAL_QUERY_URL || '').trim();
@@ -2203,10 +2218,11 @@
                     }
                 };
 
+                hideWarning();
                 const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult,
                        gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = await Promise.all([
-                    runQuery(revenueQuery),
-                    runQuery(gmvQuery),
+                    safeQuery(revenueQuery, 'Revenue'),
+                    safeQuery(gmvQuery, 'GMV'),
                     safeQuery(spQuery, 'SP status'),
                     safeQuery(gpvQuery, 'GPV'),
                     safeQuery(spRevenueQuery, 'SP Revenue'),
@@ -2224,6 +2240,13 @@
                 console.log('📊 GMV Growth query returned', gmvGrowthResult.results?.length || 0, 'shops');
                 console.log('📊 SP Penetration Trends query returned', spPenetrationTrendsResult.results?.length || 0, 'shops');
                 console.log('📊 Product Adoption query returned', productAdoptionResult.results?.length || 0, 'shops');
+
+                const failedQueries = [];
+                if (!revenueResult.results?.length) failedQueries.push('Revenue');
+                if (!gmvResult.results?.length) failedQueries.push('GMV');
+                if (failedQueries.length) {
+                    showWarning(`⚠️ Some data unavailable (BigQuery error: ${failedQueries.join(', ')}). Account list is shown but revenue/GMV metrics may be $0. Try reloading — this is usually a transient Quick backend issue.`);
+                }
                 
                 // Build maps from results
                 const revenueMap = {};
