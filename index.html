@@ -2219,18 +2219,27 @@
                 };
 
                 hideWarning();
+
+                // Run queries sequentially to avoid Quick's rate limiting (parallel = 500 errors)
+                const steps = [
+                    [revenueQuery,             'Revenue'],
+                    [gmvQuery,                 'GMV'],
+                    [spQuery,                  'SP status'],
+                    [gpvQuery,                 'GPV'],
+                    [spRevenueQuery,           'SP Revenue'],
+                    [dailyRevenueQuery,        'Daily Revenue'],
+                    [gmvGrowthQuery,           'GMV Growth'],
+                    [spPenetrationTrendsQuery, 'SP Penetration Trends'],
+                    [productAdoptionQuery,     'Product Adoption'],
+                ];
+                const results = [];
+                for (let i = 0; i < steps.length; i++) {
+                    const [sql, label] = steps[i];
+                    showAuthStatus(`⏳ Loading ${label} (${i + 1}/${steps.length})…`, 'success');
+                    results.push(await safeQuery(sql, label));
+                }
                 const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult,
-                       gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = await Promise.all([
-                    safeQuery(revenueQuery, 'Revenue'),
-                    safeQuery(gmvQuery, 'GMV'),
-                    safeQuery(spQuery, 'SP status'),
-                    safeQuery(gpvQuery, 'GPV'),
-                    safeQuery(spRevenueQuery, 'SP Revenue'),
-                    safeQuery(dailyRevenueQuery, 'Daily Revenue'),
-                    safeQuery(gmvGrowthQuery, 'GMV Growth'),
-                    safeQuery(spPenetrationTrendsQuery, 'SP Penetration Trends'),
-                    safeQuery(productAdoptionQuery, 'Product Adoption')
-                ]);
+                       gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = results;
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
                 console.log('📊 GMV query returned', gmvResult.results?.length || 0, 'shops');
