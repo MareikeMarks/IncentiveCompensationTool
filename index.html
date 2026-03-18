@@ -2227,13 +2227,11 @@
                 hideWarning();
                 showAuthStatus('⏳ Loading data…', 'success');
 
-                // Diagnostic: test if revenue table is accessible at all (no shop_id filter)
+                // Check revenue table access before running full queries
                 try {
                     await runQuery(`SELECT 1 AS test FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\` WHERE date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) LIMIT 1`);
-                    console.log('✅ Revenue table accessible');
                 } catch (e) {
-                    console.error('❌ Revenue table NOT accessible (permissions/table issue):', e.message);
-                    showWarning(`⚠️ Cannot access revenue table — likely a BigQuery permissions issue on shop_netsuite_account_daily_profit_summary. Error: ${e.message}`);
+                    showWarning(`⚠️ No access to revenue table (shop_netsuite_account_daily_profit_summary). GMV will load but all revenue/take rate columns will show $0. Request BigQuery access via #help-data-platform or Shopify's IAM portal.`);
                 }
 
                 // Run all queries in parallel (fastest); safeQuery retries handle transient Quick 500s
@@ -2259,11 +2257,8 @@
                 console.log('📊 SP Penetration Trends query returned', spPenetrationTrendsResult.results?.length || 0, 'shops');
                 console.log('📊 Product Adoption query returned', productAdoptionResult.results?.length || 0, 'shops');
 
-                const failedQueries = [];
-                if (!revenueResult.results?.length) failedQueries.push(`Revenue (${revenueResult._error || 'empty'})`);
-                if (!gmvResult.results?.length) failedQueries.push(`GMV (${gmvResult._error || 'empty'})`);
-                if (failedQueries.length) {
-                    showWarning(`⚠️ Some data failed to load: ${failedQueries.join(' | ')}. Check browser console (F12) for full error details.`);
+                if (!gmvResult.results?.length) {
+                    showWarning('⚠️ GMV data failed to load. Try reloading — this is usually a transient Quick backend issue.');
                 }
                 
                 // Build maps from results
