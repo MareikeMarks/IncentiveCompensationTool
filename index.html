@@ -2057,22 +2057,23 @@
                 });
 
                 // Query 2: Get revenue data
+                // NOTE: shop_netsuite_account_daily_profit_summary was sunset March 2026.
+                // Replacement: estimated_revenue_events_v2 (event_at TIMESTAMP, amount_usd)
                 const revenueQuery = `
-                    SELECT 
+                    SELECT
                         shop_id,
-                        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN estimated_profit_usd ELSE 0 END) AS l12m_revenue,
-                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2025,
-                        SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
-                        SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
-                        SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
-                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026,
-                        SUM(CASE WHEN date BETWEEN '2026-04-01' AND '2026-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2026,
-                        SUM(CASE WHEN date BETWEEN '2026-07-01' AND '2026-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2026,
-                        SUM(CASE WHEN date BETWEEN '2026-10-01' AND '2026-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2026
-                    FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
+                        SUM(CASE WHEN DATE(event_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN amount_usd ELSE 0 END) AS l12m_revenue,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-01-01' AND '2025-03-31' THEN amount_usd ELSE 0 END) AS q1_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-04-01' AND '2025-06-30' THEN amount_usd ELSE 0 END) AS q2_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-07-01' AND '2025-09-30' THEN amount_usd ELSE 0 END) AS q3_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-10-01' AND '2025-12-31' THEN amount_usd ELSE 0 END) AS q4_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-01-01' AND '2026-03-31' THEN amount_usd ELSE 0 END) AS q1_2026,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-04-01' AND '2026-06-30' THEN amount_usd ELSE 0 END) AS q2_2026,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-07-01' AND '2026-09-30' THEN amount_usd ELSE 0 END) AS q3_2026,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-10-01' AND '2026-12-31' THEN amount_usd ELSE 0 END) AS q4_2026
+                    FROM \`shopify-dw.finance.estimated_revenue_events_v2\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND account_type = 'Income'
-                    AND date >= '2025-01-01'
+                    AND DATE(event_at) >= '2025-01-01'
                     GROUP BY shop_id
                 `;
                 
@@ -2121,17 +2122,18 @@
                 `;
                 
                 // Query 7: Get daily revenue data for Q1 2026 run rate chart
+                // NOTE: shop_netsuite_account_daily_profit_summary was sunset March 2026.
+                // Replacement: estimated_revenue_events_v2 (event_at TIMESTAMP, amount_usd)
                 const dailyRevenueQuery = `
-                    SELECT 
+                    SELECT
                         shop_id,
-                        date,
-                        SUM(estimated_profit_usd) AS daily_revenue
-                    FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
+                        DATE(event_at) AS date,
+                        SUM(amount_usd) AS daily_revenue
+                    FROM \`shopify-dw.finance.estimated_revenue_events_v2\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND account_type = 'Income'
-                    AND date BETWEEN '2026-01-01' AND CURRENT_DATE()
-                    GROUP BY shop_id, date
-                    ORDER BY date ASC
+                    AND DATE(event_at) BETWEEN '2026-01-01' AND CURRENT_DATE()
+                    GROUP BY shop_id, DATE(event_at)
+                    ORDER BY DATE(event_at) ASC
                 `;
                 
                 // Query 8: GMV Growth (QoQ comparison with projections)
@@ -2229,9 +2231,9 @@
 
                 // Check revenue table access before running full queries
                 try {
-                    await runQuery(`SELECT 1 AS test FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\` WHERE date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) LIMIT 1`);
+                    await runQuery(`SELECT 1 AS test FROM \`shopify-dw.finance.estimated_revenue_events_v2\` WHERE DATE(event_at) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) LIMIT 1`);
                 } catch (e) {
-                    showWarning(`⚠️ No access to revenue table (shop_netsuite_account_daily_profit_summary). GMV will load but all revenue/take rate columns will show $0. Request BigQuery access via #help-data-platform or Shopify's IAM portal.`);
+                    showWarning(`⚠️ No access to revenue table (estimated_revenue_events_v2). GMV will load but all revenue/take rate columns will show $0. Request BigQuery access via #help-data-platform or Shopify's IAM portal.`);
                 }
 
                 // Run all queries in parallel (fastest); safeQuery retries handle transient Quick 500s
