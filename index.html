@@ -1330,7 +1330,7 @@
             <!-- Daily Run Rate Chart -->
             <section>
                 <h2><span class="emoji">📊</span> Daily Run Rate vs Target</h2>
-                <p class="section-description">Track daily revenue performance against your Q1 2026 target. Green = on track, Red = behind pace.</p>
+                <p class="section-description">Track daily revenue performance against your Q1 2026 NRR target. Set your target above to update the target line. Green = on track, Red = behind pace.</p>
                 <div style="background: var(--bg-card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                         <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
@@ -1646,6 +1646,7 @@
         let globalAccountsData = null;
         let globalPortfolioMetrics = null;
         let globalFullData = null; // Store full data object for recalculations
+        let lastDailyChartData = null; // Store last data passed to daily run rate chart for re-renders
         
         // Get excluded accounts from localStorage
         function getExcludedAccounts() {
@@ -2642,20 +2643,20 @@
                 return;
             }
             
+            lastDailyChartData = data; // Store for re-renders when NRR target changes
+
             const dailyData = data.daily_revenue || [];
             if (dailyData.length === 0) {
                 console.log('⚠️ No daily revenue data available');
                 return;
             }
-            
+
             // Calculate metrics
-            // Target: Match Q1 2025 at minimum (can adjust multiplier for growth target)
-            const q1_2025_baseline = data.q1_comparison.q1_2025;
-            const q1_2026_ytd = data.q1_comparison.q1_2026_ytd;
             const daysInQ1 = 90;
-            
-            // Use Q1 2025 as the target (to maintain 100% YoY)
-            const q1Target = q1_2025_baseline;
+
+            // Use manually entered NRR target; fall back to Q1 2025 actual if none set
+            const nrrTargetM = parseFloat(document.getElementById('nrr-target-input').value) || 0;
+            const q1Target = nrrTargetM > 0 ? nrrTargetM * 1000000 : (data.q1_comparison.q1_2025 || 0);
             const dailyTargetNeeded = q1Target / daysInQ1;
             
             const today = new Date();
@@ -3329,6 +3330,9 @@
             
             // Save target to localStorage for persistence (save in M, per quarter)
             localStorage.setItem('nrr_target_' + selectedQuarter, targetInM);
+
+            // Re-render daily run rate chart with updated target line
+            if (lastDailyChartData) updateDailyRunRateChart(lastDailyChartData);
         }
         
         // Load saved NRR target for selected quarter
