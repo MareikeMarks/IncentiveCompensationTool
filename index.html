@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incentive Compensation Tool | Book of Business</title>
+    <!-- Set content to your Data Portal / Revenue query API URL to use JSON instead of Quick (avoids "Unexpected token '<'" when Quick returns HTML). -->
+    <meta name="data-portal-query-url" content="">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Quick.js for BigQuery access -->
     <script src="/client/quick.js"></script>
@@ -1120,7 +1122,7 @@
         <div class="csm-selector">
             <h2>👤 Load Your Book of Business</h2>
             
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Enter your name to pull live data from BigQuery</p>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Enter your name(s), separated by comma to pull data</p>
             
             <!-- Auth Status -->
             <div id="auth-status" style="display: none; margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem;"></div>
@@ -1130,7 +1132,7 @@
                 <input 
                     type="text" 
                     id="csm-name-input" 
-                    placeholder="Enter your name (e.g., Maya Marks)"
+                    placeholder="Enter name(s), comma-separated (e.g., Maya Marks, John Doe)"
                     value=""
                     style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; min-width: 280px;"
                     onkeypress="if(event.key === 'Enter') loadLiveData()"
@@ -1140,15 +1142,19 @@
                 </button>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: center; margin-bottom: 1rem;">
-                <input type="checkbox" id="include-midmarket-scaled" style="width: 18px; height: 18px; cursor: pointer;">
+                <input type="checkbox" id="include-midmarket-scaled" checked style="width: 18px; height: 18px; cursor: pointer;">
                 <label for="include-midmarket-scaled" style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">
-                    Include Mid-Market Scaled accounts <span style="color: var(--accent-purple);">(check if you're a Mid-Market Scaled CSM)</span>
+                    Include Mid-Market Scaled accounts <span style="color: var(--accent-purple);">(uncheck to exclude)</span>
                 </label>
             </div>
             
             <!-- Error Message -->
             <div id="error-message" style="display: none; background: rgba(255, 71, 87, 0.1); border: 1px solid var(--accent-red); border-radius: 8px; padding: 1rem; margin-top: 1rem; max-width: 600px; text-align: left;">
                 <p style="color: var(--accent-red); margin: 0; font-size: 0.875rem;" id="error-text"></p>
+            </div>
+            <!-- Warning Message (partial data) -->
+            <div id="warning-message" style="display: none; background: rgba(251, 191, 36, 0.1); border: 1px solid #fbbf24; border-radius: 8px; padding: 1rem; margin-top: 1rem; max-width: 600px; text-align: left;">
+                <p style="color: #fbbf24; margin: 0; font-size: 0.875rem;" id="warning-text"></p>
             </div>
             
             <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem;">
@@ -1315,7 +1321,7 @@
                             </tr>
                         </thead>
                         <tbody id="full-book">
-                            <tr><td colspan="20" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load My Data" to see your accounts</td></tr>
+                            <tr><td colspan="20" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Enter your name and click "Load Live Data" to see your accounts</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1324,7 +1330,7 @@
             <!-- Daily Run Rate Chart -->
             <section>
                 <h2><span class="emoji">📊</span> Daily Run Rate vs Target</h2>
-                <p class="section-description">Track daily revenue performance against your Q1 2026 target. Green = on track, Red = behind pace.</p>
+                <p class="section-description">Track daily revenue performance against your Q1 2026 NRR target. Set your target above to update the target line. Green = on track, Red = behind pace.</p>
                 <div style="background: var(--bg-card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                         <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
@@ -1640,6 +1646,7 @@
         let globalAccountsData = null;
         let globalPortfolioMetrics = null;
         let globalFullData = null; // Store full data object for recalculations
+        let lastDailyChartData = null; // Store last data passed to daily run rate chart for re-renders
         
         // Get excluded accounts from localStorage
         function getExcludedAccounts() {
@@ -1914,22 +1921,57 @@
         function hideError() {
             document.getElementById('error-message').style.display = 'none';
         }
+
+        function showWarning(message) {
+            const el = document.getElementById('warning-message');
+            document.getElementById('warning-text').textContent = message;
+            el.style.display = 'block';
+        }
+
+        function hideWarning() {
+            document.getElementById('warning-message').style.display = 'none';
+        }
         
         // Main function to load live data from BigQuery
         async function loadLiveData() {
             const nameInput = document.getElementById('csm-name-input');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                showError('Please enter your name');
+            const rawInput = nameInput.value.trim();
+            const names = rawInput.split(',').map(s => s.trim()).filter(Boolean);
+            const name = names.join(', ');
+
+            if (!names.length) {
+                showError('Please enter at least one name');
                 nameInput.focus();
                 return;
             }
 
             hideError();
+            hideWarning();
             
-            // Request BigQuery auth if not already granted
-            if (!hasAuth) {
+            // Use Data Portal / Revenue query API when URL is set (returns JSON); otherwise use Quick (which may return HTML and cause "Unexpected token '<'").
+            const dataPortalUrl = (document.querySelector('meta[name="data-portal-query-url"]')?.getAttribute('content') || window.DATA_PORTAL_QUERY_URL || '').trim();
+            const runQuery = async (sql) => {
+                if (dataPortalUrl) {
+                    const res = await fetch(dataPortalUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: sql })
+                    });
+                    const text = await res.text();
+                    if (!res.ok) throw new Error(text || res.statusText);
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('Data Portal API returned non-JSON: ' + text.slice(0, 200));
+                    }
+                    return data.results !== undefined ? data : { results: data.rows || data.data || [] };
+                }
+                return await quick.dw.querySync(sql);
+            };
+            
+            // Request BigQuery auth if not already granted (only when using Quick, not Data Portal URL)
+            if (!dataPortalUrl && !hasAuth) {
                 try {
                     const authResult = await quick.auth.requestScopes([
                         "https://www.googleapis.com/auth/bigquery",
@@ -1952,15 +1994,18 @@
             loadBtn.disabled = true;
             
             try {
-                // Debug: Log the name being searched
-                console.log('🔍 Searching for CSM:', name);
+                // Debug: Log the name(s) being searched
+                console.log('🔍 Searching for CSM(s):', name);
                 showAuthStatus(`🔍 Searching for: "${name}"`, 'success');
                 
-                // Query 1: Get accounts for this CSM from sales data
+                // Query 1: Get accounts for this CSM (or multiple CSMs) from sales data
                 // Filters: account_type = 'Customer' to exclude churned/prospects
                 //          Optionally exclude Mid-Market Scaled unless checkbox is checked
                 const includeMidMarketScaled = document.getElementById('include-midmarket-scaled').checked;
                 const midMarketFilter = includeMidMarketScaled ? '' : "AND sa.service_model != 'Mid-Market Scaled'";
+                const nameConditions = names.map(n =>
+                    `LOWER(sa.merchant_success_manager) LIKE '%${n.toLowerCase().split(' ').join('%')}%'`
+                ).join(' OR ');
                 
                 const accountsQuery = `
                     SELECT DISTINCT
@@ -1975,16 +2020,19 @@
                     FROM \`shopify-dw.sales.sales_accounts\` sa
                     LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
                         ON sa.account_id = m.salesforce_account_id
-                    WHERE LOWER(sa.merchant_success_manager) LIKE '%${name.toLowerCase().split(' ').join('%')}%'
+                    WHERE (${nameConditions})
                     AND sa.account_type = 'Customer'
                     ${midMarketFilter}
                     AND m.shop_id IS NOT NULL
                 `;
                 
-                const accountsResult = await quick.dw.querySync(accountsQuery);
+                const accountsResult = await runQuery(accountsQuery);
                 
                 if (!accountsResult.results || accountsResult.results.length === 0) {
-                    throw new Error(`No accounts found for "${name}". Make sure your name matches how it appears in Salesforce.`);
+                    throw new Error(
+                        'No accounts found for "' + name + '". ' +
+                        'Check: (1) Name matches Salesforce exactly. (2) Try checking "Include Mid-Market Scaled accounts" if you\'re a Mid-Market Scaled CSM.'
+                    );
                 }
                 
                 // Debug: Show account stats (note: results.length includes shop duplicates)
@@ -2008,24 +2056,25 @@
                     }
                     if (r.shop_id) accountMap[r.account_id].shop_ids.push(r.shop_id);
                 });
-                
+
                 // Query 2: Get revenue data
+                // NOTE: shop_netsuite_account_daily_profit_summary was sunset March 2026.
+                // Replacement: estimated_revenue_events_v2 (event_at TIMESTAMP, amount_usd)
                 const revenueQuery = `
-                    SELECT 
+                    SELECT
                         shop_id,
-                        SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN estimated_profit_usd ELSE 0 END) AS l12m_revenue,
-                        SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2025,
-                        SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2025,
-                        SUM(CASE WHEN date BETWEEN '2025-07-01' AND '2025-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2025,
-                        SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2025,
-                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN estimated_profit_usd ELSE 0 END) AS q1_2026,
-                        SUM(CASE WHEN date BETWEEN '2026-04-01' AND '2026-06-30' THEN estimated_profit_usd ELSE 0 END) AS q2_2026,
-                        SUM(CASE WHEN date BETWEEN '2026-07-01' AND '2026-09-30' THEN estimated_profit_usd ELSE 0 END) AS q3_2026,
-                        SUM(CASE WHEN date BETWEEN '2026-10-01' AND '2026-12-31' THEN estimated_profit_usd ELSE 0 END) AS q4_2026
-                    FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
+                        SUM(CASE WHEN DATE(event_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN amount_usd ELSE 0 END) AS l12m_revenue,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-01-01' AND '2025-03-31' THEN amount_usd ELSE 0 END) AS q1_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-04-01' AND '2025-06-30' THEN amount_usd ELSE 0 END) AS q2_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-07-01' AND '2025-09-30' THEN amount_usd ELSE 0 END) AS q3_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2025-10-01' AND '2025-12-31' THEN amount_usd ELSE 0 END) AS q4_2025,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-01-01' AND '2026-03-31' THEN amount_usd ELSE 0 END) AS q1_2026,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-04-01' AND '2026-06-30' THEN amount_usd ELSE 0 END) AS q2_2026,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-07-01' AND '2026-09-30' THEN amount_usd ELSE 0 END) AS q3_2026,
+                        SUM(CASE WHEN DATE(event_at) BETWEEN '2026-10-01' AND '2026-12-31' THEN amount_usd ELSE 0 END) AS q4_2026
+                    FROM \`shopify-dw.finance.estimated_revenue_events_v2\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND account_type = 'Income'
-                    AND date >= '2024-01-15'
+                    AND DATE(event_at) >= '2025-01-01'
                     GROUP BY shop_id
                 `;
                 
@@ -2073,18 +2122,19 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 7: Get daily revenue data for Q1 2026 run rate chart (shop-level for filtering)
+                // Query 7: Get daily revenue data for Q1 2026 run rate chart
+                // NOTE: shop_netsuite_account_daily_profit_summary was sunset March 2026.
+                // Replacement: estimated_revenue_events_v2 (event_at TIMESTAMP, amount_usd)
                 const dailyRevenueQuery = `
-                    SELECT 
+                    SELECT
                         shop_id,
-                        date,
-                        SUM(estimated_profit_usd) AS daily_revenue
-                    FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\`
+                        DATE(event_at) AS date,
+                        SUM(amount_usd) AS daily_revenue
+                    FROM \`shopify-dw.finance.estimated_revenue_events_v2\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND account_type = 'Income'
-                    AND date BETWEEN '2026-01-01' AND CURRENT_DATE()
-                    GROUP BY shop_id, date
-                    ORDER BY date ASC
+                    AND DATE(event_at) BETWEEN '2026-01-01' AND CURRENT_DATE()
+                    GROUP BY shop_id, DATE(event_at)
+                    ORDER BY DATE(event_at) ASC
                 `;
                 
                 // Query 8: GMV Growth (QoQ comparison with projections)
@@ -2162,18 +2212,43 @@
                     SELECT * FROM adoption_data
                   `;
                   
-                  // Run all queries in parallel for speed
-                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult, 
+                const safeQuery = async (sql, label) => {
+                    let lastError;
+                    for (let attempt = 1; attempt <= 3; attempt++) {
+                        try {
+                            return await runQuery(sql);
+                        } catch (e) {
+                            lastError = e;
+                            console.warn(`⚠️ Query failed (${label}) attempt ${attempt}/3:`, e.message);
+                            if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
+                        }
+                    }
+                    console.error(`❌ Query (${label}) failed after 3 attempts. Full error:`, lastError);
+                    return { results: [], _error: lastError?.message || 'Unknown error' };
+                };
+
+                hideWarning();
+                showAuthStatus('⏳ Loading data…', 'success');
+
+                // Check revenue table access before running full queries
+                try {
+                    await runQuery(`SELECT 1 AS test FROM \`shopify-dw.finance.estimated_revenue_events_v2\` WHERE DATE(event_at) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) LIMIT 1`);
+                } catch (e) {
+                    showWarning(`⚠️ No access to revenue table (estimated_revenue_events_v2). GMV will load but all revenue/take rate columns will show $0. Request BigQuery access via #help-data-platform or Shopify's IAM portal.`);
+                }
+
+                // Run all queries in parallel (fastest); safeQuery retries handle transient Quick 500s
+                const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult,
                        gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = await Promise.all([
-                    quick.dw.querySync(revenueQuery),
-                    quick.dw.querySync(gmvQuery),
-                    quick.dw.querySync(spQuery),
-                    quick.dw.querySync(gpvQuery),
-                    quick.dw.querySync(spRevenueQuery),
-                    quick.dw.querySync(dailyRevenueQuery),
-                    quick.dw.querySync(gmvGrowthQuery),
-                    quick.dw.querySync(spPenetrationTrendsQuery),
-                    quick.dw.querySync(productAdoptionQuery)
+                    safeQuery(revenueQuery,             'Revenue'),
+                    safeQuery(gmvQuery,                 'GMV'),
+                    safeQuery(spQuery,                  'SP status'),
+                    safeQuery(gpvQuery,                 'GPV'),
+                    safeQuery(spRevenueQuery,           'SP Revenue'),
+                    safeQuery(dailyRevenueQuery,        'Daily Revenue'),
+                    safeQuery(gmvGrowthQuery,           'GMV Growth'),
+                    safeQuery(spPenetrationTrendsQuery, 'SP Penetration Trends'),
+                    safeQuery(productAdoptionQuery,     'Product Adoption'),
                 ]);
                 
                 console.log('📊 Revenue query returned', revenueResult.results?.length || 0, 'shops');
@@ -2184,6 +2259,10 @@
                 console.log('📊 GMV Growth query returned', gmvGrowthResult.results?.length || 0, 'shops');
                 console.log('📊 SP Penetration Trends query returned', spPenetrationTrendsResult.results?.length || 0, 'shops');
                 console.log('📊 Product Adoption query returned', productAdoptionResult.results?.length || 0, 'shops');
+
+                if (!gmvResult.results?.length) {
+                    showWarning('⚠️ GMV data failed to load. Try reloading — this is usually a transient Quick backend issue.');
+                }
                 
                 // Build maps from results
                 const revenueMap = {};
@@ -2564,20 +2643,20 @@
                 return;
             }
             
+            lastDailyChartData = data; // Store for re-renders when NRR target changes
+
             const dailyData = data.daily_revenue || [];
             if (dailyData.length === 0) {
                 console.log('⚠️ No daily revenue data available');
                 return;
             }
-            
+
             // Calculate metrics
-            // Target: Match Q1 2025 at minimum (can adjust multiplier for growth target)
-            const q1_2025_baseline = data.q1_comparison.q1_2025;
-            const q1_2026_ytd = data.q1_comparison.q1_2026_ytd;
             const daysInQ1 = 90;
-            
-            // Use Q1 2025 as the target (to maintain 100% YoY)
-            const q1Target = q1_2025_baseline;
+
+            // Use manually entered NRR target; fall back to Q1 2025 actual if none set
+            const nrrTargetM = parseFloat(document.getElementById('nrr-target-input').value) || 0;
+            const q1Target = nrrTargetM > 0 ? nrrTargetM * 1000000 : (data.q1_comparison.q1_2025 || 0);
             const dailyTargetNeeded = q1Target / daysInQ1;
             
             const today = new Date();
@@ -3251,6 +3330,9 @@
             
             // Save target to localStorage for persistence (save in M, per quarter)
             localStorage.setItem('nrr_target_' + selectedQuarter, targetInM);
+
+            // Re-render daily run rate chart with updated target line
+            if (lastDailyChartData) updateDailyRunRateChart(lastDailyChartData);
         }
         
         // Load saved NRR target for selected quarter
