@@ -2227,6 +2227,15 @@
                 hideWarning();
                 showAuthStatus('⏳ Loading data…', 'success');
 
+                // Diagnostic: test if revenue table is accessible at all (no shop_id filter)
+                try {
+                    await runQuery(`SELECT 1 AS test FROM \`shopify-dw.finance.shop_netsuite_account_daily_profit_summary\` WHERE date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) LIMIT 1`);
+                    console.log('✅ Revenue table accessible');
+                } catch (e) {
+                    console.error('❌ Revenue table NOT accessible (permissions/table issue):', e.message);
+                    showWarning(`⚠️ Cannot access revenue table — likely a BigQuery permissions issue on shop_netsuite_account_daily_profit_summary. Error: ${e.message}`);
+                }
+
                 // Run all queries in parallel (fastest); safeQuery retries handle transient Quick 500s
                 const [revenueResult, gmvResult, spResult, gpvResult, spRevenueResult, dailyRevenueResult,
                        gmvGrowthResult, spPenetrationTrendsResult, productAdoptionResult] = await Promise.all([
