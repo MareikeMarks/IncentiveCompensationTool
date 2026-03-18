@@ -2210,16 +2210,18 @@
                   `;
                   
                 const safeQuery = async (sql, label) => {
+                    let lastError;
                     for (let attempt = 1; attempt <= 3; attempt++) {
                         try {
                             return await runQuery(sql);
                         } catch (e) {
+                            lastError = e;
                             console.warn(`⚠️ Query failed (${label}) attempt ${attempt}/3:`, e.message);
                             if (attempt < 3) await new Promise(r => setTimeout(r, 1500 * attempt));
                         }
                     }
-                    console.error(`❌ Query (${label}) failed after 3 attempts, returning empty results`);
-                    return { results: [] };
+                    console.error(`❌ Query (${label}) failed after 3 attempts. Full error:`, lastError);
+                    return { results: [], _error: lastError?.message || 'Unknown error' };
                 };
 
                 hideWarning();
@@ -2249,10 +2251,10 @@
                 console.log('📊 Product Adoption query returned', productAdoptionResult.results?.length || 0, 'shops');
 
                 const failedQueries = [];
-                if (!revenueResult.results?.length) failedQueries.push('Revenue');
-                if (!gmvResult.results?.length) failedQueries.push('GMV');
+                if (!revenueResult.results?.length) failedQueries.push(`Revenue (${revenueResult._error || 'empty'})`);
+                if (!gmvResult.results?.length) failedQueries.push(`GMV (${gmvResult._error || 'empty'})`);
                 if (failedQueries.length) {
-                    showWarning(`⚠️ Some data unavailable (BigQuery error: ${failedQueries.join(', ')}). Account list is shown but revenue/GMV metrics may be $0. Try reloading — this is usually a transient Quick backend issue.`);
+                    showWarning(`⚠️ Some data failed to load: ${failedQueries.join(' | ')}. Check browser console (F12) for full error details.`);
                 }
                 
                 // Build maps from results
