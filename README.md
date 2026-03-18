@@ -38,9 +38,28 @@ const results = await quick.dw.querySync(`
 
 ---
 
+## 📡 Data source: Quick vs Data Portal API
+
+The tool can pull live data in two ways:
+
+1. **Quick runtime (default)**  
+   When opened from the Quick host (e.g. [incentive-compensation-tool.quick.shopify.io](https://incentive-compensation-tool.quick.shopify.io)), it uses `quick.dw.querySync()` to run BigQuery. The Quick backend must return **JSON** (not HTML); if you see "Unexpected token '<' ... is not valid JSON", the backend serving `quick.dw` needs to return JSON.
+
+2. **Data Portal query API (optional)**  
+   To use the same data path as the Data Portal MCP (JSON API), set a query endpoint URL. The app will `POST` each query to that URL and expect JSON back.  
+   - **Request:** `POST` with `Content-Type: application/json`, body `{ "query": "SELECT ..." }`.  
+   - **Response:** JSON with a `results` array of row objects, e.g. `{ "results": [ { "col1": "val1", ... }, ... ] }`.  
+   - **How to set the URL:**  
+     - In `index.html` head, uncomment and set:  
+       `<meta name="data-portal-query-url" content="https://your-query-api/query">`  
+     - Or set `window.DATA_PORTAL_QUERY_URL = "https://..."` before the app runs (e.g. in a script or Quick host config).  
+   When this URL is set, the app uses it for all queries and does not require the Quick runtime for data (only for optional auth/identity).
+
+---
+
 ## 🔐 Authentication
 
-The dashboard uses Google OAuth to access BigQuery:
+The dashboard uses Google OAuth to access BigQuery (when using the Quick runtime):
 
 1. First visit prompts for BigQuery permission
 2. Your Shopify Google account grants access
@@ -88,6 +107,44 @@ IncentiveCompensationTool/
 ├── data/                   # Legacy static data (optional)
 └── README.md
 ```
+
+---
+
+## 🚀 Deploying to Quick
+
+The live app runs at **incentive-compensation-tool.quick.shopify.io**, which is Shopify’s internal **Quick** hosting. To deploy your changes:
+
+1. **If Quick is connected to this repo**  
+   Pushing to the branch Quick watches (e.g. `main` or `master`) may trigger an automatic deploy. Push your changes and check the live URL after the build finishes.
+
+2. **If you use a Quick CLI or dashboard**  
+   Use the deploy command or UI provided by the Quick platform (e.g. `quick deploy` or a “Deploy” button in an internal Quick dashboard). If you’re not sure, ask whoever set up **incentive-compensation-tool.quick.shopify.io** or the team that owns Quick.
+
+3. **If deployment is manual**  
+   Someone may copy `index.html` (and any assets) to the Quick site’s hosting. Confirm with your team how they currently update the live site.
+
+**Need the exact steps?** Quick is internal and doesn’t have public docs in this repo. Check:
+- Internal docs or Vault for “Quick” or “quick.shopify.io” deployment.
+- The person or team who own the existing **incentive-compensation-tool** Quick site.
+- Your team’s runbook or Slack (e.g. #quick or #internal-tools).
+
+---
+
+## 🔧 Troubleshooting: "Unexpected token '<' ... is not valid JSON"
+
+If **Load Live Data** still fails with that error, the response is still HTML, not JSON. The app uses **Quick's** `quick.dw` API (from the Quick host), which may or may not be the same as data-portal-mcp.
+
+1. **Find which service returns HTML**
+   - Open the app at **incentive-compensation-tool.quick.shopify.io**.
+   - Open DevTools (F12) → **Network** tab.
+   - Click **Load Live Data** again.
+   - In the list, find the request whose **Response** starts with `<html` or has **Type** "document" / **Content-Type** "text/html". Note its **Request URL** and status (e.g. 404, 500).
+
+2. **Get that service to return JSON**
+   - The team that owns that URL (Quick platform, data-portal-mcp, or whoever runs the `quick.dw` backend) must ensure that endpoint returns `Content-Type: application/json` and a JSON body for both success and errors—no HTML error pages.
+
+3. **Use "Load from JSON" meanwhile**
+   - Export data from a working environment or use a saved JSON file so you can keep using the tool.
 
 ---
 
