@@ -8,9 +8,9 @@
     <meta name="data-portal-query-url" content="">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Quick.js for BigQuery access -->
-    <script src="/client/quick.js"></script>
+    <script  src="/client/quick.js"></script>
     <!-- Chart.js for visualizations -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script  src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -1193,7 +1193,7 @@
             <!-- NRR Target Tracker (Configurable by Quarter) -->
             <div class="yoy-comparison-card" id="nrr-target-section">
                 <div class="yoy-header">
-                    <span class="yoy-title">🎯 <span id="nrr-quarter-title">Q1 2026</span> NRR Target</span>
+                    <span class="yoy-title">🎯 <span id="nrr-quarter-title">Q2 2026</span> NRR Target</span>
                     <select id="quarter-selector" onchange="onQuarterChange()" 
                         style="padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--border); 
                         background: var(--bg-secondary); color: var(--accent-blue); font-weight: 600; cursor: pointer;">
@@ -1202,12 +1202,12 @@
                         <option value="Q3-2026">Q3 2026</option>
                         <option value="Q4-2026">Q4 2026</option>
                     </select>
-                    <span class="yoy-note" id="quarter-progress-note">~22% of quarter elapsed</span>
+                    <span class="yoy-note" id="quarter-progress-note">Loading...</span>
                 </div>
                 <div class="yoy-metrics">
                     <div class="yoy-metric">
-                        <div class="yoy-metric-label"><span id="quarter-ytd-label">Q1 2026</span> (YTD)</div>
-                        <div class="yoy-metric-value current" id="q1-2026-ytd">$0</div>
+                        <div class="yoy-metric-label"><span id="quarter-ytd-label">Q2 2026</span> (YTD)</div>
+                        <div class="yoy-metric-value current" id="q2-2026-ytd">$0</div>
                     </div>
                     <div class="yoy-arrow">→</div>
                     <div class="yoy-metric">
@@ -1229,7 +1229,7 @@
                     </div>
                     <div class="yoy-arrow">→</div>
                     <div class="yoy-metric">
-                        <div class="yoy-metric-label">Estimated <span id="quarter-est-label">Q1</span> Total</div>
+                        <div class="yoy-metric-label">Estimated <span id="quarter-est-label">Q2</span> Total</div>
                         <div class="yoy-metric-value" id="nrr-projected" style="color: var(--accent-cyan);">-</div>
                         <div id="nrr-projected-note" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;"></div>
                     </div>
@@ -1255,7 +1255,7 @@
                         <input type="text" id="account-search" class="filter-input" placeholder="Filter by account name..." onkeyup="filterTable()">
                     </div>
                     <div class="filter-group">
-                        <label for="pacing-filter">📈 Q1 Pacing</label>
+                        <label for="pacing-filter">📈 Q2 Pacing</label>
                         <select id="pacing-filter" class="filter-select" onchange="filterTable()">
                             <option value="all">All Accounts</option>
                             <option value="high">High (> 40%)</option>
@@ -1330,7 +1330,7 @@
             <!-- Daily Run Rate Chart -->
             <section>
                 <h2><span class="emoji">📊</span> Daily Run Rate vs Target</h2>
-                <p class="section-description">Track daily revenue performance against your Q1 2026 NRR target. Set your target above to update the target line. Green = on track, Red = behind pace.</p>
+                <p class="section-description">Track daily revenue performance against your Q2 2026 NRR target. Set your target above to update the target line. Green = on track, Red = behind pace.</p>
                 <div style="background: var(--bg-card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                         <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
@@ -1346,7 +1346,7 @@
                             <div id="pace-status" style="font-size: 1.5rem; font-weight: 600;">-</div>
                         </div>
                         <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
-                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Days Remaining in Q1</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Days Remaining in Q2</div>
                             <div id="days-remaining" style="color: var(--accent-yellow); font-size: 1.5rem; font-weight: 600;">-</div>
                         </div>
                     </div>
@@ -1369,19 +1369,19 @@
 
             <!-- All Accounts Q1 Performance -->
             <section>
-                <h2><span class="emoji">📊</span> All Accounts - Q1 Performance (Sorted by Q1 2026 Revenue)</h2>
+                <h2><span class="emoji">📊</span> All Accounts - Q2 Performance (Sorted by Q2 2026 Revenue)</h2>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
                                 <th>Account</th>
-                                <th>Q1 2025</th>
-                                <th>Q1 2026</th>
+                                <th>Q2 2025</th>
+                                <th>Q2 2026</th>
                                 <th>YoY Pacing</th>
                             </tr>
                         </thead>
-                        <tbody id="all-accounts-q1">
-                            <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Load your data to see Q1 performance</td></tr>
+                        <tbody id="all-accounts-q2">
+                            <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Load your data to see Q2 performance</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1389,18 +1389,18 @@
 
             <!-- Needs Attention -->
             <section>
-                <h2><span class="emoji">⚠️</span> Needs Attention (Q1 YoY < 25%)</h2>
-                <p class="section-description">Accounts with revenue pacing below 25% YoY. GMV compares same days in Q1 (YTD vs YTD). "Likely Cause" shows payment issues when GMV is healthy but revenue isn't.</p>
+                <h2><span class="emoji">⚠️</span> Needs Attention (Q2 YoY < 25%)</h2>
+                <p class="section-description">Accounts with revenue pacing below 25% YoY. GMV compares same days in Q2 (YTD vs YTD). "Likely Cause" shows payment issues when GMV is healthy but revenue isn't.</p>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
                                 <th>Account</th>
-                                <th>Q1 '25 Rev</th>
-                                <th>Q1 '26 Rev</th>
+                                <th>Q2 '25 Rev</th>
+                                <th>Q2 '26 Rev</th>
                                 <th>Rev YoY</th>
-                                <th>Q1 '25 GMV</th>
-                                <th>Q1 '26 GMV</th>
+                                <th>Q2 '25 GMV</th>
+                                <th>Q2 '26 GMV</th>
                                 <th>GMV YoY</th>
                                 <th>Likely Cause</th>
                             </tr>
@@ -1415,7 +1415,7 @@
             <!-- GMV Growth Tracker -->
             <section class="gmv-growth-section">
                 <h2><span class="emoji">📈</span> GMV Growth Tracker</h2>
-                <p class="section-description">Q1 2026 Projected = (Current daily GMV rate × 90 days). Compares projected Q1 vs actual Q4. High growth = opportunity for product adoption.</p>
+                <p class="section-description">Q2 2026 Projected = (Current daily GMV rate × 91 days). Compares projected Q2 vs actual Q1. High growth = opportunity for product adoption.</p>
                 <div class="card" style="overflow-x: auto;">
                     <table class="data-table" id="gmv-growth-table">
                         <thead>
@@ -1423,7 +1423,7 @@
                                 <th style="text-align: left; width: 25%;">Account</th>
                                 <th style="text-align: left; width: 10%;">Segment</th>
                                 <th style="text-align: right; width: 18%;">Q4 2025 GMV</th>
-                                <th style="text-align: right; width: 18%;">Q1 2026 Projected</th>
+                                <th style="text-align: right; width: 18%;">Q2 2026 Projected</th>
                                 <th style="text-align: right; width: 15%;">QoQ Growth</th>
                                 <th style="text-align: center; width: 10%;">Trend</th>
                             </tr>
@@ -1437,9 +1437,9 @@
                 <!-- GMV Projection Explanation -->
                 <div style="background: rgba(99, 102, 241, 0.1); padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #6366f1;">
                     <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">
-                        <strong style="color: var(--accent);">📊 How Q1 2026 Projected is Calculated</strong><br>
-                        <span style="color: var(--text-secondary);">Formula: Q1 2026 Projected = (Total GMV from Jan 1 to Today) ÷ (Days Elapsed) × 90 days<br>
-                        Example: If an account did $2M GMV from Jan 1 to Feb 3 (34 days), their daily average is ~$58.8K. Projected Q1 GMV = $58.8K × 90 = $5.29M. If their Q4 2025 was $3M, that's <span style="color: #10b981; font-weight: 600;">+76% growth</span>.<br>
+                        <strong style="color: var(--accent);">📊 How Q2 2026 Projected is Calculated</strong><br>
+                        <span style="color: var(--text-secondary);">Formula: Q2 2026 Projected = (Total GMV from Apr 1 to Today) ÷ (Days Elapsed) × 91 days<br>
+                        Example: If an account did $2M GMV from Apr 1 to May 3 (33 days), their daily average is ~$58.8K. Projected Q2 GMV = $60.6K × 91 = $5.51M. If their Q1 2026 was $3M, that's <span style="color: #10b981; font-weight: 600;">+76% growth</span>.<br>
                         Note: Accounts with >999% growth are typically new launches ramping up. Only accounts with >$10K Q4 GMV are shown to avoid noise.</span>
                     </p>
                 </div>
@@ -1634,10 +1634,10 @@
 
     <footer>
         <p>💰 Incentive Compensation Tool | Data from Revenue MCP & BigQuery</p>
-        <p style="margin-top: 0.5rem;">Q1 2026 data is Jan 1-15 only (~17% of quarter elapsed)</p>
+        <p style="margin-top: 0.5rem;">Q2 2026 data — updates daily from BigQuery</p>
     </footer>
 
-    <script>
+    <script >
         // === LIVE BIGQUERY DATA FUNCTIONS ===
         
         let hasAuth = false;
@@ -1722,27 +1722,28 @@
             // We'll filter daily revenue based on accounts, not shops, since we aggregate at account level
             
             // Recalculate all totals
-            let totalQ1_2026 = 0, totalQ1_2025 = 0;
-            let totalQ2_2025 = 0, totalQ3_2025 = 0, totalQ4_2025 = 0;
+            let totalQ1_2025 = 0, totalQ2_2025 = 0, totalQ3_2025 = 0, totalQ4_2025 = 0;
+            let totalQ1_2026 = 0, totalQ2_2026 = 0;
             let total2025 = 0;
             let totalGmv = 0;
             let totalRevenue = 0;
             
             includedAccounts.forEach(acc => {
-                totalQ1_2026 += acc.q1_2026 || 0;
                 totalQ1_2025 += acc.q1_2025 || 0;
                 totalQ2_2025 += acc.q2_2025 || 0;
                 totalQ3_2025 += acc.q3_2025 || 0;
                 totalQ4_2025 += acc.q4_2025 || 0;
+                totalQ1_2026 += acc.q1_2026 || 0;
+                totalQ2_2026 += acc.q2_2026 || 0;
                 total2025 += (acc.q1_2025 || 0) + (acc.q2_2025 || 0) + (acc.q3_2025 || 0) + (acc.q4_2025 || 0);
                 totalGmv += acc.l12m_gmv || 0;
                 totalRevenue += acc.l12m_revenue || 0;
             });
             
-            // Update the Q1 2026 YTD display
-            const q1YtdEl = document.getElementById('q1-2026-ytd');
-            if (q1YtdEl) {
-                q1YtdEl.textContent = formatCurrency(totalQ1_2026, true);
+            // Update the Q2 2026 YTD display
+            const q2YtdEl = document.getElementById('q2-2026-ytd');
+            if (q2YtdEl) {
+                q2YtdEl.textContent = formatCurrency(totalQ2_2026, true);
             }
             
             // Update metrics
@@ -1759,10 +1760,10 @@
             if (takeRateEl) takeRateEl.textContent = avgTakeRate.toFixed(2) + '%';
             
             // Update YoY pacing
-            const q1YoyPacing = totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025 * 100) : 0;
-            const pacingEl = document.getElementById('q1-yoy-pacing');
+            const q2YoyPacing = totalQ2_2025 > 0 ? (totalQ2_2026 / totalQ2_2025 * 100) : 0;
+            const pacingEl = document.getElementById('q2-yoy-pacing');
             if (pacingEl) {
-                pacingEl.textContent = formatPercent(q1YoyPacing);
+                pacingEl.textContent = formatPercent(q2YoyPacing);
             }
             
             // Update the TOTAL row in the BOB table
@@ -1773,6 +1774,7 @@
                 if (totalRow && totalRow.style.background && totalRow.style.background.includes('accent-blue')) {
                     // Found total row, update it
                     const totalQ1Yoy = totalQ1_2025 > 0 ? ((totalQ1_2026 / totalQ1_2025) * 100).toFixed(1) : 'N/A';
+                    const totalQ2Yoy = totalQ2_2025 > 0 ? ((totalQ2_2026 / totalQ2_2025) * 100).toFixed(1) : 'N/A';
                     totalRow.innerHTML = `
                         <td></td>
                         <td style="color: white;">📊 TOTAL (${includedAccounts.length} accounts)</td>
@@ -1783,11 +1785,11 @@
                         <td class="number" style="color: white;">${avgTakeRate.toFixed(2)}%</td>
                         <td class="number" style="color: white;">${formatCurrency(total2025, true)}</td>
                         <td class="number" style="color: white;">${formatCurrency(totalQ1_2025, true)}</td>
-                        <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totalQ1_2026, true)}</td>
+                        <td class="number" style="color: white;">${formatCurrency(totalQ1_2026, true)}</td>
                         <td style="color: white;">${totalQ1Yoy}%</td>
                         <td class="number" style="color: white;">${formatCurrency(totalQ2_2025, true)}</td>
-                        <td class="number" style="color: white;">-</td>
-                        <td style="color: white;">-</td>
+                        <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totalQ2_2026, true)}</td>
+                        <td style="color: white;">${totalQ2Yoy}%</td>
                         <td class="number" style="color: white;">${formatCurrency(totalQ3_2025, true)}</td>
                         <td class="number" style="color: white;">-</td>
                         <td style="color: white;">-</td>
@@ -1830,10 +1832,10 @@
                 // Create updated data object for chart
                 const updatedData = {
                     ...globalFullData,
-                    q1_comparison: {
-                        q1_2025: totalQ1_2025,
-                        q1_2026_ytd: totalQ1_2026,
-                        pacing_rate: totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025) * 100 : 0
+                    q2_comparison: {
+                        q2_2025: totalQ2_2025,
+                        q2_2026_ytd: totalQ2_2026,
+                        pacing_rate: totalQ2_2025 > 0 ? (totalQ2_2026 / totalQ2_2025) * 100 : 0
                     },
                     daily_revenue: filteredDailyRevenue
                 };
@@ -1843,7 +1845,7 @@
             }
             
             // Update global variable for NRR tracker
-            currentQuarterRevenue = totalQ1_2026;
+            currentQuarterRevenue = totalQ2_2026;
             
             // Update the NRR projection/tracker
             updateNRRTracker();
@@ -1860,7 +1862,7 @@
             }
             
             console.log(`📊 Recalculated: ${excluded.length} accounts excluded, ${includedAccounts.length} included`);
-            console.log(`📊 New Q1 2026 Total: ${formatCurrency(totalQ1_2026, true)}`);
+            console.log(`📊 New Q2 2026 Total: ${formatCurrency(totalQ2_2026, true)}`);
         }
         
         // Clear all exclusions
@@ -2084,7 +2086,9 @@
                         shop_id,
                         SUM(CASE WHEN date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY) THEN gmv_usd ELSE 0 END) AS l12m_gmv,
                         SUM(CASE WHEN date BETWEEN '2025-01-01' AND '2025-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2025,
-                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2026
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN gmv_usd ELSE 0 END) AS q1_gmv_2026,
+                        SUM(CASE WHEN date BETWEEN '2025-04-01' AND '2025-06-30' THEN gmv_usd ELSE 0 END) AS q2_gmv_2025,
+                        SUM(CASE WHEN date BETWEEN '2026-04-01' AND '2026-06-30' THEN gmv_usd ELSE 0 END) AS q2_gmv_2026
                     FROM \`shopify-dw.finance.shop_gmv_daily_summary_v1\`
                     WHERE shop_id IN (${shopIds.join(',')})
                     AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
@@ -2122,7 +2126,7 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 7: Get daily revenue data for Q1 2026 run rate chart
+                // Query 7: Get daily revenue data for Q2 2026 run rate chart
                 // NOTE: shop_netsuite_account_daily_profit_summary was sunset March 2026.
                 // Replacement: estimated_revenue_events_v2 (event_at TIMESTAMP, amount_usd)
                 const dailyRevenueQuery = `
@@ -2132,7 +2136,7 @@
                         SUM(amount_usd) AS daily_revenue
                     FROM \`shopify-dw.finance.estimated_revenue_events_v2\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND DATE(event_at) BETWEEN '2026-01-01' AND CURRENT_DATE()
+                    AND DATE(event_at) BETWEEN '2026-04-01' AND CURRENT_DATE()
                     GROUP BY shop_id, DATE(event_at)
                     ORDER BY DATE(event_at) ASC
                 `;
@@ -2141,18 +2145,18 @@
                 const gmvGrowthQuery = `
                     SELECT 
                         shop_id,
-                        SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN gmv_usd ELSE 0 END) AS q4_2025_gmv,
-                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_2026_gmv_ytd,
-                        -- Project Q1 based on current pace
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN gmv_usd ELSE 0 END) AS q1_2026_gmv,
+                        SUM(CASE WHEN date BETWEEN '2026-04-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q2_2026_gmv_ytd,
+                        -- Project Q2 based on current pace
                         CASE 
-                            WHEN DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) > 0 THEN
-                                SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) 
-                                / DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) * 90
+                            WHEN DATE_DIFF(CURRENT_DATE(), DATE('2026-04-01'), DAY) > 0 THEN
+                                SUM(CASE WHEN date BETWEEN '2026-04-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) 
+                                / DATE_DIFF(CURRENT_DATE(), DATE('2026-04-01'), DAY) * 91
                             ELSE 0
-                        END AS q1_2026_gmv_projected
+                        END AS q2_2026_gmv_projected
                     FROM \`shopify-dw.finance.shop_gmv_daily_summary_v1\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND date >= '2025-10-01'
+                    AND date >= '2026-01-01'
                     GROUP BY shop_id
                 `;
                 
@@ -2266,10 +2270,10 @@
                 
                 // Build maps from results
                 const revenueMap = {};
-                let debugQ1_2026_Total = 0;
+                let debugQ2_2026_Total = 0;
                 (revenueResult.results || []).forEach(r => {
-                    const q1_2026_val = parseFloat(r.q1_2026) || 0;
-                    debugQ1_2026_Total += q1_2026_val;
+                    const q2_2026_val = parseFloat(r.q2_2026) || 0;
+                    debugQ2_2026_Total += q2_2026_val;
                     revenueMap[r.shop_id] = {
                         l12m_revenue: parseFloat(r.l12m_revenue) || 0,
                         q1_2025: parseFloat(r.q1_2025) || 0,
@@ -2288,7 +2292,9 @@
                     gmvMap[r.shop_id] = {
                         l12m_gmv: parseFloat(r.l12m_gmv) || 0,
                         q1_gmv_2025: parseFloat(r.q1_gmv_2025) || 0,
-                        q1_gmv_2026: parseFloat(r.q1_gmv_2026) || 0
+                        q1_gmv_2026: parseFloat(r.q1_gmv_2026) || 0,
+                        q2_gmv_2025: parseFloat(r.q2_gmv_2025) || 0,
+                        q2_gmv_2026: parseFloat(r.q2_gmv_2026) || 0
                     };
                 });
                 
@@ -2319,9 +2325,9 @@
                 const gmvGrowthMap = {};
                 (gmvGrowthResult.results || []).forEach(r => {
                     gmvGrowthMap[r.shop_id] = {
-                        q4_2025_gmv: parseFloat(r.q4_2025_gmv) || 0,
-                        q1_2026_gmv_ytd: parseFloat(r.q1_2026_gmv_ytd) || 0,
-                        q1_2026_gmv_projected: parseFloat(r.q1_2026_gmv_projected) || 0
+                        q1_2026_gmv: parseFloat(r.q1_2026_gmv) || 0,
+                        q2_2026_gmv_ytd: parseFloat(r.q2_2026_gmv_ytd) || 0,
+                        q2_2026_gmv_projected: parseFloat(r.q2_2026_gmv_projected) || 0
                     };
                 });
                 
@@ -2348,7 +2354,7 @@
                     };
                 });
                 
-                console.log('📊 Total Q1 2026 from revenue query:', debugQ1_2026_Total);
+                console.log('📊 Total Q2 2026 from revenue query:', debugQ2_2026_Total);
                 
                 // Aggregate data by account
                 const accounts = [];
@@ -2361,9 +2367,9 @@
                     let accGmv = 0, accRevenue = 0, accGpv = 0, accSpRevenue = 0;
                     let accQ1_25 = 0, accQ2_25 = 0, accQ3_25 = 0, accQ4_25 = 0;
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
-                    let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
+                    let accQ1Gmv25 = 0, accQ1Gmv26 = 0, accQ2Gmv25 = 0, accQ2Gmv26 = 0;
                     let spEnabledShops = 0, spDisabledShops = 0;
-                    let accQ4_2025_gmv = 0, accQ1_2026_gmv_projected = 0;
+                    let accQ1_2026_gmv_actual = 0, accQ2_2026_gmv_projected = 0;
                     let accSpPenL3m = 0, accSpPenPrev3m = 0, accGmvPrev3m = 0, spPenShopCount = 0;
                     let paymentGatewaysSet = new Set(); // Collect unique gateways across all shops
                     let adoptionData = {
@@ -2380,6 +2386,8 @@
                             accGmv += gmvData.l12m_gmv || 0;
                             accQ1Gmv25 += gmvData.q1_gmv_2025 || 0;
                             accQ1Gmv26 += gmvData.q1_gmv_2026 || 0;
+                            accQ2Gmv25 += gmvData.q2_gmv_2025 || 0;
+                            accQ2Gmv26 += gmvData.q2_gmv_2026 || 0;
                         }
                         const gpvData = gpvMap[shopId];
                         if (gpvData) {
@@ -2417,8 +2425,8 @@
                         // Collect GMV growth data
                         const gmvGrowthData = gmvGrowthMap[shopId];
                         if (gmvGrowthData) {
-                            accQ4_2025_gmv += gmvGrowthData.q4_2025_gmv || 0;
-                            accQ1_2026_gmv_projected += gmvGrowthData.q1_2026_gmv_projected || 0;
+                            accQ1_2026_gmv_actual += gmvGrowthData.q1_2026_gmv || 0;
+                            accQ2_2026_gmv_projected += gmvGrowthData.q2_2026_gmv_projected || 0;
                         }
                         
                         // Collect SP penetration trends data
@@ -2456,8 +2464,8 @@
                     const acc2025 = accQ1_25 + accQ2_25 + accQ3_25 + accQ4_25;
                     
                     // Calculate GMV growth rate (QoQ)
-                    const gmvGrowthRate = accQ4_2025_gmv > 0 ? 
-                        ((accQ1_2026_gmv_projected - accQ4_2025_gmv) / accQ4_2025_gmv) * 100 : 0;
+                    const gmvGrowthRate = accQ1_2026_gmv_actual > 0 ? 
+                        ((accQ2_2026_gmv_projected - accQ1_2026_gmv_actual) / accQ1_2026_gmv_actual) * 100 : 0;
                     
                     // Calculate average SP penetration trends across all shops in the account
                     const avgSpPenL3m = spPenShopCount > 0 ? accSpPenL3m / spPenShopCount : 0;
@@ -2489,11 +2497,13 @@
                         q4_2026: accQ4_26,
                         q1_gmv_2025: accQ1Gmv25,
                         q1_gmv_2026: accQ1Gmv26,
+                        q2_gmv_2025: accQ2Gmv25,
+                        q2_gmv_2026: accQ2Gmv26,
                         country: account.country,
                         sp_currently_disabled: spCurrentlyDisabled,
                         // New: GMV Growth tracking
-                        q4_2025_gmv: accQ4_2025_gmv,
-                        q1_2026_gmv_projected: accQ1_2026_gmv_projected,
+                        q1_2026_gmv: accQ1_2026_gmv_actual,
+                        q2_2026_gmv_projected: accQ2_2026_gmv_projected,
                         gmv_growth_rate: gmvGrowthRate,
                         // New: Product adoption flags
                         has_shopify_payments: adoptionData.has_shopify_payments,
@@ -2528,7 +2538,7 @@
                 // Sort accounts by L12M revenue
                 accounts.sort((a, b) => b.l12m_revenue - a.l12m_revenue);
                 
-                console.log('📊 After aggregation - Total Q1 2026:', totalQ1_2026);
+                console.log('📊 After aggregation - Total Q2 2026:', totalQ2_2026);
                 console.log('📊 Number of accounts:', accounts.length);
                 
                 // Process daily revenue data for run rate chart (shop-level)
@@ -2571,7 +2581,7 @@
                     'Q3-2026': totalQ3_2026,
                     'Q4-2026': totalQ4_2026
                 };
-                const selectedQuarterRevenue = quarterTotals[selectedQuarter] || totalQ1_2026;
+                const selectedQuarterRevenue = quarterTotals[selectedQuarter] || totalQ2_2026;
                 
                 // Build final data object
                 const data = {
@@ -2590,10 +2600,10 @@
                         avg_pure_sp_take_rate: totalGpv > 0 ? (totalSpRevenue / totalGpv) * 100 : 0,
                         sp_penetration: totalGmv > 0 ? (totalGpv / totalGmv) * 100 : 0
                     },
-                    q1_comparison: {
-                        q1_2025: totalQ1_2025,
-                        q1_2026_ytd: totalQ1_2026,
-                        pacing_rate: totalQ1_2025 > 0 ? (totalQ1_2026 / totalQ1_2025) * 100 : 0
+                    q2_comparison: {
+                        q2_2025: totalQ2_2025,
+                        q2_2026_ytd: totalQ2_2026,
+                        pacing_rate: totalQ2_2025 > 0 ? (totalQ2_2026 / totalQ2_2025) * 100 : 0
                     },
                     quarter_totals_2025: {
                         'Q1': totalQ1_2025,
@@ -2652,18 +2662,18 @@
             }
 
             // Calculate metrics
-            const daysInQ1 = 90;
+            const daysInQ2 = 91;
 
-            // Use manually entered NRR target; fall back to Q1 2025 actual if none set
+            // Use manually entered NRR target; fall back to Q2 2025 actual if none set
             const nrrTargetM = parseFloat(document.getElementById('nrr-target-input').value) || 0;
-            const q1Target = nrrTargetM > 0 ? nrrTargetM * 1000000 : (data.q1_comparison.q1_2025 || 0);
-            const dailyTargetNeeded = q1Target / daysInQ1;
+            const q2Target = nrrTargetM > 0 ? nrrTargetM * 1000000 : (data.q2_comparison?.q2_2025 || 0);
+            const dailyTargetNeeded = q2Target / daysInQ2;
             
             const today = new Date();
-            const q1Start = new Date('2026-01-01');
-            const q1End = new Date('2026-03-31');
-            const daysPassed = Math.floor((today - q1Start) / (1000 * 60 * 60 * 24)) + 1;
-            const daysRemaining = Math.max(0, Math.floor((q1End - today) / (1000 * 60 * 60 * 24)));
+            const q2Start = new Date('2026-04-01');
+            const q2End = new Date('2026-06-30');
+            const daysPassed = Math.floor((today - q2Start) / (1000 * 60 * 60 * 24)) + 1;
+            const daysRemaining = Math.max(0, Math.floor((q2End - today) / (1000 * 60 * 60 * 24)));
             
             const totalRevenueYTD = dailyData.reduce((sum, d) => sum + d.revenue, 0);
             const actualDailyAvg = daysPassed > 0 ? totalRevenueYTD / daysPassed : 0;
@@ -2920,12 +2930,12 @@
             updateQuarterlyPerformance(data);
             
             // Update NRR tracker section with selected quarter
-            const quarterRevenue = data.selected_quarter_ytd || data.q1_comparison?.q1_2026_ytd || 0;
+            const quarterRevenue = data.selected_quarter_ytd || data.q2_comparison?.q2_2026_ytd || 0;
             const config = quarterConfig[selectedQuarter];
             console.log(`💰 ${config.label} YTD Revenue:`, quarterRevenue, '→', formatCurrency(quarterRevenue, true));
             
             // Update YTD display
-            const ytdElement = document.getElementById('q1-2026-ytd');
+            const ytdElement = document.getElementById('q2-2026-ytd');
             if (ytdElement) {
                 ytdElement.textContent = formatCurrency(quarterRevenue, true);
                 console.log('✅ Updated quarter YTD element');
@@ -2956,7 +2966,7 @@
             // Calculate totals
             let totals = {
                 l12m_gmv: 0, l12m_revenue: 0, total_2025: 0,
-                q1_2025: 0, q1_2026: 0, q2_2025: 0, q3_2025: 0, q4_2025: 0
+                q1_2025: 0, q1_2026: 0, q2_2025: 0, q2_2026: 0, q3_2025: 0, q4_2025: 0
             };
             
             data.accounts.forEach(account => {
@@ -2964,14 +2974,17 @@
                 totals.l12m_gmv += account.l12m_gmv || 0;
                 totals.l12m_revenue += account.l12m_revenue || 0;
                 totals.q1_2025 += account.q1_2025 || 0;
-                totals.q1_2026 += account.q1_2026 || 0;
                 totals.q2_2025 += account.q2_2025 || 0;
                 totals.q3_2025 += account.q3_2025 || 0;
                 totals.q4_2025 += account.q4_2025 || 0;
+                totals.q1_2026 += account.q1_2026 || 0;
+                totals.q2_2026 += account.q2_2026 || 0;
                 totals.total_2025 += (account.q1_2025 || 0) + (account.q2_2025 || 0) + (account.q3_2025 || 0) + (account.q4_2025 || 0);
                 
                 const q1Yoy = account.q1_2025 > 0 ? ((account.q1_2026 / account.q1_2025) * 100).toFixed(1) : 'N/A';
-                const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
+                const q2Yoy = account.q2_2025 > 0 ? ((account.q2_2026 / account.q2_2025) * 100).toFixed(1) : 'N/A';
+                const q1PacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
+                const q2PacingClass = q2Yoy === 'N/A' ? '' : (parseFloat(q2Yoy) >= 40 ? 'pacing-high' : parseFloat(q2Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
                 
                 // Get short segment name
                 const segmentShort = {
@@ -3003,10 +3016,10 @@
                     <td class="number">${formatCurrency((account.q1_2025 || 0) + (account.q2_2025 || 0) + (account.q3_2025 || 0) + (account.q4_2025 || 0), true)}</td>
                     <td class="number">${formatCurrency(account.q1_2025, true)}</td>
                     <td class="number">${formatCurrency(account.q1_2026, true)}</td>
-                    <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
+                    <td class="${q1PacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
                     <td class="number">${formatCurrency(account.q2_2025, true)}</td>
-                    <td class="number">-</td>
-                    <td>-</td>
+                    <td class="number" style="color: var(--accent-green);">${formatCurrency(account.q2_2026, true)}</td>
+                    <td class="${q2PacingClass}">${q2Yoy}${q2Yoy !== 'N/A' ? '%' : ''}</td>
                     <td class="number">${formatCurrency(account.q3_2025, true)}</td>
                     <td class="number">-</td>
                     <td>-</td>
@@ -3023,6 +3036,7 @@
             
             // Add total row
             const totalQ1Yoy = totals.q1_2025 > 0 ? ((totals.q1_2026 / totals.q1_2025) * 100).toFixed(1) : 'N/A';
+            const totalQ2Yoy = totals.q2_2025 > 0 ? ((totals.q2_2026 / totals.q2_2025) * 100).toFixed(1) : 'N/A';
             const totalTakeRate = totals.l12m_gmv > 0 ? (totals.l12m_revenue / totals.l12m_gmv) * 100 : 0;
             const totalRow = document.createElement('tr');
             totalRow.style.cssText = 'background: var(--accent-blue); font-weight: 700; position: sticky; bottom: 0;';
@@ -3036,11 +3050,11 @@
                 <td class="number" style="color: white;">${totalTakeRate.toFixed(2)}%</td>
                 <td class="number" style="color: white;">${formatCurrency(totals.total_2025, true)}</td>
                 <td class="number" style="color: white;">${formatCurrency(totals.q1_2025, true)}</td>
-                <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totals.q1_2026, true)}</td>
+                <td class="number" style="color: white;">${formatCurrency(totals.q1_2026, true)}</td>
                 <td style="color: white;">${totalQ1Yoy}%</td>
                 <td class="number" style="color: white;">${formatCurrency(totals.q2_2025, true)}</td>
-                <td class="number" style="color: white;">$0</td>
-                <td style="color: white;">-</td>
+                <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totals.q2_2026, true)}</td>
+                <td style="color: white;">${totalQ2Yoy}%</td>
                 <td class="number" style="color: white;">${formatCurrency(totals.q3_2025, true)}</td>
                 <td class="number" style="color: white;">$0</td>
                 <td style="color: white;">-</td>
@@ -3051,17 +3065,17 @@
             tbody.appendChild(totalRow);
             
             // Update Q1 Performance table (show ALL accounts)
-            const q1Tbody = document.getElementById('all-accounts-q1');
+            const q1Tbody = document.getElementById('all-accounts-q2');
             if (q1Tbody) {
-                const sortedByQ1 = [...data.accounts].sort((a, b) => (b.q1_2026 || 0) - (a.q1_2026 || 0));
-                q1Tbody.innerHTML = sortedByQ1.map(acc => {
-                    const q1Yoy = acc.q1_2025 > 0 ? ((acc.q1_2026 / acc.q1_2025) * 100).toFixed(1) : 'N/A';
-                    const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
+                const sortedByQ2 = [...data.accounts].sort((a, b) => (b.q2_2026 || 0) - (a.q2_2026 || 0));
+                q1Tbody.innerHTML = sortedByQ2.map(acc => {
+                    const q2Yoy = acc.q2_2025 > 0 ? ((acc.q2_2026 / acc.q2_2025) * 100).toFixed(1) : 'N/A';
+                    const pacingClass = q2Yoy === 'N/A' ? '' : (parseFloat(q2Yoy) >= 40 ? 'pacing-high' : parseFloat(q2Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
                     return `<tr>
                         <td>${acc.name}</td>
-                        <td class="number">${formatCurrency(acc.q1_2025)}</td>
-                        <td class="number">${formatCurrency(acc.q1_2026)}</td>
-                        <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
+                        <td class="number">${formatCurrency(acc.q2_2025)}</td>
+                        <td class="number">${formatCurrency(acc.q2_2026)}</td>
+                        <td class="${pacingClass}">${q2Yoy}${q2Yoy !== 'N/A' ? '%' : ''}</td>
                     </tr>`;
                 }).join('');
             }
@@ -3070,19 +3084,21 @@
             const needsAttentionTbody = document.getElementById('needs-attention');
             if (needsAttentionTbody) {
                 const needsAttention = data.accounts.filter(acc => {
-                    if (!acc.q1_2025 || acc.q1_2025 <= 0) return false;
-                    const yoy = (acc.q1_2026 / acc.q1_2025) * 100;
+                    if (!acc.q2_2025 || acc.q2_2025 <= 0) return false;
+                    const yoy = (acc.q2_2026 / acc.q2_2025) * 100;
                     return yoy < 25;
                 }).sort((a, b) => {
-                    const aYoy = a.q1_2025 > 0 ? (a.q1_2026 / a.q1_2025) : 0;
-                    const bYoy = b.q1_2025 > 0 ? (b.q1_2026 / b.q1_2025) : 0;
+                    const aYoy = a.q2_2025 > 0 ? (a.q2_2026 / a.q2_2025) : 0;
+                    const bYoy = b.q2_2025 > 0 ? (b.q2_2026 / b.q2_2025) : 0;
                     return aYoy - bYoy;
                 });
                 
                 needsAttentionTbody.innerHTML = needsAttention.slice(0, 10).map(acc => {
-                    const revYoy = acc.q1_2025 > 0 ? ((acc.q1_2026 / acc.q1_2025) * 100).toFixed(1) : 'N/A';
-                    const gmvYoyNum = acc.q1_gmv_2025 > 0 ? (acc.q1_gmv_2026 / acc.q1_gmv_2025) * 100 : 0;
-                    const gmvYoy = acc.q1_gmv_2025 > 0 ? gmvYoyNum.toFixed(1) : 'N/A';
+                    const revYoy = acc.q2_2025 > 0 ? ((acc.q2_2026 / acc.q2_2025) * 100).toFixed(1) : 'N/A';
+                    // Compare projected full-quarter Q2 2026 GMV to Q2 2025 GMV (apples-to-apples)
+                    const q2_26_gmv = acc.q2_2026_gmv_projected || acc.q2_gmv_2026 || 0;
+                    const gmvYoyNum = acc.q2_gmv_2025 > 0 ? (q2_26_gmv / acc.q2_gmv_2025) * 100 : 0;
+                    const gmvYoy = acc.q2_gmv_2025 > 0 ? gmvYoyNum.toFixed(1) : 'N/A';
                     const gmvYoyClass = gmvYoy === 'N/A' ? '' : (gmvYoyNum >= 100 ? 'pacing-high' : gmvYoyNum >= 50 ? 'pacing-medium' : 'pacing-low');
                     
                     // Determine likely cause based on GMV vs Revenue pattern
@@ -3112,11 +3128,11 @@
                     
                     return `<tr>
                         <td>${acc.name}</td>
-                        <td class="number">${formatCurrency(acc.q1_2025)}</td>
-                        <td class="number">${formatCurrency(acc.q1_2026)}</td>
+                        <td class="number">${formatCurrency(acc.q2_2025)}</td>
+                        <td class="number">${formatCurrency(acc.q2_2026)}</td>
                         <td class="pacing-low">${revYoy}%</td>
-                        <td class="number">${formatCurrency(acc.q1_gmv_2025 || 0, true)}</td>
-                        <td class="number">${formatCurrency(acc.q1_gmv_2026 || 0, true)}</td>
+                        <td class="number">${formatCurrency(acc.q2_gmv_2025 || 0, true)}</td>
+                        <td class="number">${formatCurrency(q2_26_gmv, true)}</td>
                         <td class="${gmvYoyClass}">${gmvYoy}${gmvYoy !== 'N/A' ? '%' : ''}</td>
                         <td ${causeClass}>${likelyCause}</td>
                     </tr>`;
@@ -3219,7 +3235,7 @@
         // Global variables for NRR tracker
         let currentQuarterRevenue = 0;
         let projectedQuarterRevenue = 0;
-        let selectedQuarter = 'Q1-2026';
+        let selectedQuarter = 'Q2-2026';
         
         // Quarter date ranges
         const quarterConfig = {
@@ -3352,10 +3368,10 @@
             document.getElementById('current-csm-name').textContent = 'Enter your name above';
             document.getElementById('report-content').classList.add('active');
             
-            // Load saved quarter selection
-            const savedQuarter = localStorage.getItem('selected_quarter') || 'Q1-2026';
-            selectedQuarter = savedQuarter;
-            document.getElementById('quarter-selector').value = savedQuarter;
+            // Load saved quarter selection (fall back to current quarter if unknown)
+            const savedQuarter = localStorage.getItem('selected_quarter');
+            selectedQuarter = (savedQuarter && quarterConfig[savedQuarter]) ? savedQuarter : 'Q2-2026';
+            document.getElementById('quarter-selector').value = selectedQuarter;
             
             // Update UI labels for selected quarter
             const config = quarterConfig[selectedQuarter];
@@ -3378,7 +3394,7 @@
             tbody.innerHTML = '';
             
             data.accounts.forEach(account => {
-                const q1Yoy = account.q1_2025 > 0 ? ((account.q1_2026 / account.q1_2025) * 100).toFixed(1) : 'N/A';
+                const q2Yoy = account.q2_2025 > 0 ? ((account.q2_2026 / account.q2_2025) * 100).toFixed(1) : 'N/A';
                 const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
                 
                 const row = document.createElement('tr');
@@ -3389,9 +3405,9 @@
                     <td class="number">${formatCurrency(account.l12m_revenue, true)}</td>
                     <td class="number">${account.take_rate.toFixed(2)}%</td>
                     <td class="number">${formatCurrency(account.q1_2025 + account.q2_2025 + account.q3_2025 + account.q4_2025, true)}</td>
-                    <td class="number">${formatCurrency(account.q1_2025, true)}</td>
-                    <td class="number">${formatCurrency(account.q1_2026, true)}</td>
-                    <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
+                    <td class="number">${formatCurrency(account.q2_2025, true)}</td>
+                    <td class="number">${formatCurrency(account.q2_2026, true)}</td>
+                    <td class="${pacingClass}">${q2Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
                     <td class="number">${formatCurrency(account.q2_2025, true)}</td>
                     <td class="number">-</td>
                     <td>-</td>
@@ -3424,8 +3440,8 @@
             // Update quarterly performance
             updateQuarterlyPerformance(metrics);
             
-            // Update all accounts Q1 table
-            updateAllAccountsQ1(accounts);
+            // Update all accounts Q2 table
+            updateAllAccountsQ2(accounts);
             
             // Update needs attention table
             updateNeedsAttention(accounts);
@@ -3466,25 +3482,25 @@
             const pacing_el = document.querySelector('.yoy-metric-value.pacing-value');
             const projected_el = document.querySelector('.yoy-projected strong');
             
-            if (q1_2025_el) q1_2025_el.textContent = formatCurrency(metrics.q1_2025_total, true);
-            if (q1_2026_el) q1_2026_el.textContent = formatCurrency(metrics.q1_2026_total, true);
-            if (pacing_el) pacing_el.textContent = formatPercent(metrics.portfolio_q1_yoy_pacing);
-            if (projected_el) projected_el.textContent = formatCurrency(metrics.q1_2026_total * 6, true);
+            if (q1_2025_el) q1_2025_el.textContent = formatCurrency(metrics.q2_2025_total, true);
+            if (q1_2026_el) q1_2026_el.textContent = formatCurrency(metrics.q2_2026_total, true);
+            if (pacing_el) pacing_el.textContent = formatPercent(metrics.portfolio_q2_yoy_pacing);
+            if (projected_el) projected_el.textContent = formatCurrency(metrics.q2_2026_total * 4, true);
         }
         
-        function updateAllAccountsQ1(accounts) {
-            const tbody = document.getElementById('all-accounts-q1');
+        function updateAllAccountsQ2(accounts) {
+            const tbody = document.getElementById('all-accounts-q2');
             if (!tbody) return;
             
-            // Sort by Q1 2026 revenue
-            const sorted = [...accounts].sort((a, b) => b.q1_2026 - a.q1_2026);
+            // Sort by Q2 2026 revenue
+            const sorted = [...accounts].sort((a, b) => b.q2_2026 - a.q2_2026);
             
             tbody.innerHTML = sorted.map(acc => `
                 <tr>
                     <td>${acc.account_name}</td>
-                    <td class="number">${formatCurrency(acc.q1_2025)}</td>
-                    <td class="number">${formatCurrency(acc.q1_2026)}</td>
-                    <td class="${getPacingClass(acc.q1_yoy_pacing)}">${formatPercent(acc.q1_yoy_pacing)}${acc.q1_yoy_pacing > 100 ? ' 🔥' : ''}</td>
+                    <td class="number">${formatCurrency(acc.q2_2025)}</td>
+                    <td class="number">${formatCurrency(acc.q2_2026)}</td>
+                    <td class="${getPacingClass(acc.q2_yoy_pacing)}">${formatPercent(acc.q2_yoy_pacing)}${acc.q2_yoy_pacing > 100 ? ' 🔥' : ''}</td>
                 </tr>
             `).join('');
         }
@@ -3495,15 +3511,15 @@
             
             // Filter to accounts with pacing < 25%
             const needsAttention = accounts
-                .filter(acc => acc.q1_yoy_pacing !== null && acc.q1_yoy_pacing < 25)
-                .sort((a, b) => a.q1_yoy_pacing - b.q1_yoy_pacing);
+                .filter(acc => acc.q2_yoy_pacing !== null && acc.q2_yoy_pacing < 25)
+                .sort((a, b) => a.q2_yoy_pacing - b.q2_yoy_pacing);
             
             tbody.innerHTML = needsAttention.map(acc => `
                 <tr>
                     <td>${acc.account_name}</td>
-                    <td class="number">${formatCurrency(acc.q1_2025)}</td>
-                    <td class="number">${formatCurrency(acc.q1_2026)}</td>
-                    <td class="pacing-low">${formatPercent(acc.q1_yoy_pacing)}</td>
+                    <td class="number">${formatCurrency(acc.q2_2025)}</td>
+                    <td class="number">${formatCurrency(acc.q2_2026)}</td>
+                    <td class="pacing-low">${formatPercent(acc.q2_yoy_pacing)}</td>
                 </tr>
             `).join('');
         }
@@ -3537,9 +3553,9 @@
                     <td class="number">${formatCurrency(acc.l12m_revenue, true)}</td>
                     <td class="number">${acc.take_rate.toFixed(2)}%</td>
                     <td class="number">${formatCurrency(acc.total_2025, true)}</td>
-                    <td class="number">${formatCurrency(acc.q1_2025, true)}</td>
-                    <td class="number">${formatCurrency(acc.q1_2026, true)}</td>
-                    <td class="${getPacingClass(acc.q1_yoy_pacing)}">${formatPercent(acc.q1_yoy_pacing)}</td>
+                    <td class="number">${formatCurrency(acc.q2_2025, true)}</td>
+                    <td class="number">${formatCurrency(acc.q2_2026, true)}</td>
+                    <td class="${getPacingClass(acc.q2_yoy_pacing)}">${formatPercent(acc.q2_yoy_pacing)}</td>
                     <td class="number">${formatCurrency(acc.q2_2025, true)}</td>
                     <td class="number">-</td>
                     <td>-</td>
@@ -3594,10 +3610,12 @@
                 
                 const accountName = cells[1].textContent.toLowerCase();
                 // Column indices after adding Exclude checkbox and Segment column:
-                // 0=Excl, 1=Account, 2=SFDC, 3=Segment, 4=GMV, 5=Rev, 6=TakeRate, 7=2025Total, 8=Q1'25, 9=Q1'26, 10=Q1YoY
+                // 0=Excl, 1=Account, 2=SFDC, 3=Segment, 4=GMV, 5=Rev, 6=TakeRate, 7=2025Total,
+                // 8=Q1'25, 9=Q1'26, 10=Q1YoY, 11=Q2'25, 12=Q2'26, 13=Q2YoY (current quarter)
                 const revenue2025Text = cells[7].textContent.replace(/[$,]/g, '');
                 const revenue2025 = parseFloat(revenue2025Text) || 0;
-                const yoyPacingCell = cells[10].textContent;
+                // Use Q2 YoY (current quarter) for pacing filter
+                const yoyPacingCell = cells[13].textContent;
                 
                 // Parse YoY pacing
                 let pacingValue = 0;
@@ -3658,7 +3676,7 @@
             
             // Filter accounts with meaningful GMV data (> $10K in Q4 2025 to avoid noise)
             const accountsWithGrowth = accounts
-                .filter(acc => acc.q4_2025_gmv > 10000 && acc.q1_2026_gmv_projected > 0)
+                .filter(acc => acc.q1_2026_gmv > 10000 && acc.q2_2026_gmv_projected > 0)
                 .sort((a, b) => b.gmv_growth_rate - a.gmv_growth_rate);
             
             if (accountsWithGrowth.length === 0) {
@@ -3686,7 +3704,7 @@
                     <td style="text-align: left; width: 25%;"><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
                     <td style="text-align: left; width: 10%;">${segment}</td>
                     <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q4_2025_gmv, true)}</td>
-                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q1_2026_gmv_projected, true)}</td>
+                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q2_2026_gmv_projected, true)}</td>
                     <td class="number" style="text-align: right; width: 15%; color: ${trendColor}; font-weight: 600;">${growthText}</td>
                     <td style="text-align: center; width: 10%; font-size: 1.5rem;">${trendEmoji}</td>
                 </tr>
