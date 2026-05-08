@@ -2020,7 +2020,7 @@
                         COALESCE(sa.service_model, 'SMB') AS service_model,
                         m.shop_id
                     FROM \`shopify-dw.sales.sales_accounts\` sa
-                    LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
+                    LEFT JOIN \`shopify-dw.sales.shop_to_sales_account_mapping\` m
                         ON sa.account_id = m.salesforce_account_id
                     WHERE (${nameConditions})
                     AND sa.account_type = 'Customer'
