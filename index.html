@@ -1193,7 +1193,7 @@
             <!-- NRR Target Tracker (Configurable by Quarter) -->
             <div class="yoy-comparison-card" id="nrr-target-section">
                 <div class="yoy-header">
-                    <span class="yoy-title">🎯 <span id="nrr-quarter-title">Q1 2026</span> NRR Target</span>
+                    <span class="yoy-title">🎯 <span id="nrr-quarter-title">Q2 2026</span> NRR Target</span>
                     <select id="quarter-selector" onchange="onQuarterChange()" 
                         style="padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--border); 
                         background: var(--bg-secondary); color: var(--accent-blue); font-weight: 600; cursor: pointer;">
@@ -2018,7 +2018,7 @@
                         COALESCE(sa.service_model, 'SMB') AS service_model,
                         m.shop_id
                     FROM \`shopify-dw.sales.sales_accounts\` sa
-                    LEFT JOIN \`shopify-dw.sales.sales_unified_entity_mapping\` m
+                    LEFT JOIN \`shopify-dw.sales.shop_to_sales_account_mapping\` m
                         ON sa.account_id = m.salesforce_account_id
                     WHERE (${nameConditions})
                     AND sa.account_type = 'Customer'
@@ -2920,7 +2920,7 @@
             updateQuarterlyPerformance(data);
             
             // Update NRR tracker section with selected quarter
-            const quarterRevenue = data.selected_quarter_ytd || data.q1_comparison?.q1_2026_ytd || 0;
+            const quarterRevenue = data.selected_quarter_ytd || data.q2_comparison?.q2_2026_ytd || data.q1_comparison?.q1_2026_ytd || 0;
             const config = quarterConfig[selectedQuarter];
             console.log(`💰 ${config.label} YTD Revenue:`, quarterRevenue, '→', formatCurrency(quarterRevenue, true));
             
@@ -2956,7 +2956,7 @@
             // Calculate totals
             let totals = {
                 l12m_gmv: 0, l12m_revenue: 0, total_2025: 0,
-                q1_2025: 0, q1_2026: 0, q2_2025: 0, q3_2025: 0, q4_2025: 0
+                q1_2025: 0, q1_2026: 0, q2_2025: 0, q2_2026: 0, q3_2025: 0, q4_2025: 0
             };
             
             data.accounts.forEach(account => {
@@ -2965,13 +2965,16 @@
                 totals.l12m_revenue += account.l12m_revenue || 0;
                 totals.q1_2025 += account.q1_2025 || 0;
                 totals.q1_2026 += account.q1_2026 || 0;
+                totals.q2_2026 += account.q2_2026 || 0;
                 totals.q2_2025 += account.q2_2025 || 0;
                 totals.q3_2025 += account.q3_2025 || 0;
                 totals.q4_2025 += account.q4_2025 || 0;
                 totals.total_2025 += (account.q1_2025 || 0) + (account.q2_2025 || 0) + (account.q3_2025 || 0) + (account.q4_2025 || 0);
                 
                 const q1Yoy = account.q1_2025 > 0 ? ((account.q1_2026 / account.q1_2025) * 100).toFixed(1) : 'N/A';
+                const q2Yoy = account.q2_2025 > 0 ? ((account.q2_2026 / account.q2_2025) * 100).toFixed(1) : 'N/A';
                 const pacingClass = q1Yoy === 'N/A' ? '' : (parseFloat(q1Yoy) >= 40 ? 'pacing-high' : parseFloat(q1Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
+                const q2PacingClass = q2Yoy === 'N/A' ? '' : (parseFloat(q2Yoy) >= 40 ? 'pacing-high' : parseFloat(q2Yoy) >= 25 ? 'pacing-medium' : 'pacing-low');
                 
                 // Get short segment name
                 const segmentShort = {
@@ -3005,8 +3008,8 @@
                     <td class="number">${formatCurrency(account.q1_2026, true)}</td>
                     <td class="${pacingClass}">${q1Yoy}${q1Yoy !== 'N/A' ? '%' : ''}</td>
                     <td class="number">${formatCurrency(account.q2_2025, true)}</td>
-                    <td class="number">-</td>
-                    <td>-</td>
+                    <td class="number" style="color: var(--accent-green);">${formatCurrency(account.q2_2026, true)}</td>
+                    <td class="${q2PacingClass}">${q2Yoy}${q2Yoy !== 'N/A' ? '%' : ''}</td>
                     <td class="number">${formatCurrency(account.q3_2025, true)}</td>
                     <td class="number">-</td>
                     <td>-</td>
@@ -3023,6 +3026,7 @@
             
             // Add total row
             const totalQ1Yoy = totals.q1_2025 > 0 ? ((totals.q1_2026 / totals.q1_2025) * 100).toFixed(1) : 'N/A';
+            const totalQ2Yoy = totals.q2_2025 > 0 ? ((totals.q2_2026 / totals.q2_2025) * 100).toFixed(1) : 'N/A';
             const totalTakeRate = totals.l12m_gmv > 0 ? (totals.l12m_revenue / totals.l12m_gmv) * 100 : 0;
             const totalRow = document.createElement('tr');
             totalRow.style.cssText = 'background: var(--accent-blue); font-weight: 700; position: sticky; bottom: 0;';
@@ -3039,8 +3043,8 @@
                 <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totals.q1_2026, true)}</td>
                 <td style="color: white;">${totalQ1Yoy}%</td>
                 <td class="number" style="color: white;">${formatCurrency(totals.q2_2025, true)}</td>
-                <td class="number" style="color: white;">$0</td>
-                <td style="color: white;">-</td>
+                <td class="number" style="color: #00ff88; font-size: 1.1em;">${formatCurrency(totals.q2_2026, true)}</td>
+                <td style="color: white;">${totalQ2Yoy}%</td>
                 <td class="number" style="color: white;">${formatCurrency(totals.q3_2025, true)}</td>
                 <td class="number" style="color: white;">$0</td>
                 <td style="color: white;">-</td>
@@ -3219,7 +3223,7 @@
         // Global variables for NRR tracker
         let currentQuarterRevenue = 0;
         let projectedQuarterRevenue = 0;
-        let selectedQuarter = 'Q1-2026';
+        let selectedQuarter = 'Q2-2026';
         
         // Quarter date ranges
         const quarterConfig = {
@@ -3353,7 +3357,7 @@
             document.getElementById('report-content').classList.add('active');
             
             // Load saved quarter selection
-            const savedQuarter = localStorage.getItem('selected_quarter') || 'Q1-2026';
+            const savedQuarter = localStorage.getItem('selected_quarter') || 'Q2-2026';
             selectedQuarter = savedQuarter;
             document.getElementById('quarter-selector').value = savedQuarter;
             
