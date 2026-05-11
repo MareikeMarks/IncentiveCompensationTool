@@ -8,9 +8,9 @@
     <meta name="data-portal-query-url" content="">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Quick.js for BigQuery access -->
-    <script src="/client/quick.js"></script>
+    <script nonce="4849dbbdf1cdb4c2fdd13ff43aa769ab" src="/client/quick.js"></script>
     <!-- Chart.js for visualizations -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script nonce="4849dbbdf1cdb4c2fdd13ff43aa769ab" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -1330,7 +1330,7 @@
             <!-- Daily Run Rate Chart -->
             <section>
                 <h2><span class="emoji">📊</span> Daily Run Rate vs Target</h2>
-                <p class="section-description">Track daily revenue performance against your Q1 2026 NRR target. Set your target above to update the target line. Green = on track, Red = behind pace.</p>
+                <p class="section-description">Track daily revenue performance against your Q2 2026 NRR target. Set your target above to update the target line. Green = on track, Red = behind pace.</p>
                 <div style="background: var(--bg-card); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                         <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
@@ -1346,7 +1346,7 @@
                             <div id="pace-status" style="font-size: 1.5rem; font-weight: 600;">-</div>
                         </div>
                         <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
-                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Days Remaining in Q1</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Days Remaining in Q2</div>
                             <div id="days-remaining" style="color: var(--accent-yellow); font-size: 1.5rem; font-weight: 600;">-</div>
                         </div>
                     </div>
@@ -1415,15 +1415,15 @@
             <!-- GMV Growth Tracker -->
             <section class="gmv-growth-section">
                 <h2><span class="emoji">📈</span> GMV Growth Tracker</h2>
-                <p class="section-description">Q1 2026 Projected = (Current daily GMV rate × 90 days). Compares projected Q1 vs actual Q4. High growth = opportunity for product adoption.</p>
+                <p class="section-description">Q2 2026 Projected = (Current daily GMV rate × 91 days). Compares projected Q2 vs actual Q1. High growth = opportunity for product adoption.</p>
                 <div class="card" style="overflow-x: auto;">
                     <table class="data-table" id="gmv-growth-table">
                         <thead>
                             <tr style="background: rgba(99, 102, 241, 0.1);">
                                 <th style="text-align: left; width: 25%;">Account</th>
                                 <th style="text-align: left; width: 10%;">Segment</th>
-                                <th style="text-align: right; width: 18%;">Q4 2025 GMV</th>
-                                <th style="text-align: right; width: 18%;">Q1 2026 Projected</th>
+                                <th style="text-align: right; width: 18%;">Q1 2026 GMV</th>
+                                <th style="text-align: right; width: 18%;">Q2 2026 Projected</th>
                                 <th style="text-align: right; width: 15%;">QoQ Growth</th>
                                 <th style="text-align: center; width: 10%;">Trend</th>
                             </tr>
@@ -1437,10 +1437,10 @@
                 <!-- GMV Projection Explanation -->
                 <div style="background: rgba(99, 102, 241, 0.1); padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #6366f1;">
                     <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">
-                        <strong style="color: var(--accent);">📊 How Q1 2026 Projected is Calculated</strong><br>
-                        <span style="color: var(--text-secondary);">Formula: Q1 2026 Projected = (Total GMV from Jan 1 to Today) ÷ (Days Elapsed) × 90 days<br>
-                        Example: If an account did $2M GMV from Jan 1 to Feb 3 (34 days), their daily average is ~$58.8K. Projected Q1 GMV = $58.8K × 90 = $5.29M. If their Q4 2025 was $3M, that's <span style="color: #10b981; font-weight: 600;">+76% growth</span>.<br>
-                        Note: Accounts with >999% growth are typically new launches ramping up. Only accounts with >$10K Q4 GMV are shown to avoid noise.</span>
+                        <strong style="color: var(--accent);">📊 How Q2 2026 Projected is Calculated</strong><br>
+                        <span style="color: var(--text-secondary);">Formula: Q2 2026 Projected = (Total GMV from Apr 1 to Today) ÷ (Days Elapsed) × 91 days<br>
+                        Example: If an account did $2M GMV from Apr 1 to May 4 (34 days), their daily average is ~$58.8K. Projected Q2 GMV = $58.8K × 91 = $5.35M. If their Q1 2026 was $3M, that's <span style="color: #10b981; font-weight: 600;">+78% growth</span>.<br>
+                        Note: Accounts with >999% growth are typically new launches ramping up. Only accounts with >$10K Q1 GMV are shown to avoid noise.</span>
                     </p>
                 </div>
             </section>
@@ -1637,7 +1637,7 @@
         <p style="margin-top: 0.5rem;">Q1 2026 data is Jan 1-15 only (~17% of quarter elapsed)</p>
     </footer>
 
-    <script>
+    <script nonce="4849dbbdf1cdb4c2fdd13ff43aa769ab">
         // === LIVE BIGQUERY DATA FUNCTIONS ===
         
         let hasAuth = false;
@@ -2122,7 +2122,7 @@
                     GROUP BY shop_id
                 `;
                 
-                // Query 7: Get daily revenue data for Q1 2026 run rate chart
+                // Query 7: Get daily revenue data for Q2 2026 run rate chart
                 // NOTE: shop_netsuite_account_daily_profit_summary was sunset March 2026.
                 // Replacement: estimated_revenue_events_v2 (event_at TIMESTAMP, amount_usd)
                 const dailyRevenueQuery = `
@@ -2132,7 +2132,7 @@
                         SUM(amount_usd) AS daily_revenue
                     FROM \`shopify-dw.finance.estimated_revenue_events_v2\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND DATE(event_at) BETWEEN '2026-01-01' AND CURRENT_DATE()
+                    AND DATE(event_at) BETWEEN '2026-04-01' AND CURRENT_DATE()
                     GROUP BY shop_id, DATE(event_at)
                     ORDER BY DATE(event_at) ASC
                 `;
@@ -2141,18 +2141,18 @@
                 const gmvGrowthQuery = `
                     SELECT 
                         shop_id,
-                        SUM(CASE WHEN date BETWEEN '2025-10-01' AND '2025-12-31' THEN gmv_usd ELSE 0 END) AS q4_2025_gmv,
-                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q1_2026_gmv_ytd,
-                        -- Project Q1 based on current pace
+                        SUM(CASE WHEN date BETWEEN '2026-01-01' AND '2026-03-31' THEN gmv_usd ELSE 0 END) AS q1_2026_gmv,
+                        SUM(CASE WHEN date BETWEEN '2026-04-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) AS q2_2026_gmv_ytd,
+                        -- Project Q2 based on current pace
                         CASE 
-                            WHEN DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) > 0 THEN
-                                SUM(CASE WHEN date BETWEEN '2026-01-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) 
-                                / DATE_DIFF(CURRENT_DATE(), DATE('2026-01-01'), DAY) * 90
+                            WHEN DATE_DIFF(CURRENT_DATE(), DATE('2026-04-01'), DAY) > 0 THEN
+                                SUM(CASE WHEN date BETWEEN '2026-04-01' AND CURRENT_DATE() THEN gmv_usd ELSE 0 END) 
+                                / DATE_DIFF(CURRENT_DATE(), DATE('2026-04-01'), DAY) * 91
                             ELSE 0
-                        END AS q1_2026_gmv_projected
+                        END AS q2_2026_gmv_projected
                     FROM \`shopify-dw.finance.shop_gmv_daily_summary_v1\`
                     WHERE shop_id IN (${shopIds.join(',')})
-                    AND date >= '2025-10-01'
+                    AND date >= '2026-01-01'
                     GROUP BY shop_id
                 `;
                 
@@ -2319,9 +2319,9 @@
                 const gmvGrowthMap = {};
                 (gmvGrowthResult.results || []).forEach(r => {
                     gmvGrowthMap[r.shop_id] = {
-                        q4_2025_gmv: parseFloat(r.q4_2025_gmv) || 0,
-                        q1_2026_gmv_ytd: parseFloat(r.q1_2026_gmv_ytd) || 0,
-                        q1_2026_gmv_projected: parseFloat(r.q1_2026_gmv_projected) || 0
+                        q1_2026_gmv: parseFloat(r.q1_2026_gmv) || 0,
+                        q2_2026_gmv_ytd: parseFloat(r.q2_2026_gmv_ytd) || 0,
+                        q2_2026_gmv_projected: parseFloat(r.q2_2026_gmv_projected) || 0
                     };
                 });
                 
@@ -2363,7 +2363,7 @@
                     let accQ1_26 = 0, accQ2_26 = 0, accQ3_26 = 0, accQ4_26 = 0;
                     let accQ1Gmv25 = 0, accQ1Gmv26 = 0;
                     let spEnabledShops = 0, spDisabledShops = 0;
-                    let accQ4_2025_gmv = 0, accQ1_2026_gmv_projected = 0;
+                    let accQ1_2026_gmv = 0, accQ2_2026_gmv_projected = 0;
                     let accSpPenL3m = 0, accSpPenPrev3m = 0, accGmvPrev3m = 0, spPenShopCount = 0;
                     let paymentGatewaysSet = new Set(); // Collect unique gateways across all shops
                     let adoptionData = {
@@ -2417,8 +2417,8 @@
                         // Collect GMV growth data
                         const gmvGrowthData = gmvGrowthMap[shopId];
                         if (gmvGrowthData) {
-                            accQ4_2025_gmv += gmvGrowthData.q4_2025_gmv || 0;
-                            accQ1_2026_gmv_projected += gmvGrowthData.q1_2026_gmv_projected || 0;
+                            accQ1_2026_gmv += gmvGrowthData.q1_2026_gmv || 0;
+                            accQ2_2026_gmv_projected += gmvGrowthData.q2_2026_gmv_projected || 0;
                         }
                         
                         // Collect SP penetration trends data
@@ -2456,8 +2456,8 @@
                     const acc2025 = accQ1_25 + accQ2_25 + accQ3_25 + accQ4_25;
                     
                     // Calculate GMV growth rate (QoQ)
-                    const gmvGrowthRate = accQ4_2025_gmv > 0 ? 
-                        ((accQ1_2026_gmv_projected - accQ4_2025_gmv) / accQ4_2025_gmv) * 100 : 0;
+                    const gmvGrowthRate = accQ1_2026_gmv > 0 ? 
+                        ((accQ2_2026_gmv_projected - accQ1_2026_gmv) / accQ1_2026_gmv) * 100 : 0;
                     
                     // Calculate average SP penetration trends across all shops in the account
                     const avgSpPenL3m = spPenShopCount > 0 ? accSpPenL3m / spPenShopCount : 0;
@@ -2492,8 +2492,8 @@
                         country: account.country,
                         sp_currently_disabled: spCurrentlyDisabled,
                         // New: GMV Growth tracking
-                        q4_2025_gmv: accQ4_2025_gmv,
-                        q1_2026_gmv_projected: accQ1_2026_gmv_projected,
+                        q1_2026_gmv: accQ1_2026_gmv,
+                        q2_2026_gmv_projected: accQ2_2026_gmv_projected,
                         gmv_growth_rate: gmvGrowthRate,
                         // New: Product adoption flags
                         has_shopify_payments: adoptionData.has_shopify_payments,
@@ -2652,18 +2652,18 @@
             }
 
             // Calculate metrics
-            const daysInQ1 = 90;
+            const daysInQ2 = 91;
 
-            // Use manually entered NRR target; fall back to Q1 2025 actual if none set
+            // Use manually entered NRR target; fall back to Q2 2025 actual if none set
             const nrrTargetM = parseFloat(document.getElementById('nrr-target-input').value) || 0;
-            const q1Target = nrrTargetM > 0 ? nrrTargetM * 1000000 : (data.q1_comparison.q1_2025 || 0);
-            const dailyTargetNeeded = q1Target / daysInQ1;
+            const q2Target = nrrTargetM > 0 ? nrrTargetM * 1000000 : (data.q2_comparison?.q2_2025 || data.q1_comparison?.q1_2025 || 0);
+            const dailyTargetNeeded = q2Target / daysInQ2;
             
             const today = new Date();
-            const q1Start = new Date('2026-01-01');
-            const q1End = new Date('2026-03-31');
-            const daysPassed = Math.floor((today - q1Start) / (1000 * 60 * 60 * 24)) + 1;
-            const daysRemaining = Math.max(0, Math.floor((q1End - today) / (1000 * 60 * 60 * 24)));
+            const q2Start = new Date('2026-04-01');
+            const q2End = new Date('2026-06-30');
+            const daysPassed = Math.floor((today - q2Start) / (1000 * 60 * 60 * 24)) + 1;
+            const daysRemaining = Math.max(0, Math.floor((q2End - today) / (1000 * 60 * 60 * 24)));
             
             const totalRevenueYTD = dailyData.reduce((sum, d) => sum + d.revenue, 0);
             const actualDailyAvg = daysPassed > 0 ? totalRevenueYTD / daysPassed : 0;
@@ -3662,7 +3662,7 @@
             
             // Filter accounts with meaningful GMV data (> $10K in Q4 2025 to avoid noise)
             const accountsWithGrowth = accounts
-                .filter(acc => acc.q4_2025_gmv > 10000 && acc.q1_2026_gmv_projected > 0)
+                .filter(acc => acc.q1_2026_gmv > 10000 && acc.q2_2026_gmv_projected > 0)
                 .sort((a, b) => b.gmv_growth_rate - a.gmv_growth_rate);
             
             if (accountsWithGrowth.length === 0) {
@@ -3689,8 +3689,8 @@
                 <tr>
                     <td style="text-align: left; width: 25%;"><a href="${acc.sfdc_url}" target="_blank" style="color: #fff; text-decoration: none;">${acc.name}</a></td>
                     <td style="text-align: left; width: 10%;">${segment}</td>
-                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q4_2025_gmv, true)}</td>
-                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q1_2026_gmv_projected, true)}</td>
+                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q1_2026_gmv, true)}</td>
+                    <td class="number" style="text-align: right; width: 18%;">${formatCurrency(acc.q2_2026_gmv_projected, true)}</td>
                     <td class="number" style="text-align: right; width: 15%; color: ${trendColor}; font-weight: 600;">${growthText}</td>
                     <td style="text-align: center; width: 10%; font-size: 1.5rem;">${trendEmoji}</td>
                 </tr>
